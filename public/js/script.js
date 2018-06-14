@@ -59,6 +59,9 @@ $('#component').change(function(){
                 json = {};
                 component = {};
                 $('#component_display').html("");
+                $('#parent_tab_content').html("");
+                $('#component_tab_content').html("");
+                $('#child_tab_content').html("");
                 $('form').each(function() {
                 this.reset();
                 });
@@ -261,4 +264,23 @@ $("#load_child_setting").click(function(){
     setting += '</div>';
     setting += '</div></div>';
     ele.append(setting);
+});
+$('#component_setting a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+    var display = $("#"+e.target.id+"_content");
+    var highlight = $("#highlight").is(':checked');
+    var setting = "";
+    if(display.html() == "") {
+        if(e.target.id == "parent_tab") {
+            if(typeof component.parent != "undefined") {
+                //working Here
+            } else {
+                display.html();
+            }
+        } else if(e.target.id == "component_tab") {
+
+        } else if(e.target.id == "child_tab") {
+
+        }
+    }
+    display.html(setting);
 });

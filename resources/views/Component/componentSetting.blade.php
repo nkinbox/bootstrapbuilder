@@ -12,47 +12,21 @@
         <div id="component_setting" class="collapse border container bg-light position-absolute w-100" style="right:0">
             <div class="m-2 p-2" id="loading_component_setting"><i class="fa fa-spinner"></i> Loading Component Settings</div>
             <form id="component_setting_form" class="pb-2 d-none">
-                <h5>Apply Config</h5>
-                <div class="form-row">
-                    <div class="form-group col-md-4">
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="inFocus" id="inFocus1" value="this_parent">
-                            <label class="form-check-label" for="inFocus1">
-                                Parent Element
-                            </label>
-                        </div>
-                    </div>
-                    <div class="form-group col-md-4">
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="inFocus" id="inFocus2" value="this_self" checked>
-                            <label class="form-check-label" for="inFocus2">
-                                Component itself
-                            </label>
-                        </div>
-                    </div>
-                    <div class="form-group col-md-4">
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="inFocus" id="inFocus3" value="this_child">
-                            <label class="form-check-label" for="inFocus3">
-                                Child Element
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Background color</label>
-                    <select multiple class="form-control" name="name">
-                        <option>bg-primary</option>
-                        <option>bg-secondary</option>
-                        <option>bg-success</option>
-                        <option>bg-danger</option>
-                        <option>bg-warning</option>
-                        <option>bg-info</option>
-                        <option>bg-light</option>
-                        <option>bg-dark</option>
-                        <option>bg-white</option>
-                    </select>
+                <ul class="nav nav-tabs mt-2" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link" id="parent_tab" data-toggle="tab" href="#parent_tab" role="tab">Wrapper</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" id="component_tab" data-toggle="tab" href="#component_tab" role="tab">Component</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="child_tab" data-toggle="tab" href="#child_tab" role="tab">Children</a>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane fade" id="parent_tab_content" role="tabpanel"></div>
+                    <div class="tab-pane fade show active" id="component_tab_content" role="tabpanel"></div>
+                    <div class="tab-pane fade" id="child_tab_content" role="tabpanel"></div>
                 </div>
                 <button type="submit" class="btn btn-primary">Preview</button>
             </form>

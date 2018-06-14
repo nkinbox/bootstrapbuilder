@@ -77,7 +77,11 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-2">col</div>
+                <div class="col-md-2">
+                    <div>
+                        <label><input type="checkbox" id="highlight"><i class="fa fa-object-ungroup"></i></label>
+                    </div>
+                </div>
                 <div class="col-md-2">col</div>
             </div>
     </div>
@@ -87,6 +91,7 @@
 <script>
     var json = {};
     var component = {};
+    var stacked = {};
     var url = {
         "loadComponent":"{{ route('LoadComponent') }}"
     }
@@ -100,6 +105,9 @@
     }
     #component_display {
         margin-bottom: 200px;
+    }
+    .highlighter {
+        box-shadow: 10px 10px 8px 10px #888888;
     }
 </style>
 @endpush
