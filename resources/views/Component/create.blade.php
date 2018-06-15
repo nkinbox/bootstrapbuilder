@@ -107,7 +107,13 @@
         margin-bottom: 200px;
     }
     .highlighter {
-        box-shadow: 10px 10px 8px 10px #888888;
+        box-shadow: 0 0 5px 1px #2e5bff inset;
+    }
+    .Removed {
+        box-shadow: 0 0 5px 1px #e20000 inset;
+    }
+    .Conditional {
+        box-shadow: 0 0 5px 1px #23e200 inset;
     }
 </style>
 @endpush
