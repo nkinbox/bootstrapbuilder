@@ -1,4 +1,4 @@
-function element_renderer(ele) {
+function element_renderer(ele, highlight = false) {
     var element = $(ele.start_tag+ele.end_tag);
     var style = $("<style></style>");
     element.attr("id", "component_"+ele.id);
@@ -21,10 +21,13 @@ function element_renderer(ele) {
         element.attr("title","Visibility");
         element.attr("data-placement","bottom");
     }
+    if(highlight) {
+        element.addClass("highlighter");
+    }
     if(ele.content_type == "static" || ele.content_type == "variable")
-    element.html(ele.content);
+    element.html(((ele.content)?ele.content:'This is some TEXT to fill element.'));
     else
-    element.html("<div class='p-5 text-center text-light bg-info'>@@Component@@</div>");
+    element.html("<div class='p-5 text-center text-light bg-info'>@@"+ele.content_type+"@@</div>");
     var temp_style = "";
     $.each(ele.style.style, function(key, value) {
         temp_style += key+':'+value+';';
@@ -34,17 +37,24 @@ function element_renderer(ele) {
     return element;
 }
 function component_renderer(comp) {
+    var highlight = $("#highlight");
     var component_, rendered = [], i = 0;
     $.each(comp, function(key, ele) {
         if(key == "basic") {
             return true;
         } else if(key == "child") {
             rendered[key] = [];
-            $.each(ele, function(c_key, c_ele){                
+            $.each(ele, function(c_key, c_ele){
+                if(highlight.is(':checked') && highlight.attr("data-highlight") == "child" && highlight.attr("data-childKey") == c_key)
+                rendered[key][i] = element_renderer(c_ele, true);
+                else
                 rendered[key][i] = element_renderer(c_ele);
                 i++;
             });
         } else {
+            if(highlight.is(':checked') && highlight.attr("data-highlight") == key)
+            rendered[key] = element_renderer(ele, true);
+            else
             rendered[key] = element_renderer(ele);
         } 
     });    
@@ -75,25 +85,18 @@ function getter(node, property, key) {
     setting = component[node];
     return setting[property];    
 }
-function setter(node, id, property, value) {
-    if(property == "style") {
-        try {
-            value = JSON.parse(value);
-        } catch (e) {
-            alert("Invalid JSON in COMPONENT STYLE value");
-            return false;
-        }
-    }
+function setter(node, property, value, key = "") {
     if(node == "child") {
-        if(typeof component.child != "undefined") {
-            $.each(component.child, function(key, value) {
-                if(value.id == id) {
-                    if(property == "visibility" && value == "none")
-                    delete component[node][key];
-                    else
-                    component[node][key][property] = value;
+        if(typeof component.child[key] != "undefined") {
+            if(property == "visibility" && value == "none") {
+                component[node].splice(key,1);
+                if(!component.child.length) {
+                    delete component["child"];
+                    component.self.content_type = "static";
                 }
-            });
+            }
+            else
+            component[node][key][property] = value;
         }
     } else if(node == "parent") {
         if(typeof component[node] != "undefined") {
@@ -104,7 +107,7 @@ function setter(node, id, property, value) {
             component[node][property] = value;
             if(property == "content_type" && value != "element") {
                 if(typeof component.child != "undefined")
-                delete component.child;
+                delete component["child"];
             }
         }
     }    
@@ -129,7 +132,7 @@ function childOrder(child_key) {
     }
 }
 function settingFormData(node, element) {
-    var setting = "";
+    var setting = '<h5><b>'+element.start_tag.replace("<","").replace(">","")+'</b>_<small>'+element.id+'</small></h5><hr>';
     setting += '<div class="form-group">';
     setting += '<label>Visibility</label>';
     setting += '<select class="form-control" name="visibility">';
@@ -145,12 +148,12 @@ function settingFormData(node, element) {
     setting += '<option selected>guest</option>';
     else
     setting += '<option>guest</option>';
-    if(node == "child") {
-        if(element.visibility == "none")
-        setting += '<option selected>none</option>';
-        else
-        setting += '<option>none</option>';
-    }
+    // if(node == "child") {
+    //     if(element.visibility == "none")
+    //     setting += '<option selected>none</option>';
+    //     else
+    //     setting += '<option>none</option>';
+    // }
     setting += '</select>';
     setting += '</div>';
     if(node != "parent") {
@@ -183,13 +186,13 @@ function settingFormData(node, element) {
         setting += '<small class="form-text text-muted">Required If content type Variable|Static.</small>';
         setting += '</div>';
     }
-    if(node == "child") {
-        setting += '<div class="form-group">';
-        setting += '<label>Duplicate</label>';
-        setting += '<input type="number" autocomplete="off" class="form-control" name="loop">';
-        setting += '<small class="form-text text-muted">Repeat element X times.</small>';
-        setting += '</div>';
-    }
+    // if(node == "child") {
+    //     setting += '<div class="form-group">';
+    //     setting += '<label>Duplicate</label>';
+    //     setting += '<input type="number" autocomplete="off" class="form-control" name="loop">';
+    //     setting += '<small class="form-text text-muted">Repeat element X times.</small>';
+    //     setting += '</div>';
+    // }
     setting += '<div class="form-group">';
     setting += '<label>Start Tag</label>';
     setting += '<input type="text" autocomplete="off" class="form-control" name="start_tag" value="'+element.start_tag+'">';
@@ -204,7 +207,7 @@ function settingFormData(node, element) {
     $.each(element.attributes, function(key, value) {
         setting += '<div class="form-check">';
         setting += '<label class="form-check-label">';
-        setting += '<input type="checkbox" class="form-check-input" name="attributes" value="'+key+'" checked>';
+        setting += '<input type="checkbox" class="form-check-input" name="attributes" value=\'{"'+key+'":"'+value+'"}\' checked>';
         setting += key+ " : " +value;
         setting += '</label>';
         setting += '</div>';
@@ -227,13 +230,14 @@ function settingFormData(node, element) {
     setting += '</div>';
     setting += '<div class="form-group"> ';
     setting += '<label>Attribute</label>                          ';
-    setting += '<input type="text" autocomplete="off" class="form-control" placeholder="Attribute Name" name="attribute_key">';
-    setting += '<input type="text" autocomplete="off" class="form-control" placeholder="Attribute Value" name="attribute_value">';
+    setting += '<input type="text" autocomplete="off" class="form-control" name="attributes" value="{}">';
+    //setting += '<input type="text" autocomplete="off" class="form-control" placeholder="Attribute Value" name="attribute_value">';
+    setting += '<small class="form-text text-muted">Attributes in JSON eg: {"attr1":"value1", "attr2":"value2"}</small>';
     setting += '</div>';
     return setting;
 }
 function addNewElement(node) {
-    var element = JSON.parse('{"id":0,"geolocation":0,"name":"","category":"element","node":"","visibility":"show","content_type":"","child_order":1,"nested_component":null,"loop_source":null,"start_tag":"","end_tag":"","attributes":{},"var_attributes":[],"classes":[],"style":{"selector":"","style":{}},"content":null}');
+    var element = {id:0,geolocation:0,name:"",category:"element",node:"",visibility:"show",content_type:"",child_order:1,nested_component:null,loop_source:null,start_tag:"",end_tag:"",attributes:{},var_attributes:[],classes:[],style:{selector:"",style:{}},content:null};
     element.node = node;
     if(node == "parent") {
         if(typeof component.parent == "undefined") {
@@ -248,6 +252,26 @@ function addNewElement(node) {
             component.child.push(element);
         }
     }    
+}
+function duplicateChildElement(key) {
+    if(typeof component.child[key] != "undefined") {
+        var temp = {}, id = 0;
+        $.each(component.child, function(k,v){
+            if(v.id > id)
+            id = v.id;
+        });
+        $.each(component.child[key], function(key_, value){
+            temp[key_] = value;
+        });
+        temp.id = id+1;
+        component.child.push(temp);
+    }
+    var i = 1;
+    $.each(component.child, function(key, value) {
+        component.child[key].child_order = i++;
+    });
+    $("#child_tab").click();
+    loadComponent();
 }
 function addChildForm(childnumber) {
     var setting = '<h4>Add Child</h4>';
@@ -292,9 +316,6 @@ $('#component').change(function(){
                 json = {};
                 component = {};
                 $('#component_display').html("");
-                $('#parent_tab_content').html("");
-                $('#component_tab_content').html("");
-                $('#child_tab_content').html("");
                 $('form').each(function() {
                 this.reset();
                 });
@@ -316,6 +337,7 @@ $('#component').change(function(){
                 $("#loading_component_setting").addClass('d-none').removeClass('d-block');
                 $("#component_setting_form_container").addClass('d-block').removeClass('d-none');
                 loadComponent();
+                $("#component_tab").click();
             }            
         });
     } else {
@@ -491,31 +513,35 @@ $("#load_child_setting").click(function(){
 });
 $('#component_setting a[data-toggle="tab"]').click(function () {
     var display = $("#component_setting_form_subcontainer");
-    var highlight = $("#highlight").is(':checked');
+    var highlight = $("#highlight");
     var setting = "";
     display.html("<div class=\"m-2 p-2\"><i class=\"fa fa-gear\"></i> No Settings to display.</div>");
     if(this.id == "parent_tab") {
         if(typeof component.parent != "undefined") {
+            highlight.attr("data-highlight","parent");
             setting = settingFormData("parent", component.parent);
             display.html('<form id="component_setting_form">'+setting+'<button type="submit" class="btn btn-primary">Preview</button></form>');
             $("#component_setting_form").submit(function (e) {
                 e.preventDefault();
                 var formData = $(this).serializeArray();
-                updateComponent(formData);
+                updateComponent(formData, "parent");
                 $("#component_setting").collapse("hide");
             });
         } else {
             display.append("Add Parent");
         }
     } else if(this.id == "component_tab") {
-        setting = settingFormData("self", component.self);
-        display.html('<form id="component_setting_form">'+setting+'<button type="submit" class="btn btn-primary">Preview</button></form>');
-        $("#component_setting_form").submit(function (e) {
-            e.preventDefault();
-            var formData = $(this).serializeArray();
-            updateComponent(formData);
-            $("#component_setting").collapse("hide");
-        });
+        if(typeof component.self != "undefined") {
+            highlight.attr("data-highlight","self");
+            setting = settingFormData("self", component.self);
+            display.html('<form id="component_setting_form">'+setting+'<button type="submit" class="btn btn-primary">Preview</button></form>');
+            $("#component_setting_form").submit(function (e) {
+                e.preventDefault();
+                var formData = $(this).serializeArray();
+                updateComponent(formData, "self");
+                $("#component_setting").collapse("hide");
+            });
+        }
     } else if(this.id == "child_tab") {
         if(typeof component.child != "undefined") {
             display.html("");
@@ -523,15 +549,20 @@ $('#component_setting a[data-toggle="tab"]').click(function () {
             setting = '<div class="d-flex flex-wrap mb-3">';
             $.each(component.child, function(key, child) {                
                 setting += '<div class="d-flex ml-1 border border-info">';
-                setting += '<div class="mr-auto py-1 px-2">'+child.id+'.<b>'+child.start_tag.replace("<","").replace(">","")+'</b></div>';
+                setting += '<div class="mr-auto py-1 px-2"><b>'+child.start_tag.replace("<","").replace(">","")+'</b>_<small>'+child.id+'</small></div>';
                 if(i)
-                setting += '<a class="p-1 child_pointer" href="#" id="orderLeft" data-key="'+ key +'"><i class="fa fa-arrow-left"></i></a>';
-                setting += '<a class="p-1 child_pointer" href="#" id="loadChildSetting" data-key="'+ key +'"><i class="fa fa-gear"></i></a>';
+                setting += '<a class="p-1 child_pointer" title="Shift" href="#" id="orderLeft" data-key="'+ key +'"><i class="fa fa-arrow-left"></i></a>';
+                //setting += '<div class="d-flex flex-column">';
+                setting += '<a class="p-1 child_pointer" title="Duplicate" href="#" id="duplicate" data-key="'+ key +'"><i class="fa fa-plus-square"></i></a>';
+                setting += '<a class="p-1 child_pointer" title="Remove" href="#" id="remove" data-key="'+ key +'"><i class="fa fa-minus-square"></i></a>';
+                //setting += '</div>';
+                setting += '<a class="p-1 child_pointer" title="Setting" href="#" id="loadChildSetting" data-key="'+ key +'"><i class="fa fa-gear"></i></a>';
                 setting += '</div>';
                 i++;
             });
             setting += '</div>';
             display.append(setting);
+            display.find('[data-toggle="popover"]').popover();
             $(".child_pointer").click(function(e){
                 e.preventDefault();
                 if(this.id == "orderLeft") {
@@ -539,16 +570,55 @@ $('#component_setting a[data-toggle="tab"]').click(function () {
                     $("#child_tab").click();
                 } else if(this.id == "loadChildSetting") {
                     var display = $("#component_setting_form_subcontainer");
+                    var highlight = $("#highlight");
+                    highlight.attr("data-highlight","child");
+                    highlight.attr("data-childKey",$(this).attr("data-key"));
                     var setting = settingFormData("child", component.child[$(this).attr("data-key")]);
                     display.find("#component_setting_form").remove();
-                    display.append('<form id="component_setting_form">'+setting+'<button type="submit" class="btn btn-primary">Preview</button></form>');
+                    display.append('<form id="component_setting_form" data-key="'+$(this).attr("data-key")+'">'+setting+'<button type="submit" class="btn btn-primary">Preview</button></form>');
+                    if(highlight.is(":checked"))
+                    loadComponent();
+                    $("#component_setting_form").submit(function (e) {
+                        e.preventDefault();
+                        var formData = $(this).serializeArray();
+                        updateComponent(formData, "child", $(this).attr("data-key"));
+                        $("#component_setting").collapse("hide");
+                    });
+                } else if(this.id == "duplicate") {
+                    duplicateChildElement($(this).attr("data-key"));
+                } else if(this.id == "remove") {
+                    setter("child", "visibility", "none", key = $(this).attr("data-key"));
+                    $("#child_tab").click();
+                    loadComponent();
                 }
             });
         }
-    }
+   }
+   if(highlight.is(":checked"))
+   loadComponent();
 });
-function updateComponent(formData) {
-
+function updateComponent(formData, node, childkey="") {
+    console.log(formData);
+    var tempSetting = {attributes:{},classes:[]};
+    for(var i = 0; i < formData.length; i++) {
+        if(formData[i].name == "style" || formData[i].name == "attributes") {
+            try {
+                formData[i].value = JSON.parse(formData[i].value);
+            } catch (e) {
+                alert("Invalid JSON found in component setting.");
+            }
+        }
+        if(formData[i].name == "attributes") {
+            for(key in formData[i].value)
+            tempSetting.attributes[key] = formData[i].value[key];
+        } else if(formData[i].name == "classes") {
+            tempSetting.classes.push(formData[i].value);
+        } else tempSetting[formData[i].name] = formData[i].value;
+    }
+    $.each(tempSetting, function(property, value){
+        setter(node, property, value, childkey);
+    });
+    loadComponent();
 }
 function newComponent(formData) {
 
