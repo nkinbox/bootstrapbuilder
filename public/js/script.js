@@ -1,7 +1,14 @@
-function element_renderer(ele, highlight = false) {
+function element_renderer(ele, highlight = false, recrusive = false) {
+    ele_id++;
     var element = $(ele.start_tag+ele.end_tag);
     var style = $("<style></style>");
-    element.attr("id", "component_"+ele.id);
+    var temp_style = "";
+    $.each(ele.style.style, function(key, value) {
+        temp_style += key+':'+value+';';
+    });
+    style.html("#component_"+ele_id+ " "+ele.style.selector+"{"+temp_style+"}");
+    $("#component_display").append(style);
+    element.attr("id", "component_"+ele_id);
     $.each(ele.classes, function(key, value){
         element.addClass(value);
     });
@@ -25,18 +32,17 @@ function element_renderer(ele, highlight = false) {
         element.addClass("highlighter");
     }
     if(ele.content_type == "static" || ele.content_type == "variable")
-    element.html(((ele.content)?ele.content:'This is some TEXT to fill element.'));
-    else
-    element.html("<div class='p-5 text-center text-light bg-info'>@@"+ele.content_type+"@@</div>");
-    var temp_style = "";
-    $.each(ele.style.style, function(key, value) {
-        temp_style += key+':'+value+';';
-    });
-    style.html("#component_"+ele.id+ " "+ele.style.selector+"{"+temp_style+"}");
-    $("#component_display").append(style);
+    element.html(((typeof ele.content == "string")?ele.content:'This is some TEXT to fill element.'));
+    else {
+        if(ele.content != null && typeof ele.content == "object" && recrusive) {
+            element.html("");
+            element.append(component_renderer(ele.content));
+        } else
+        element.html("<div class='p-5 text-center text-light bg-info'>@@"+ele.content_type+"@@</div>");
+    }
     return element;
 }
-function component_renderer(comp) {
+function component_renderer(comp, recrusive = false) {
     var highlight = $("#highlight");
     var component_, rendered = [], i = 0;
     $.each(comp, function(key, ele) {
@@ -46,25 +52,25 @@ function component_renderer(comp) {
             rendered[key] = [];
             $.each(ele, function(c_key, c_ele){
                 if(highlight.is(':checked') && highlight.attr("data-highlight") == "child" && highlight.attr("data-childKey") == c_key)
-                rendered[key][i] = element_renderer(c_ele, true);
+                rendered[key][i] = element_renderer(c_ele, true, recrusive);
                 else
-                rendered[key][i] = element_renderer(c_ele);
+                rendered[key][i] = element_renderer(c_ele, false, recrusive);
                 i++;
             });
         } else {
             if(highlight.is(':checked') && highlight.attr("data-highlight") == key)
-            rendered[key] = element_renderer(ele, true);
+            rendered[key] = element_renderer(ele, true, recrusive);
             else
-            rendered[key] = element_renderer(ele);
+            rendered[key] = element_renderer(ele, false, recrusive);
         } 
     });    
-    if(typeof rendered['child'] != 'undefined') {
+    if(typeof rendered['child'] !== "undefined") {
         rendered['self'].html("");
         $.each(rendered['child'], function(key, value){            
             rendered['self'].append(value);
         });
     }
-    if(typeof rendered['parent'] != 'undefined') {
+    if(typeof rendered['parent'] !== "undefined") {
         rendered['parent'].html("");
         rendered['parent'].append(rendered['self']);
         component_ = rendered['parent'];
@@ -74,6 +80,9 @@ function component_renderer(comp) {
 function loadComponent() {
     var display = $("#component_display");
     display.html("");
+    if($("#loadstack").is(':checked') && !$.isEmptyObject(stack) && typeof stack.self !== 'undefined')
+    display.append(component_renderer(stack, true));
+    else
     display.append(component_renderer(component));
     display.find('[data-toggle="popover"]').popover();
 }
@@ -87,26 +96,25 @@ function getter(node, property, key) {
 }
 function setter(node, property, value, key = "") {
     if(node == "child") {
-        if(typeof component.child[key] != "undefined") {
+        if(typeof component.child[key] !== "undefined") {
             if(property == "visibility" && value == "none") {
                 component[node].splice(key,1);
                 if(!component.child.length) {
                     delete component["child"];
                     component.self.content_type = "static";
                 }
-            }
-            else
+            } else
             component[node][key][property] = value;
         }
     } else if(node == "parent") {
-        if(typeof component[node] != "undefined") {
+        if(typeof component[node] !== "undefined") {
             component[node][property] = value;
         }
     } else if(node == "self") {
-        if(typeof component[node] != "undefined") {
+        if(typeof component[node] !== "undefined") {
             component[node][property] = value;
             if(property == "content_type" && value != "element") {
-                if(typeof component.child != "undefined")
+                if(typeof component.child !== "undefined")
                 delete component["child"];
             }
         }
@@ -182,7 +190,7 @@ function settingFormData(node, element) {
         setting += '</div>';
         setting += '<div class="form-group">';
         setting += '<label>Content</label>';
-        setting += '<input type="text" autocomplete="off" class="form-control" name="content" value="'+((element.content)?element.content:'')+'">';
+        setting += '<input type="text" autocomplete="off" class="form-control" name="content" value="'+((typeof element.content != "object")?element.content:'')+'">';
         setting += '<small class="form-text text-muted">Required If content type Variable|Static.</small>';
         setting += '</div>';
     }
@@ -237,7 +245,7 @@ function settingFormData(node, element) {
     return setting;
 }
 function addNewElement(node) {
-    var element = {id:0,geolocation:0,name:"",category:"element",node:"",visibility:"show",content_type:"",child_order:1,nested_component:null,loop_source:null,start_tag:"",end_tag:"",attributes:{},var_attributes:[],classes:[],style:{selector:"",style:{}},content:null};
+    var element = {id:1,geolocation:0,name:"",category:"element",node:"",visibility:"show",content_type:"static",child_order:1,nested_component:null,loop_source:null,start_tag:"<div>",end_tag:"</div>",attributes:{},var_attributes:[],classes:[],style:{selector:"",style:{}},content:null};
     element.node = node;
     if(node == "parent") {
         if(typeof component.parent == "undefined") {
@@ -248,13 +256,26 @@ function addNewElement(node) {
             component["child"] = [];
             component["child"][0] = element;
         } else {
+            var id = 0;
+            $.each(component.child, function(k,v){
+                if(v.id > id)
+                id = v.id;
+            });
+            element.id = id+1;
             element.child_order = component.child.length + 1;
             component.child.push(element);
         }
-    }    
+    } else if(node == "self") {
+        if(typeof component !== "undefined") {
+            component["self"] = element;
+        }
+    }
+}
+function addNewComponent(path) {
+    //path stack = {"self":{"content":"value"}}
 }
 function duplicateChildElement(key) {
-    if(typeof component.child[key] != "undefined") {
+    if(typeof component.child[key] !== "undefined") {
         var temp = {}, id = 0;
         $.each(component.child, function(k,v){
             if(v.id > id)
@@ -308,31 +329,57 @@ $('.toggler').click(function(){
 $('.showhide').click(function(){
     $($(this).attr("data-target")).toggleClass('d-block').toggleClass('d-none');
 });
-$('#component').change(function(){
-    if($(this).val()) {
-        if(typeof json["component_name"] !== 'undefined' && json["component_name"] != $(this).val()) {
-            var r = confirm("Discard Component "+json["component_name"]+ "?");
-            if(r) {
-                json = {};
-                component = {};
-                $('#component_display').html("");
-                $('form').each(function() {
-                this.reset();
-                });
-            } else {
-                $(this).val($(this).attr("data-selected"));
-                return false;
-            }
+$("#BrowseComponents").click(function(){
+    if(!$.isEmptyObject(component) && typeof component.self !== 'undefined') {
+        var r = confirm("Discard Component "+$("#component_name").val()+ "?");
+        if(r) {
+            component = {};
+            $('#component_display').html("");
+            $('form').each(function() {
+            this.reset();
+            });
+        } else {
+            return false;
         }
-        $(this).attr("data-selected", $(this).val());
-        json["component_name"] = $(this).val();
-        json["classes"] = {};
+    }
+    var display = $("#basicComponentContainer");
+    display.addClass("d-block").removeClass("d-none");
+    var container = $('<div class="card m-2">'+
+    '<h4 class="card-header text-capitalize text-center">'+
+    '</h4>'+
+    '<div class="card-body">'+
+    '</div>'+
+    '<div class="card-footer text-muted text-center">'+
+    '<a href="#" data-name="" class="btn btn-primary useComponent">Use Component</a>'+
+    '</div>'+
+    '</div>');
+    display.html("<div id=\"basicLoader\" class=\"m-2 p-2 text-center\"><h2><i class=\"fa fa-spinner\"></i> Loading Components.</h2></div>");
+    $.getJSON(url.loadComponents, function(response, status){
+        if(status == "success") {
+            $.each(response, function(i, value){
+                container.find(".card-header").html(value.self.name);
+                container.find(".card-body").html("").append(component_renderer(value, true));
+                container.find(".useComponent").attr("data-name",value.self.name);
+                display.append(container.clone());
+            });
+            display.find("#basicLoader").remove();
+            display.prepend('<h2 class="text-center">Basic Components</h2><hr>');
+            $(".useComponent").click(function(e){
+                e.preventDefault();
+                componentToEditor($(this).attr("data-name"));
+                $("#basicComponentContainer").addClass("d-none").removeClass("d-block");;
+            });
+        }
+    });
+});
+function componentToEditor(name = "") {
+    if(name != "") {
         $("#component_setting_panel").addClass('d-block').removeClass('d-none');
-        //$("#component_setting").collapse("show");
         $("#loading_component_setting").addClass('d-block').removeClass('d-none');
         $("#component_setting_form_container").addClass('d-none').removeClass('d-block');
-        $.getJSON(url.loadComponent+"/"+$(this).val(), function(response, status){
+        $.getJSON(url.loadComponent+"/"+name, function(response, status){
             if(status == "success") {
+                $("#component_name").val(response.self.name);
                 component = response;
                 $("#loading_component_setting").addClass('d-none').removeClass('d-block');
                 $("#component_setting_form_container").addClass('d-block').removeClass('d-none');
@@ -340,13 +387,11 @@ $('#component').change(function(){
                 $("#component_tab").click();
             }            
         });
-    } else {
-        $(this).val($(this).attr("data-selected"));
     }
-});
+}
 $("#display_property").change(function(){
     if($(this).val()) {
-        if(typeof json["component_name"] !== 'undefined') {
+        if(!$.isEmptyObject(component) && typeof component.self !== 'undefined') {
             $("#display_property_"+$(this).val()+"_panel").addClass('d-block').removeClass('d-none');
         } else {
             alert("No Component Selected");
@@ -355,13 +400,69 @@ $("#display_property").change(function(){
 });
 $(".display_property_form").submit(function (e) {
     e.preventDefault();
-    var formData = $(this).serializeArray();
-    var property_name = $(this).attr("property-name");
-    json["classes"][property_name] = [];
-    for(var i = 0; i < formData.length; i++) {
-        json["classes"][property_name].push(formData[i].value);
+    var node = $("#component_setting_panel").attr("data-node");
+    var key = "";
+    var panel = "";
+    if(typeof node !== 'undefined' && typeof component[((node == "children")?'child':node)] !== "undefined") {
+        if(node == "children") {
+            panel = "#child_tab";
+        } else if( node == "self") {
+            panel = "#component_tab";
+        } else if (node == "child") {
+            panel = "#child_tab";
+        }
+        else panel = "#parent_tab";
+        var formData = $(this).serializeArray();
+        var classes = {};
+        var tempClasses = {};
+        var finalClasses;
+        for(var i = 0; i < formData.length; i++) {
+            classes[formData[i].value] = "-";
+        }
+        if(node == "children") {
+            $.each(component.child, function(key_, value){
+                tempClasses = classes;
+                $.each(value.classes, function(k, v){
+                    tempClasses[v] = "-";
+                });
+                finalClasses = [];
+                $.each(tempClasses, function(c, v){
+                    finalClasses.push(c);
+                });
+                setter("child", "classes", finalClasses, key_);
+            });
+        } else {
+            if(node == "child") {
+                key = $("#component_setting_panel").attr("data-key");
+                if(typeof key !== 'undefined' && typeof component.child[key] !== "undefined") {
+                    tempClasses = classes;
+                    $.each(component.child[key].classes, function(k, v){
+                        tempClasses[v] = "-";
+                    });
+                    finalClasses = [];
+                    $.each(tempClasses, function(c, v){
+                        finalClasses.push(c);
+                    });
+                    setter("child", "classes", finalClasses, key);
+                }
+            } else {
+                tempClasses = classes;
+                $.each(component[node].classes, function(k, v){
+                    tempClasses[v] = "-";
+                });
+                finalClasses = [];
+                $.each(tempClasses, function(c, v){
+                    finalClasses.push(c);
+                });
+                setter(node, "classes", finalClasses, key);
+            }
+        }
+        $(panel).click();
+        if(node == "child")
+        $("a[data-name='loadChildSetting'][data-key='"+key+"']").click();
+        loadComponent();
     }
-    $("#display_property_"+property_name).collapse("hide");
+    $("#display_property_"+$(this).attr("property-name")).collapse("hide");
 });
 $("#Display_value").change(function(){
     var screen = $("#Display_screen").val();
@@ -517,7 +618,8 @@ $('#component_setting a[data-toggle="tab"]').click(function () {
     var setting = "";
     display.html("<div class=\"m-2 p-2\"><i class=\"fa fa-gear\"></i> No Settings to display.</div>");
     if(this.id == "parent_tab") {
-        if(typeof component.parent != "undefined") {
+        $("#component_setting_panel").attr("data-node","parent");
+        if(typeof component.parent !== "undefined") {
             highlight.attr("data-highlight","parent");
             setting = settingFormData("parent", component.parent);
             display.html('<form id="component_setting_form">'+setting+'<button type="submit" class="btn btn-primary">Preview</button></form>');
@@ -528,10 +630,17 @@ $('#component_setting a[data-toggle="tab"]').click(function () {
                 $("#component_setting").collapse("hide");
             });
         } else {
-            display.append("Add Parent");
+            display.append('<a class="p-1 text-success" title="Add Wrapper to Component" href="#" id="newParent"><i class="fa fa-plus-square"></i> Add Wrapper</a>');
+            $("#newParent").click(function(e){
+                e.preventDefault();
+                addNewElement("parent");
+                $("#parent_tab").click();
+                loadComponent();
+            });
         }
     } else if(this.id == "component_tab") {
-        if(typeof component.self != "undefined") {
+        $("#component_setting_panel").attr("data-node","self");
+        if(typeof component.self !== "undefined") {
             highlight.attr("data-highlight","self");
             setting = settingFormData("self", component.self);
             display.html('<form id="component_setting_form">'+setting+'<button type="submit" class="btn btn-primary">Preview</button></form>');
@@ -543,32 +652,39 @@ $('#component_setting a[data-toggle="tab"]').click(function () {
             });
         }
     } else if(this.id == "child_tab") {
-        if(typeof component.child != "undefined") {
+        $("#component_setting_panel").attr("data-node","children");
+        if(typeof component.child !== "undefined") {            
             display.html("");
             var i = 0;
             setting = '<div class="d-flex flex-wrap mb-3">';
-            $.each(component.child, function(key, child) {                
-                setting += '<div class="d-flex ml-1 border border-info">';
+            $.each(component.child, function(key, child) {
+                setting += '<div class="d-flex ml-0 m-1 border border-info">';
                 setting += '<div class="mr-auto py-1 px-2"><b>'+child.start_tag.replace("<","").replace(">","")+'</b>_<small>'+child.id+'</small></div>';
                 if(i)
-                setting += '<a class="p-1 child_pointer" title="Shift" href="#" id="orderLeft" data-key="'+ key +'"><i class="fa fa-arrow-left"></i></a>';
+                setting += '<a class="p-1 child_pointer" title="Shift" href="#" data-name="orderLeft" data-key="'+ key +'"><i class="fa fa-angle-double-left"></i></a>';
                 //setting += '<div class="d-flex flex-column">';
-                setting += '<a class="p-1 child_pointer" title="Duplicate" href="#" id="duplicate" data-key="'+ key +'"><i class="fa fa-plus-square"></i></a>';
-                setting += '<a class="p-1 child_pointer" title="Remove" href="#" id="remove" data-key="'+ key +'"><i class="fa fa-minus-square"></i></a>';
+                setting += '<a class="p-1 child_pointer text-warning" title="Duplicate" href="#" data-name="duplicate" data-key="'+ key +'"><i class="fa fa-copy"></i></a>';
+                setting += '<a class="p-1 child_pointer text-danger" title="Remove" href="#" data-name="remove" data-key="'+ key +'"><i class="fa fa-trash-o"></i></a>';
                 //setting += '</div>';
-                setting += '<a class="p-1 child_pointer" title="Setting" href="#" id="loadChildSetting" data-key="'+ key +'"><i class="fa fa-gear"></i></a>';
+                setting += '<a class="p-1 child_pointer" title="Setting" href="#" data-name="loadChildSetting" data-key="'+ key +'"><i class="fa fa-gears"></i></a>';
                 setting += '</div>';
                 i++;
             });
-            setting += '</div>';
+            //setting += '<div class="d-flex ml-0 m-1 border bg-warning text-light">';
+            //setting += '<div class="mr-auto py-1 px-2">new</div>';
+            setting += '<a class="p-1 child_pointer text-success" title="Create Child" href="#" data-name="newChild"><i class="fa fa-plus-square"></i></a>';
+            //setting += '</div>';
+            //setting += '</div>';
             display.append(setting);
             display.find('[data-toggle="popover"]').popover();
             $(".child_pointer").click(function(e){
                 e.preventDefault();
-                if(this.id == "orderLeft") {
+                $("#component_setting_panel").attr("data-node","child");
+                $("#component_setting_panel").attr("data-key",$(this).attr("data-key"));
+                if($(this).attr("data-name") == "orderLeft") {
                     childOrder($(this).attr("data-key"));
                     $("#child_tab").click();
-                } else if(this.id == "loadChildSetting") {
+                } else if($(this).attr("data-name") == "loadChildSetting") {
                     var display = $("#component_setting_form_subcontainer");
                     var highlight = $("#highlight");
                     highlight.attr("data-highlight","child");
@@ -584,10 +700,14 @@ $('#component_setting a[data-toggle="tab"]').click(function () {
                         updateComponent(formData, "child", $(this).attr("data-key"));
                         $("#component_setting").collapse("hide");
                     });
-                } else if(this.id == "duplicate") {
+                } else if($(this).attr("data-name") == "duplicate") {
                     duplicateChildElement($(this).attr("data-key"));
-                } else if(this.id == "remove") {
+                } else if($(this).attr("data-name") == "remove") {
                     setter("child", "visibility", "none", key = $(this).attr("data-key"));
+                    $("#child_tab").click();
+                    loadComponent();
+                } else if($(this).attr("data-name") == "newChild") {
+                    addNewElement("child");
                     $("#child_tab").click();
                     loadComponent();
                 }
@@ -597,8 +717,15 @@ $('#component_setting a[data-toggle="tab"]').click(function () {
    if(highlight.is(":checked"))
    loadComponent();
 });
+$("#highlight").change(function() {
+    loadComponent();
+});
+$("#loadstack").change(function() {
+    if(!$.isEmptyObject(stack) && typeof stack.self !== 'undefined') {
+    loadComponent();
+    }
+});
 function updateComponent(formData, node, childkey="") {
-    console.log(formData);
     var tempSetting = {attributes:{},classes:[]};
     for(var i = 0; i < formData.length; i++) {
         if(formData[i].name == "style" || formData[i].name == "attributes") {

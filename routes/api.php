@@ -7,3 +7,4 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 });
 
 Route::get('/load_component/{name?}', 'ComponentController@loadComponent')->name("LoadComponent");
+Route::get('/load_components', 'ComponentController@loadComponents')->name("LoadComponents");

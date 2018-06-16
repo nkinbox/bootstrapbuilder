@@ -20,6 +20,7 @@
     </div>
     {{-- Display Property @@ END --}}
 </div>
+<div class="py-4 border bg-white rounded d-none" id="basicComponentContainer" style="margin: 20px 10px 800px 10px"></div>
 <div class="py-4" id="component_display"></div>
 <div class="fixed-bottom bg-light">
     <div class="toggler d-flex justify-content-center bg-primary p-1" data-toggle="collapse" data-target="#collapse_1" role="button">
@@ -27,39 +28,18 @@
     </div>
     <div id="collapse_1" class="container p-2 collapse in">
             <div class="row">
-                <div class="col-md-2">
+                <div class="col-md-4">
                     <div class="form-group">
                         <label for="component">Component</label>
-                        <select class="form-control" id="component" data-selected="0">
-                            <option value="">Select Component</option>
-                            @foreach($basicComponents as $component)
-                            <option>{{ $component->name }}</option>
-                            @endforeach
-                            <option>Grid</option>
-                            <option>Alerts</option>
-                            <option>Badge</option>
-                            <option>Breadcrumb</option>
-                            <option>Buttons</option>
-                            <option>ButtonsGroup</option>
-                            <option>Card</option>
-                            <option>Carousel</option>
-                            <option>Collapse</option>
-                            <option>Dropdowns</option>
-                            <option>Forms</option>
-                            <option>InputGroup</option>
-                            <option>Jumbotron</option>
-                            <option>ListGroup</option>
-                            <option>Modal</option>
-                            <option>Navs</option>
-                            <option>Navbar</option>
-                            <option>Popovers</option>
-                            <option>Images</option>
-                            <option>Figures</option>
-                            <option>Tables</option>
-                        </select>
+                        <div class="input-group mb-3">
+                            <input id="component_name" type="text" class="form-control" placeholder="Select Component" disabled>
+                            <div class="input-group-append">
+                                <button id="BrowseComponents" class="btn btn-outline-secondary" type="button"><i class="fa fa-cloud-download"></i></button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-4">
                     <div class="form-group">
                         <label for="display_property">Display Property</label>
                         <select class="form-control" id="display_property">
@@ -77,23 +57,26 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-4">
                     <div>
                         <label><input type="checkbox" id="highlight"><i class="fa fa-object-ungroup"></i></label>
                     </div>
+                    <div>
+                        <label><input type="checkbox" id="loadstack"><i class="fa fa-cubes"></i></label>
+                    </div>
                 </div>
-                <div class="col-md-2">col</div>
             </div>
     </div>
 </div>
 @endsection
 @push("scripts")
 <script>
-    var json = {};
     var component = {};
-    var stacked = {};
+    var stack = {};
+    var ele_id = 0;
     var url = {
-        "loadComponent":"{{ route('LoadComponent') }}"
+        "loadComponent":"{{ route('LoadComponent') }}",
+        "loadComponents":"{{ route('LoadComponents') }}"
     }
 </script>
 @endpush
@@ -106,13 +89,13 @@
     #component_display {
         margin-bottom: 200px;
     }
-    .highlighter {
+    #component_display .highlighter {
         box-shadow: 0 0 5px 1px #2e5bff inset;
     }
-    .Removed {
+    #component_display .Removed {
         box-shadow: 0 0 5px 1px #e20000 inset;
     }
-    .Conditional {
+    #component_display .Conditional {
         box-shadow: 0 0 5px 1px #23e200 inset;
     }
 </style>
