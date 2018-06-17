@@ -1,4 +1,4 @@
-function element_renderer(ele, highlight = false, recrusive = false) {
+function element_renderer(ele, highlight = false, recrusive = false, pointer = "") {
     ele_id++;
     var element = $(ele.start_tag+ele.end_tag);
     var style = $("<style></style>");
@@ -31,38 +31,45 @@ function element_renderer(ele, highlight = false, recrusive = false) {
     if(highlight) {
         element.addClass("highlighter");
     }
+    if(pointer)element.addClass(pointer.replace(".","_"));
     if(ele.content_type == "static" || ele.content_type == "variable")
-    element.html(((typeof ele.content == "string")?ele.content:'This is some TEXT to fill element.'));
+    element.html(((typeof ele.content == "string" && ele.content != "")?ele.content:'@@'+ele.content_type+'@@'));
     else {
-        if(ele.content != null && typeof ele.content == "object" && recrusive) {
+        if(ele.content != null && typeof ele.content === "object" && recrusive) {
             element.html("");
-            element.append(component_renderer(ele.content));
+            element.append(component_renderer(ele.content, recrusive, pointer));
+        } else if(recrusive && pointer != "" && !$.isEmptyObject(component) && pointer == stackPointer) {
+            element.append(component_renderer(component));
         } else
         element.html("<div class='p-5 text-center text-light bg-info'>@@"+ele.content_type+"@@</div>");
     }
     return element;
 }
-function component_renderer(comp, recrusive = false) {
+function component_renderer(comp, recrusive = false, pointer = "") {
     var highlight = $("#highlight");
     var component_, rendered = [], i = 0;
+    if(pointer) pointer += '.';
     $.each(comp, function(key, ele) {
-        if(key == "basic") {
-            return true;
-        } else if(key == "child") {
+        if(key == "child") {
             rendered[key] = [];
             $.each(ele, function(c_key, c_ele){
-                if(highlight.is(':checked') && highlight.attr("data-highlight") == "child" && highlight.attr("data-childKey") == c_key)
-                rendered[key][i] = element_renderer(c_ele, true, recrusive);
+                if(!recrusive && highlight.is(':checked') && highlight.attr("data-highlight") == "child" && highlight.attr("data-childKey") == c_key)
+                rendered[key][i] = element_renderer(c_ele, true, recrusive, pointer+c_key);
                 else
-                rendered[key][i] = element_renderer(c_ele, false, recrusive);
+                rendered[key][i] = element_renderer(c_ele, false, recrusive, pointer+c_key);
                 i++;
             });
-        } else {
+        } else if(key == "self") {
             if(highlight.is(':checked') && highlight.attr("data-highlight") == key)
-            rendered[key] = element_renderer(ele, true, recrusive);
+            rendered[key] = element_renderer(ele, true, recrusive, ((typeof comp.child === "undefined")?pointer+'self':''));
             else
             rendered[key] = element_renderer(ele, false, recrusive);
-        } 
+        } else {
+        if(highlight.is(':checked') && highlight.attr("data-highlight") == key)
+        rendered[key] = element_renderer(ele, true, recrusive);
+        else
+        rendered[key] = element_renderer(ele, false, recrusive);
+    } 
     });    
     if(typeof rendered['child'] !== "undefined") {
         rendered['self'].html("");
@@ -81,9 +88,9 @@ function loadComponent() {
     var display = $("#component_display");
     display.html("");
     if($("#loadstack").is(':checked') && !$.isEmptyObject(stack) && typeof stack.self !== 'undefined')
-    display.append(component_renderer(stack, true));
+    display.append(component_renderer(stack, true, ((typeof stack.child === "undefined")?'self':'')));
     else
-    display.append(component_renderer(component));
+    display.append(component_renderer(component, false,  ((typeof component.child === "undefined")?'self':'')));
     display.find('[data-toggle="popover"]').popover();
 }
 function getter(node, property, key) {
@@ -176,16 +183,10 @@ function settingFormData(node, element) {
         setting += '<option selected>variable</option>';
         else
         setting += '<option>variable</option>';
-        if(element.content_type == "component")
-        setting += '<option selected>component</option>';
+        if(element.content_type == "element")
+        setting += '<option selected>element</option>';
         else
-        setting += '<option>component</option>';
-        if(node == "self") {
-            if(element.content_type == "element")
-            setting += '<option selected>element</option>';
-            else
-            setting += '<option>element</option>';
-        }
+        setting += '<option>element</option>';
         setting += '</select>';
         setting += '</div>';
         setting += '<div class="form-group">';
@@ -313,7 +314,7 @@ function addChildForm(childnumber) {
     setting += '<select class="form-control" name="content_type">';
     setting += '<option selected>static</option>';
     setting += '<option>variable</option>';
-    setting += '<option>component</option>';
+    setting += '<option>element</option>';
     setting += '</select>';
     setting += '</div>';
     setting += '<div class="form-group">';
@@ -392,7 +393,11 @@ function componentToEditor(name = "") {
 $("#display_property").change(function(){
     if($(this).val()) {
         if(!$.isEmptyObject(component) && typeof component.self !== 'undefined') {
-            $("#display_property_"+$(this).val()+"_panel").addClass('d-block').removeClass('d-none');
+            var ele = $("#display_property_"+$(this).val()+"_panel");
+            if(ele.hasClass("d-none")) {
+                ele.addClass('d-block').removeClass('d-none');
+                ele.appendTo("#setting_panel");
+            }
         } else {
             alert("No Component Selected");
         }
@@ -400,6 +405,7 @@ $("#display_property").change(function(){
 });
 $(".display_property_form").submit(function (e) {
     e.preventDefault();
+    $(window).scrollTop(0);
     var node = $("#component_setting_panel").attr("data-node");
     var key = "";
     var panel = "";
@@ -622,11 +628,13 @@ $('#component_setting a[data-toggle="tab"]').click(function () {
         if(typeof component.parent !== "undefined") {
             highlight.attr("data-highlight","parent");
             setting = settingFormData("parent", component.parent);
-            display.html('<form id="component_setting_form">'+setting+'<button type="submit" class="btn btn-primary">Preview</button></form>');
+            display.html('<form id="component_setting_form">'+setting+'<label class="pull-right"><input type="checkbox" id="previewCollapse" checked> Collapse</label><button type="submit" class="btn btn-primary">Preview</button></form>');
             $("#component_setting_form").submit(function (e) {
                 e.preventDefault();
+                $(window).scrollTop(0);
                 var formData = $(this).serializeArray();
                 updateComponent(formData, "parent");
+                if($("#previewCollapse").is(":checked"))
                 $("#component_setting").collapse("hide");
             });
         } else {
@@ -643,11 +651,13 @@ $('#component_setting a[data-toggle="tab"]').click(function () {
         if(typeof component.self !== "undefined") {
             highlight.attr("data-highlight","self");
             setting = settingFormData("self", component.self);
-            display.html('<form id="component_setting_form">'+setting+'<button type="submit" class="btn btn-primary">Preview</button></form>');
+            display.html('<form id="component_setting_form">'+setting+'<label class="pull-right"><input type="checkbox" id="previewCollapse" checked> Collapse</label><button type="submit" class="btn btn-primary">Preview</button></form>');
             $("#component_setting_form").submit(function (e) {
                 e.preventDefault();
+                $(window).scrollTop(0);
                 var formData = $(this).serializeArray();
                 updateComponent(formData, "self");
+                if($("#previewCollapse").is(":checked"))
                 $("#component_setting").collapse("hide");
             });
         }
@@ -691,13 +701,15 @@ $('#component_setting a[data-toggle="tab"]').click(function () {
                     highlight.attr("data-childKey",$(this).attr("data-key"));
                     var setting = settingFormData("child", component.child[$(this).attr("data-key")]);
                     display.find("#component_setting_form").remove();
-                    display.append('<form id="component_setting_form" data-key="'+$(this).attr("data-key")+'">'+setting+'<button type="submit" class="btn btn-primary">Preview</button></form>');
+                    display.append('<form id="component_setting_form" data-key="'+$(this).attr("data-key")+'">'+setting+'<label class="pull-right"><input type="checkbox" id="previewCollapse" checked> Collapse</label><button type="submit" class="btn btn-primary">Preview</button></form>');
                     if(highlight.is(":checked"))
                     loadComponent();
                     $("#component_setting_form").submit(function (e) {
                         e.preventDefault();
+                        $(window).scrollTop(0);
                         var formData = $(this).serializeArray();
                         updateComponent(formData, "child", $(this).attr("data-key"));
+                        if($("#previewCollapse").is(":checked"))
                         $("#component_setting").collapse("hide");
                     });
                 } else if($(this).attr("data-name") == "duplicate") {
@@ -750,3 +762,96 @@ function updateComponent(formData, node, childkey="") {
 function newComponent(formData) {
 
 }
+function stackSettingRender(container, display, pointer, key, val) {
+    if(key == "child") {
+        display.html("");
+        $.each(val, function(k, v){
+            if(v.content_type == "element") {
+                display.prepend('<button class="btn btn-default" type="button" class="selectStackIndex" value="'+
+                pointer+k
+                +'"><i class="fa fa-cube"></i> '+v.start_tag.replace("<","").replace(">","")+'_'+v.id+'</button>');
+            }
+        });
+        container.append(display.clone());
+        $.each(val, function(k, v){
+            if(v.content_type == "element") {
+                if(v.content != null && typeof v.content === "object") {
+                    if(typeof v.content.child !== "undefined" && v.content.child != null && typeof v.content.child === "object")
+                        stackSettingRender(container, display, pointer+k+'.', "child", v.content.child);
+                    else
+                        stackSettingRender(container, display, pointer+k+'.', "self", v.content.self);
+                }
+            }
+        });
+    } else if(key == "self" && val.content_type == "element") {
+        display.html("");
+        display.prepend('<button class="btn btn-default" type="button" class="selectStackIndex" value="'+
+        pointer+"self"
+        +'"><i class="fa fa-cube"></i> '+val.start_tag.replace("<","").replace(">","")+'_'+val.id+'</button>');
+        container.append(display.clone());
+        if(val.content != null && typeof val.content === "object") {
+            if(typeof val.content.child !== "undefined" && val.content.child != null && typeof val.content.child === "object")
+                stackSettingRender(container, display, pointer+"self"+'.', "child", val.content.child);
+            else
+                stackSettingRender(container, display, pointer+"self"+'.', "self", val.content.self);
+        }
+    }
+}
+$("#savestack").click(function(){
+    $(this).blur();
+    if($(this).is(":disabled")) return;
+    $(this).prop("disabled", false);
+});
+$("#showstack").click(function(){
+    $(this).blur();
+    if($.isEmptyObject(stack) || typeof stack.self !== "object"){
+        alert("No component in Stack.");
+        return;
+    }
+    var ele = $("#stack_panel");
+    if(ele.hasClass("d-none")) {
+        ele.addClass('d-block').removeClass('d-none');
+        ele.appendTo("#setting_panel");
+    }
+    var container = $('<div id="stackBoxView" class="d-flex flex-column my-2"></div>');
+    var display = $('<div class="d-flex justify-content-center"></div>');
+    if(typeof stack.child !== "undefined" && stack.child != null && typeof stack.child === "object")
+        stackSettingRender(container, display, "", "child", stack.child);
+    else
+        stackSettingRender(container, display, "", "self", stack.self);
+        //stackPointer .replace(/^,/, '')
+
+    stackPointer = ''+container.find("button:last").removeClass("btn-default").addClass("btn-success").val();
+    $("#display_stack").html("").append(container);
+    $(".selectStackIndex").click(function(){
+        $(this).blur();
+        stackPointer = ''+$(this).val();
+        $(".selectStackIndex").removeClass("btn-success").addClass("btn-default");
+        $(this).removeClass("btn-default").addClass("btn-success");
+    });
+});
+$("#addtostack").click(function(){
+    $(this).blur();
+    if($.isEmptyObject(component)){
+        alert("No Component to Add in Stack");
+        return;
+    }
+    if($.isEmptyObject(stack)) {
+        stack = component;
+    } else if(stackPointer != "") {
+        var temp = stack, pointer = stackPointer.split(".");
+        pointer.forEach(function(index, key) {
+            if(index == "self"){
+                temp = temp.self;
+            } else {
+                temp = temp.child[index];
+            }
+            if(key == (pointer.length - 1) && temp.content_type == "element")
+            temp.content = component;
+        });
+    }
+    component = {};
+    $("#component_display").html("");
+    $("#component_name").val("");
+    $("#component_tab").click();
+});

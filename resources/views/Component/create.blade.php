@@ -3,6 +3,21 @@
 <div id="setting_panel" class="d-flex flex-row-reverse p-1">
 @include('Component.componentSetting')
 @include('Bootstrap.utilities')
+    {{-- Stack select START --}}
+    <div id="stack_panel" class="position-relative w-25 d-none ml-1">
+        <div class="d-flex align-items-center bg-warning p-1">
+            <div class="mr-auto"><span class="fa fa-cubes"></span> Component Stack</div>
+            <div class="toggler pr-1" data-toggle="collapse" data-target="#display_stack" role="button">
+                <i class="fa fa-toggle-down"></i>
+            </div>
+            <div class="showhide" data-target="#stack_panel">
+                <i class="fa fa-window-close-o"></i>
+            </div>
+        </div>
+        <div id="display_stack" class="collapse border container bg-light position-absolute w-100" style="right:0">
+        </div>
+    </div>
+    {{-- Stack select END --}}
     {{-- Display Property @@ START --}}
     <div id="display_property_@@_panel" class="position-relative w-25 d-none ml-1">
         <div class="d-flex align-items-center bg-warning p-1">
@@ -58,11 +73,23 @@
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div>
-                        <label><input type="checkbox" id="highlight"><i class="fa fa-object-ungroup"></i></label>
-                    </div>
-                    <div>
-                        <label><input type="checkbox" id="loadstack"><i class="fa fa-cubes"></i></label>
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div>
+                                <label title="Highlight Selected Element"><input type="checkbox" id="highlight"><i class="fa fa-object-ungroup"></i></label>
+                            </div>
+                            <div>
+                                <label title="Load Component ALL/Current"><input type="checkbox" id="loadstack"><i class="fa fa-cubes"></i></label>
+                            </div>
+                            <div>
+                                <label title="Add to Component Stack"><button class="btn btn-default" type="button" id="addtostack"><i class="fa fa-window-restore"></i></button></label>
+                                <label title="Show Component Stack"><button class="btn btn-warning" type="button" id="showstack"><i class="fa fa-sitemap"></i></button></label>
+                                <label title="Save Component Stack"><button class="btn btn-success" type="button" id="savestack" disabled><i class="fa fa-save"></i></button></label>
+                            </div>
+                        </div>
+                        <div>
+                            
+                        </div>
                     </div>
                 </div>
             </div>
@@ -73,6 +100,7 @@
 <script>
     var component = {};
     var stack = {};
+    var stackPointer = "";
     var ele_id = 0;
     var url = {
         "loadComponent":"{{ route('LoadComponent') }}",

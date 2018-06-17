@@ -20,7 +20,7 @@ class CreateComponentsTable extends Migration
             $table->enum("category",["basic", "element", "component"]);
             $table->enum("node", ["parent", "self", "child"]);
             $table->enum("visibility", ["auth", "guest", "show", "none"])->default("show");
-            $table->enum("content_type", ["static", "variable", "component", "element"]);
+            $table->enum("content_type", ["static", "variable", "element"]);
             $table->unsignedInteger("child_order")->default(1);
             $table->unsignedInteger("nested_component")->default(null)->nullable();
             $table->string("loop_source", "200")->default(null)->nullable();

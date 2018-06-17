@@ -109,11 +109,8 @@ class ComponentController extends Controller
     public function loadComponent($name = null, $json = true) {
         $components = Components::where("name", $name)->orderBy("child_order")->get();
         $response = [];
-        if($json)
-        $response["basic"] = 0;
         foreach($components as $key => $component) {
             if($component->node == "self" && $component->category == "basic" && $json)
-            $response["basic"] = 1;
             $components[$key]->var_attributes = json_decode($component->var_attributes);
             $components[$key]->classes = json_decode($component->classes);
             $components[$key]->attributes = json_decode($component->attributes);
@@ -133,11 +130,9 @@ class ComponentController extends Controller
         $response_ = [];
         foreach($basiccomponents as $key => $basiccomponent) {
                 $response = [];
-                $response["basic"] = 0;
                 $components = Components::where("name", $basiccomponent->name)->orderBy("child_order")->get();
                 foreach($components as $key => $component) {
                 if($component->node == "self" && $component->category == "basic")
-                $response["basic"] = 1;
                 if($component->nested_component != null) {
                     $nested = Components::find($component->nested_component);
                     $components[$key]->content = $this->loadComponent($nested->name)->original;
