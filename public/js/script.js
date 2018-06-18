@@ -1,4 +1,4 @@
-function element_renderer(ele, highlight = false, recrusive = false, pointer = "") {
+function element_renderer(ele, highlight = false, pointer = "") {
     ele_id++;
     var element = $(ele.start_tag+ele.end_tag);
     var style = $("<style></style>");
@@ -28,47 +28,47 @@ function element_renderer(ele, highlight = false, recrusive = false, pointer = "
         element.attr("title","Visibility");
         element.attr("data-placement","bottom");
     }
-    if(highlight) {
+    if(highlight && pointer == "") {
+        element.addClass("highlighter");
+    } else if(pointer != "" && pointer == stackPointer) {
         element.addClass("highlighter");
     }
-    if(pointer)element.addClass(pointer.replace(".","_"));
     if(ele.content_type == "static" || ele.content_type == "variable")
     element.html(((typeof ele.content == "string" && ele.content != "")?ele.content:'@@'+ele.content_type+'@@'));
     else {
-        if(ele.content != null && typeof ele.content === "object" && recrusive) {
+        if(ele.content != null && typeof ele.content === "object" && pointer) {
             element.html("");
-            element.append(component_renderer(ele.content, recrusive, pointer));
-        } else if(recrusive && pointer != "" && !$.isEmptyObject(component) && pointer == stackPointer) {
-            element.append(component_renderer(component));
+            element.append(component_renderer(ele.content, pointer));
+        } else if(pointer != "" && !$.isEmptyObject(component) && pointer == stackPointer) {
+            element.append(component_renderer(component, false));
         } else
         element.html("<div class='p-5 text-center text-light bg-info'>@@"+ele.content_type+"@@</div>");
     }
     return element;
 }
-function component_renderer(comp, recrusive = false, pointer = "") {
+function component_renderer(comp, pointer = "") {
     var highlight = $("#highlight");
     var component_, rendered = [], i = 0;
-    if(pointer) pointer += '.';
     $.each(comp, function(key, ele) {
         if(key == "child") {
             rendered[key] = [];
             $.each(ele, function(c_key, c_ele){
-                if(!recrusive && highlight.is(':checked') && highlight.attr("data-highlight") == "child" && highlight.attr("data-childKey") == c_key)
-                rendered[key][i] = element_renderer(c_ele, true, recrusive, pointer+c_key);
+                if(highlight.is(':checked') && highlight.attr("data-highlight") == "child" && highlight.attr("data-childKey") == c_key)
+                rendered[key][i] = element_renderer(c_ele, !$("#loadstack").is(":checked"), (($("#loadstack").is(":checked"))?((pointer)?pointer+'.'+c_key:((typeof pointer === "boolean")?'':c_key)):''));
                 else
-                rendered[key][i] = element_renderer(c_ele, false, recrusive, pointer+c_key);
+                rendered[key][i] = element_renderer(c_ele, false, (($("#loadstack").is(":checked"))?((pointer)?pointer+'.'+c_key:((typeof pointer === "boolean")?'':c_key)):''));
                 i++;
             });
         } else if(key == "self") {
             if(highlight.is(':checked') && highlight.attr("data-highlight") == key)
-            rendered[key] = element_renderer(ele, true, recrusive, ((typeof comp.child === "undefined")?pointer+'self':''));
+            rendered[key] = element_renderer(ele, !$("#loadstack").is(":checked"),(($("#loadstack").is(":checked"))?((pointer)?pointer+'.self':((typeof pointer === "boolean")?'':'self')):''));
             else
-            rendered[key] = element_renderer(ele, false, recrusive);
+            rendered[key] = element_renderer(ele, false, (($("#loadstack").is(":checked"))?((pointer)?pointer+'.self':((typeof pointer === "boolean")?'':'self')):''));
         } else {
         if(highlight.is(':checked') && highlight.attr("data-highlight") == key)
-        rendered[key] = element_renderer(ele, true, recrusive);
+        rendered[key] = element_renderer(ele, true);
         else
-        rendered[key] = element_renderer(ele, false, recrusive);
+        rendered[key] = element_renderer(ele, false);
     } 
     });    
     if(typeof rendered['child'] !== "undefined") {
@@ -88,18 +88,10 @@ function loadComponent() {
     var display = $("#component_display");
     display.html("");
     if($("#loadstack").is(':checked') && !$.isEmptyObject(stack) && typeof stack.self !== 'undefined')
-    display.append(component_renderer(stack, true, ((typeof stack.child === "undefined")?'self':'')));
+    display.append(component_renderer(stack));
     else
-    display.append(component_renderer(component, false,  ((typeof component.child === "undefined")?'self':'')));
+    display.append(component_renderer(component));
     display.find('[data-toggle="popover"]').popover();
-}
-function getter(node, property, key) {
-    var setting;
-    if(node == "child")
-    setting = component[node][key];
-    else
-    setting = component[node];
-    return setting[property];    
 }
 function setter(node, property, value, key = "") {
     if(node == "child") {
@@ -663,28 +655,25 @@ $('#component_setting a[data-toggle="tab"]').click(function () {
         }
     } else if(this.id == "child_tab") {
         $("#component_setting_panel").attr("data-node","children");
-        if(typeof component.child !== "undefined") {            
+        // if(typeof component.child !== "undefined") {
             display.html("");
             var i = 0;
             setting = '<div class="d-flex flex-wrap mb-3">';
-            $.each(component.child, function(key, child) {
-                setting += '<div class="d-flex ml-0 m-1 border border-info">';
-                setting += '<div class="mr-auto py-1 px-2"><b>'+child.start_tag.replace("<","").replace(">","")+'</b>_<small>'+child.id+'</small></div>';
-                if(i)
-                setting += '<a class="p-1 child_pointer" title="Shift" href="#" data-name="orderLeft" data-key="'+ key +'"><i class="fa fa-angle-double-left"></i></a>';
-                //setting += '<div class="d-flex flex-column">';
-                setting += '<a class="p-1 child_pointer text-warning" title="Duplicate" href="#" data-name="duplicate" data-key="'+ key +'"><i class="fa fa-copy"></i></a>';
-                setting += '<a class="p-1 child_pointer text-danger" title="Remove" href="#" data-name="remove" data-key="'+ key +'"><i class="fa fa-trash-o"></i></a>';
-                //setting += '</div>';
-                setting += '<a class="p-1 child_pointer" title="Setting" href="#" data-name="loadChildSetting" data-key="'+ key +'"><i class="fa fa-gears"></i></a>';
-                setting += '</div>';
-                i++;
-            });
-            //setting += '<div class="d-flex ml-0 m-1 border bg-warning text-light">';
-            //setting += '<div class="mr-auto py-1 px-2">new</div>';
+            if(typeof component.child !== "undefined") {
+                $.each(component.child, function(key, child) {
+                    setting += '<div class="d-flex ml-0 m-1 border border-info">';
+                    setting += '<div class="mr-auto py-1 px-2"><b>'+child.start_tag.replace("<","").replace(">","")+'</b>_<small>'+child.id+'</small></div>';
+                    if(i)
+                    setting += '<a class="p-1 child_pointer" title="Shift" href="#" data-name="orderLeft" data-key="'+ key +'"><i class="fa fa-angle-double-left"></i></a>';
+                    setting += '<a class="p-1 child_pointer text-warning" title="Duplicate" href="#" data-name="duplicate" data-key="'+ key +'"><i class="fa fa-copy"></i></a>';
+                    setting += '<a class="p-1 child_pointer text-danger" title="Remove" href="#" data-name="remove" data-key="'+ key +'"><i class="fa fa-trash-o"></i></a>';
+                    setting += '<a class="p-1 child_pointer" title="Setting" href="#" data-name="loadChildSetting" data-key="'+ key +'"><i class="fa fa-gears"></i></a>';
+                    setting += '</div>';
+                    i++;
+                });
+            }
             setting += '<a class="p-1 child_pointer text-success" title="Create Child" href="#" data-name="newChild"><i class="fa fa-plus-square"></i></a>';
-            //setting += '</div>';
-            //setting += '</div>';
+            setting += '</div>';
             display.append(setting);
             display.find('[data-toggle="popover"]').popover();
             $(".child_pointer").click(function(e){
@@ -724,7 +713,7 @@ $('#component_setting a[data-toggle="tab"]').click(function () {
                     loadComponent();
                 }
             });
-        }
+        // }
    }
    if(highlight.is(":checked"))
    loadComponent();
@@ -762,40 +751,40 @@ function updateComponent(formData, node, childkey="") {
 function newComponent(formData) {
 
 }
-function stackSettingRender(container, display, pointer, key, val) {
-    if(key == "child") {
-        display.html("");
-        $.each(val, function(k, v){
-            if(v.content_type == "element") {
-                display.prepend('<button class="btn btn-default" type="button" class="selectStackIndex" value="'+
-                pointer+k
-                +'"><i class="fa fa-cube"></i> '+v.start_tag.replace("<","").replace(">","")+'_'+v.id+'</button>');
-            }
-        });
-        container.append(display.clone());
-        $.each(val, function(k, v){
-            if(v.content_type == "element") {
-                if(v.content != null && typeof v.content === "object") {
-                    if(typeof v.content.child !== "undefined" && v.content.child != null && typeof v.content.child === "object")
-                        stackSettingRender(container, display, pointer+k+'.', "child", v.content.child);
+function stackSettingRender(ele, pointer = "") {
+    if(pointer) pointer += ".";
+    var node = $("<li></li>");
+    var branch;
+    if(typeof ele === "object" && ele != null) {
+        if(typeof ele.child === "object") {
+            node.append('<a href="#" data-pointer="'+pointer+'self" class="selectPointer">'+ele.self.start_tag.replace("<","").replace(">","")+'</b>_'+ele.self.id+'</a><ul></ul>');
+            $.each(ele.child, function(k, val){
+                branch = stackSettingRender(val.content, pointer+k);
+                if(branch) {
+                    node.find("ul").prepend(branch);
+                } else {
+                    if(val.content_type == "element")
+                    node.find("ul").prepend('<li><a href="#" data-pointer="'+pointer+k+'" class="selectPointer">'+val.start_tag.replace("<","").replace(">","")+'</b>_'+val.id+'</a></li>');
                     else
-                        stackSettingRender(container, display, pointer+k+'.', "self", v.content.self);
+                    node.find("ul").prepend('<li><a>'+val.start_tag.replace("<","").replace(">","")+'</b>_'+val.id+'</a></li>');
                 }
+            });
+        } else if(typeof ele.self === "object" && ele.self != null) {
+            if(typeof ele.self.content === "object" && ele.self.content != null) {
+                node.append('<a href="#" data-pointer="'+pointer+'self" class="selectPointer">'+ele.self.start_tag.replace("<","").replace(">","")+'</b>_'+ele.self.id+'</a><ul></ul>');
+                branch = stackSettingRender(ele.self.content, pointer+'self');
+                if(branch) {
+                    node.find("ul").append(branch);
+                }
+            } else {
+                if(ele.self.content_type == "element")
+                node.append('<a href="#" data-pointer="'+pointer+'self" class="selectPointer">'+ele.self.start_tag.replace("<","").replace(">","")+'</b>_'+ele.self.id+'</a>');
+                else
+                node.append('<a>'+ele.self.start_tag.replace("<","").replace(">","")+'</b>_'+ele.self.id+'</a>');
             }
-        });
-    } else if(key == "self" && val.content_type == "element") {
-        display.html("");
-        display.prepend('<button class="btn btn-default" type="button" class="selectStackIndex" value="'+
-        pointer+"self"
-        +'"><i class="fa fa-cube"></i> '+val.start_tag.replace("<","").replace(">","")+'_'+val.id+'</button>');
-        container.append(display.clone());
-        if(val.content != null && typeof val.content === "object") {
-            if(typeof val.content.child !== "undefined" && val.content.child != null && typeof val.content.child === "object")
-                stackSettingRender(container, display, pointer+"self"+'.', "child", val.content.child);
-            else
-                stackSettingRender(container, display, pointer+"self"+'.', "self", val.content.self);
         }
-    }
+    } else return false;
+    return node;
 }
 $("#savestack").click(function(){
     $(this).blur();
@@ -808,26 +797,19 @@ $("#showstack").click(function(){
         alert("No component in Stack.");
         return;
     }
-    var ele = $("#stack_panel");
-    if(ele.hasClass("d-none")) {
-        ele.addClass('d-block').removeClass('d-none');
-        ele.appendTo("#setting_panel");
-    }
-    var container = $('<div id="stackBoxView" class="d-flex flex-column my-2"></div>');
-    var display = $('<div class="d-flex justify-content-center"></div>');
-    if(typeof stack.child !== "undefined" && stack.child != null && typeof stack.child === "object")
-        stackSettingRender(container, display, "", "child", stack.child);
-    else
-        stackSettingRender(container, display, "", "self", stack.self);
-        //stackPointer .replace(/^,/, '')
-
-    stackPointer = ''+container.find("button:last").removeClass("btn-default").addClass("btn-success").val();
-    $("#display_stack").html("").append(container);
-    $(".selectStackIndex").click(function(){
-        $(this).blur();
-        stackPointer = ''+$(this).val();
-        $(".selectStackIndex").removeClass("btn-success").addClass("btn-default");
-        $(this).removeClass("btn-default").addClass("btn-success");
+    var tree = $(".tree");
+    tree.html("");
+    tree.append('<ul></ul>');
+    tree.find('ul').append(stackSettingRender(stack));
+    $("a[data-pointer='"+stackPointer+"']").css("background-color","#c7c7c7");
+    $("#stackTree").modal("show");
+    $(".selectPointer").click(function(e){
+        e.preventDefault();
+        $("#stackTree").modal("hide");
+        stackPointer = $(this).attr("data-pointer");
+        if($("#movetoeditor").is(":checked"))
+        nodeToEditor(stack);
+        loadComponent();
     });
 });
 $("#addtostack").click(function(){
@@ -838,20 +820,55 @@ $("#addtostack").click(function(){
     }
     if($.isEmptyObject(stack)) {
         stack = component;
+        component = {};
+        stackPointer = "";
+        $("#component_display").html("");
+        $("#component_name").val("");
+        $("#component_setting_panel").addClass('d-none').removeClass('d-block');
     } else if(stackPointer != "") {
         var temp = stack, pointer = stackPointer.split(".");
         pointer.forEach(function(index, key) {
+            if(typeof temp["content"] === "object" && temp["content"] != null)
+            temp = temp["content"];
             if(index == "self"){
-                temp = temp.self;
+                temp = temp["self"];
             } else {
-                temp = temp.child[index];
+                temp = temp["child"][index];
             }
-            if(key == (pointer.length - 1) && temp.content_type == "element")
-            temp.content = component;
+            if(key == (pointer.length - 1) && temp["content_type"] == "element") {
+                temp["content"] = component;
+            }
         });
+        component = {};
+        stackPointer = "";
+        $("#component_display").html("");
+        $("#component_name").val("");
+        $("#component_setting_panel").addClass('d-none').removeClass('d-block');
+    } else {
+        alert("No stack node selected.");
     }
-    component = {};
-    $("#component_display").html("");
-    $("#component_name").val("");
-    $("#component_tab").click();
+
 });
+function nodeToEditor(ele, pointer = "") {
+    if(!$.isEmptyObject(stack) && stackPointer != "") {
+        var temp = stack, pointer = stackPointer.split(".");
+        pointer.forEach(function(index, key) {
+            if(typeof temp["content"] === "object" && temp["content"] != null) {
+                component = temp["content"];
+                temp = temp["content"];
+            } else component = temp;
+            if(index == "self"){
+                temp = temp["self"];
+            } else {
+                temp = temp["child"][index];
+            }
+            if(key == (pointer.length - 1) && temp["content_type"] == "element") {
+                console.log(temp);
+                component = temp;
+            }
+        });
+        loadComponent();
+        $("#component_name").val("HTML Node");
+        $("#component_tab").click();
+    }
+}

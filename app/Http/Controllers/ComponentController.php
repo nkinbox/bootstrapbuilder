@@ -110,7 +110,10 @@ class ComponentController extends Controller
         $components = Components::where("name", $name)->orderBy("child_order")->get();
         $response = [];
         foreach($components as $key => $component) {
-            if($component->node == "self" && $component->category == "basic" && $json)
+            if($component->nested_component != null) {
+                $nested = Components::find($component->nested_component);
+                $components[$key]->content = $this->loadComponent($nested->name)->original;
+            }
             $components[$key]->var_attributes = json_decode($component->var_attributes);
             $components[$key]->classes = json_decode($component->classes);
             $components[$key]->attributes = json_decode($component->attributes);
@@ -132,7 +135,6 @@ class ComponentController extends Controller
                 $response = [];
                 $components = Components::where("name", $basiccomponent->name)->orderBy("child_order")->get();
                 foreach($components as $key => $component) {
-                if($component->node == "self" && $component->category == "basic")
                 if($component->nested_component != null) {
                     $nested = Components::find($component->nested_component);
                     $components[$key]->content = $this->loadComponent($nested->name)->original;
