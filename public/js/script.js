@@ -230,10 +230,16 @@ function settingFormData(node, element) {
     setting += '<small class="form-text text-muted">Style in JSON eg: {&quot;selector&quot;:&quot;&quot;, &quot;style&quot;:{&quot;width&quot;:&quot;100%&quot;}}</small>';
     setting += '</div>';
     setting += '<div class="form-group"> ';
-    setting += '<label>Attribute</label>                          ';
+    setting += '<label>Attribute</label>';
     setting += '<input type="text" autocomplete="off" class="form-control" name="attributes" value="{}">';
     //setting += '<input type="text" autocomplete="off" class="form-control" placeholder="Attribute Value" name="attribute_value">';
     setting += '<small class="form-text text-muted">Attributes in JSON eg: {"attr1":"value1", "attr2":"value2"}</small>';
+    setting += '</div>';
+    setting += '<div class="form-group">';
+    setting += '<label>Class</label>';
+    setting += '<input type="text" autocomplete="off" class="form-control" name="classes" value="" placeholder="Class Name">';
+    //setting += '<input type="text" autocomplete="off" class="form-control" placeholder="Attribute Value" name="attribute_value">';
+    //setting += '<small class="form-text text-muted">Attributes in JSON eg: {"attr1":"value1", "attr2":"value2"}</small>';
     setting += '</div>';
     return setting;
 }
@@ -264,8 +270,8 @@ function addNewElement(node) {
         }
     }
 }
-function addNewComponent(path) {
-    //path stack = {"self":{"content":"value"}}
+function copy_(val) {
+    return JSON.parse(JSON.stringify(val));
 }
 function duplicateChildElement(key) {
     if(typeof component.child[key] !== "undefined") {
@@ -316,6 +322,128 @@ function addChildForm(childnumber) {
     setting += '</div>';
     return setting;
 }
+function componentToEditor(name = "") {
+    if(name != "") {
+        $("#component_setting_panel").addClass('d-block').removeClass('d-none');
+        $("#loading_component_setting").addClass('d-block').removeClass('d-none');
+        $("#component_setting_form_container").addClass('d-none').removeClass('d-block');
+        $.getJSON(urls.loadComponent+"/"+name, function(response, status){
+            if(status == "success") {
+                $("#component_name").val(response.self.name);
+                component = response;
+                $("#loading_component_setting").addClass('d-none').removeClass('d-block');
+                $("#component_setting_form_container").addClass('d-block').removeClass('d-none');
+                loadComponent();
+                $("#component_tab").click();
+            }            
+        });
+    }
+}
+function updateComponent(formData, node, childkey="") {
+    var tempSetting = {attributes:{},classes:[]};
+    for(var i = 0; i < formData.length; i++) {
+        if(formData[i].name == "style" || formData[i].name == "attributes") {
+            try {
+                formData[i].value = JSON.parse(formData[i].value);
+            } catch (e) {
+                alert("Invalid JSON found in component setting.");
+            }
+        }
+        if(formData[i].name == "attributes") {
+            for(key in formData[i].value)
+            tempSetting.attributes[key] = formData[i].value[key];
+        } else if(formData[i].name == "classes") {
+            if(formData[i].value != "")
+            tempSetting.classes.push(formData[i].value);
+        } else tempSetting[formData[i].name] = formData[i].value;
+    }
+    $.each(tempSetting, function(property, value){
+        setter(node, property, value, childkey);
+    });
+    loadComponent();
+}
+function stackSettingRender(ele, pointer = "") {
+    if(pointer) pointer += ".";
+    var node = $("<li></li>");
+    var branch;
+    if(typeof ele === "object" && ele != null) {
+        if(typeof ele.child === "object") {
+            node.append('<a href="#" data-pointer="'+pointer+'self" class="selectPointer" haschild="true">'+ele.self.start_tag.replace("<","").replace(">","")+'</b>_'+ele.self.id+'</a><ul></ul>');
+            //node.append('<a>'+ele.self.start_tag.replace("<","").replace(">","")+'</b>_'+ele.self.id+'</a><ul></ul>');
+            $.each(ele.child, function(k, val){
+                branch = stackSettingRender(val.content, pointer+k);
+                if(branch) {
+                    node.find("ul").prepend(branch);
+                } else {
+                    if(val.content_type == "element")
+                    node.find("ul").prepend('<li><a href="#" data-pointer="'+pointer+k+'" class="selectPointer">'+val.start_tag.replace("<","").replace(">","")+'</b>_'+val.id+'</a></li>');
+                    else
+                    node.find("ul").prepend('<li><a>'+val.start_tag.replace("<","").replace(">","")+'</b>_'+val.id+'</a></li>');
+                }
+            });
+        } else if(typeof ele.self === "object" && ele.self != null) {
+            if(typeof ele.self.content === "object" && ele.self.content != null) {
+                node.append('<a href="#" data-pointer="'+pointer+'self" class="selectPointer">'+ele.self.start_tag.replace("<","").replace(">","")+'</b>_'+ele.self.id+'</a><ul></ul>');
+                branch = stackSettingRender(ele.self.content, pointer+'self');
+                if(branch) {
+                    node.find("ul").append(branch);
+                }
+            } else {
+                if(ele.self.content_type == "element")
+                node.append('<a href="#" data-pointer="'+pointer+'self" class="selectPointer">'+ele.self.start_tag.replace("<","").replace(">","")+'</b>_'+ele.self.id+'</a>');
+                else
+                node.append('<a>'+ele.self.start_tag.replace("<","").replace(">","")+'</b>_'+ele.self.id+'</a>');
+            }
+        }
+    } else return false;
+    return node;
+}
+function nodeEditor(mode) {
+    if(!$.isEmptyObject(stack) && stackPointer != "") {
+        var temp = stack, pointer = stackPointer.split(".");
+        pointer.forEach(function(index, key) {
+            if(typeof temp["content"] === "object" && temp["content"] != null) {
+                if(key == (pointer.length - 1)) {
+                    if(mode == "delete")
+                    temp["content"] = null;
+                    else
+                    component = copy_(temp["content"]);
+                } else {
+                    temp = temp["content"];
+                }
+            } else {
+                if(key == (pointer.length - 1)) {
+                    if(mode == "delete") {
+                        if(key)
+                        temp = {};
+                        else
+                        stack = {};
+                    }
+                    else
+                    component = copy_(temp);
+                }
+            }
+            if(key != (pointer.length - 1)) {
+                if(index == "self"){
+                    temp = temp["self"];
+                } else {
+                    temp = temp["child"][index];
+                }
+            }
+        });
+        if(mode != "delete") {
+            if(mode == "edit") {
+                pointer.pop();
+                stackPointer = pointer.join(".");
+                if(stackPointer == "")
+                stack = {};
+            } else stackPointer = "";
+            $("#component_name").val("HTML Node");
+            $("#component_setting_panel").addClass('d-block').removeClass('d-none');
+            $("#component_tab").click();
+        }
+    }
+}
 $('.toggler').click(function(){
     $(this).find('i').toggleClass('fa-toggle-up').toggleClass('fa-toggle-down');
 });
@@ -323,6 +451,7 @@ $('.showhide').click(function(){
     $($(this).attr("data-target")).toggleClass('d-block').toggleClass('d-none');
 });
 $("#BrowseComponents").click(function(){
+    $(this).blur();
     if(!$.isEmptyObject(component) && typeof component.self !== 'undefined') {
         var r = confirm("Discard Component "+$("#component_name").val()+ "?");
         if(r) {
@@ -347,7 +476,7 @@ $("#BrowseComponents").click(function(){
     '</div>'+
     '</div>');
     display.html("<div id=\"basicLoader\" class=\"m-2 p-2 text-center\"><h2><i class=\"fa fa-spinner\"></i> Loading Components.</h2></div>");
-    $.getJSON(url.loadComponents, function(response, status){
+    $.getJSON(urls.loadComponents, function(response, status){
         if(status == "success") {
             $.each(response, function(i, value){
                 container.find(".card-header").html(value.self.name);
@@ -360,28 +489,24 @@ $("#BrowseComponents").click(function(){
             $(".useComponent").click(function(e){
                 e.preventDefault();
                 componentToEditor($(this).attr("data-name"));
-                $("#basicComponentContainer").addClass("d-none").removeClass("d-block");;
+                $("#basicComponentContainer").addClass("d-none").removeClass("d-block");
             });
         }
     });
 });
-function componentToEditor(name = "") {
-    if(name != "") {
+$("#component_new").click(function(){
+    if($.isEmptyObject(component)) {
+        addNewElement("self");
+        $("#component_name").val("Untitled");
         $("#component_setting_panel").addClass('d-block').removeClass('d-none');
-        $("#loading_component_setting").addClass('d-block').removeClass('d-none');
-        $("#component_setting_form_container").addClass('d-none').removeClass('d-block');
-        $.getJSON(url.loadComponent+"/"+name, function(response, status){
-            if(status == "success") {
-                $("#component_name").val(response.self.name);
-                component = response;
-                $("#loading_component_setting").addClass('d-none').removeClass('d-block');
-                $("#component_setting_form_container").addClass('d-block').removeClass('d-none');
-                loadComponent();
-                $("#component_tab").click();
-            }            
-        });
+        $("#loading_component_setting").addClass('d-none').removeClass('d-block');
+        $("#component_setting_form_container").addClass('d-block').removeClass('d-none');
+        loadComponent();
+        $("#component_tab").click();
+    } else {
+        alert("Component already in editor.");
     }
-}
+});
 $("#display_property").change(function(){
     if($(this).val()) {
         if(!$.isEmptyObject(component) && typeof component.self !== 'undefined') {
@@ -392,6 +517,7 @@ $("#display_property").change(function(){
             }
         } else {
             alert("No Component Selected");
+            $(this).val("");
         }
     }
 });
@@ -726,70 +852,61 @@ $("#loadstack").change(function() {
     loadComponent();
     }
 });
-function updateComponent(formData, node, childkey="") {
-    var tempSetting = {attributes:{},classes:[]};
-    for(var i = 0; i < formData.length; i++) {
-        if(formData[i].name == "style" || formData[i].name == "attributes") {
-            try {
-                formData[i].value = JSON.parse(formData[i].value);
-            } catch (e) {
-                alert("Invalid JSON found in component setting.");
-            }
-        }
-        if(formData[i].name == "attributes") {
-            for(key in formData[i].value)
-            tempSetting.attributes[key] = formData[i].value[key];
-        } else if(formData[i].name == "classes") {
-            tempSetting.classes.push(formData[i].value);
-        } else tempSetting[formData[i].name] = formData[i].value;
+$("#component_reset").click(function() {
+    $(this).blur();
+    if($("#showstack").attr("data-mode") == "edit") {
+        $("#addtostack").click();
+    } else {
+        component = {};
+        stackPointer = "";
+        $("#component_display").html("");
+        $("#component_name").val("");
+        $("#component_setting_panel").addClass('d-none').removeClass('d-block');
+        $("#basicComponentContainer").addClass("d-none").removeClass("d-block");
     }
-    $.each(tempSetting, function(property, value){
-        setter(node, property, value, childkey);
-    });
-    loadComponent();
-}
-function newComponent(formData) {
-
-}
-function stackSettingRender(ele, pointer = "") {
-    if(pointer) pointer += ".";
-    var node = $("<li></li>");
-    var branch;
-    if(typeof ele === "object" && ele != null) {
-        if(typeof ele.child === "object") {
-            node.append('<a href="#" data-pointer="'+pointer+'self" class="selectPointer">'+ele.self.start_tag.replace("<","").replace(">","")+'</b>_'+ele.self.id+'</a><ul></ul>');
-            $.each(ele.child, function(k, val){
-                branch = stackSettingRender(val.content, pointer+k);
-                if(branch) {
-                    node.find("ul").prepend(branch);
-                } else {
-                    if(val.content_type == "element")
-                    node.find("ul").prepend('<li><a href="#" data-pointer="'+pointer+k+'" class="selectPointer">'+val.start_tag.replace("<","").replace(">","")+'</b>_'+val.id+'</a></li>');
-                    else
-                    node.find("ul").prepend('<li><a>'+val.start_tag.replace("<","").replace(">","")+'</b>_'+val.id+'</a></li>');
-                }
-            });
-        } else if(typeof ele.self === "object" && ele.self != null) {
-            if(typeof ele.self.content === "object" && ele.self.content != null) {
-                node.append('<a href="#" data-pointer="'+pointer+'self" class="selectPointer">'+ele.self.start_tag.replace("<","").replace(">","")+'</b>_'+ele.self.id+'</a><ul></ul>');
-                branch = stackSettingRender(ele.self.content, pointer+'self');
-                if(branch) {
-                    node.find("ul").append(branch);
-                }
-            } else {
-                if(ele.self.content_type == "element")
-                node.append('<a href="#" data-pointer="'+pointer+'self" class="selectPointer">'+ele.self.start_tag.replace("<","").replace(">","")+'</b>_'+ele.self.id+'</a>');
-                else
-                node.append('<a>'+ele.self.start_tag.replace("<","").replace(">","")+'</b>_'+ele.self.id+'</a>');
-            }
-        }
-    } else return false;
-    return node;
-}
+});
 $("#savestack").click(function(){
     $(this).blur();
-    if($(this).is(":disabled")) return;
-    $(this).prop("disabled", false);
+    var r = confirm("Do you want to save this Stack?");
+    if(!r) {
+        return false;
+    } else {
+        var Cname = prompt("Give Component Name", "");
+        if (Cname == null) {
+            return false;
+        }
+    }
+    $("#component_reset").click();
+    if(!$.isEmptyObject(stack)) {
+        var display = $('#component_display');
+        display.addClass("d-block").removeClass("d-none");
+        display.html("<div id=\"basicLoader\" class=\"m-2 p-2 text-center\"><h2><i class=\"fa fa-spinner\"></i> Saving Component.</h2></div>");
+        $.ajax({
+            type: "POST",
+            url: urls.saveComponent,
+            data: JSON.stringify({name:Cname,component:stack}),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function(data){
+                console.log(data);
+                console.log("_________________________________");
+                var display = $('#component_display');
+                display.addClass("d-block").removeClass("d-none");
+                if(data.success) {
+                    stack = {};
+                    display.html("<div id=\"basicLoader\" class=\"m-2 p-2 text-center text-success\"><h2><i class=\"fa fa-check-square-o\"></i> Saved.</h2></div>");
+                } else {
+                    display.html("<div id=\"basicLoader\" class=\"m-2 p-2 text-center text-danger\"><h2><i class=\"fa fa-warning\"></i> " +data.error+ "</h2></div>");
+                    console.log(data.stack);
+                }
+            },
+            failure: function(errMsg) {
+                console.log(errMsg);
+            }
+        });
+    } else {
+        alert("Stack is Empty");
+    }
 });
 $("#showstack").click(function(){
     $(this).blur();
@@ -797,6 +914,7 @@ $("#showstack").click(function(){
         alert("No component in Stack.");
         return;
     }
+    $("input[value='select']").prop("checked", true);
     var tree = $(".tree");
     tree.html("");
     tree.append('<ul></ul>');
@@ -805,15 +923,31 @@ $("#showstack").click(function(){
     $("#stackTree").modal("show");
     $(".selectPointer").click(function(e){
         e.preventDefault();
-        $("#stackTree").modal("hide");
-        stackPointer = $(this).attr("data-pointer");
-        if($("#movetoeditor").is(":checked"))
-        nodeToEditor(stack);
-        loadComponent();
+        if($("#showstack").attr("data-mode") != "edit") {
+            stackPointer = $(this).attr("data-pointer");      
+            $("#stackTree").modal("hide");
+            var mode = $("input[name='mode']:checked").val();
+            $("#showstack").attr("data-mode", mode);
+            if(mode != "select")
+            nodeEditor(mode);
+            else if($(this).is('[haschild]')) {
+                stackPointer = "";
+                alert("This Node Cannot be Selected.");
+            }            
+            loadComponent();
+        } else {
+            alert("Editor have Node in Edit Mode.");
+        }
+        if(mode == "select") {
+            var addtostack = $("#addtostack");
+            if(addtostack.attr("data-wait") == "pointer")
+            addtostack.click();
+        }
     });
 });
 $("#addtostack").click(function(){
     $(this).blur();
+    $(this).attr("data-wait", "none");
     if($.isEmptyObject(component)){
         alert("No Component to Add in Stack");
         return;
@@ -822,6 +956,7 @@ $("#addtostack").click(function(){
         stack = component;
         component = {};
         stackPointer = "";
+        $("#showstack").attr("data-mode", "select");
         $("#component_display").html("");
         $("#component_name").val("");
         $("#component_setting_panel").addClass('d-none').removeClass('d-block');
@@ -836,39 +971,17 @@ $("#addtostack").click(function(){
                 temp = temp["child"][index];
             }
             if(key == (pointer.length - 1) && temp["content_type"] == "element") {
-                temp["content"] = component;
+                temp["content"] = copy_(component);
             }
         });
         component = {};
         stackPointer = "";
+        $("#showstack").attr("data-mode", "select");
         $("#component_display").html("");
         $("#component_name").val("");
         $("#component_setting_panel").addClass('d-none').removeClass('d-block');
     } else {
-        alert("No stack node selected.");
+        $(this).attr("data-wait", "pointer");
+        $("#showstack").click();
     }
-
 });
-function nodeToEditor(ele, pointer = "") {
-    if(!$.isEmptyObject(stack) && stackPointer != "") {
-        var temp = stack, pointer = stackPointer.split(".");
-        pointer.forEach(function(index, key) {
-            if(typeof temp["content"] === "object" && temp["content"] != null) {
-                component = temp["content"];
-                temp = temp["content"];
-            } else component = temp;
-            if(index == "self"){
-                temp = temp["self"];
-            } else {
-                temp = temp["child"][index];
-            }
-            if(key == (pointer.length - 1) && temp["content_type"] == "element") {
-                console.log(temp);
-                component = temp;
-            }
-        });
-        loadComponent();
-        $("#component_name").val("HTML Node");
-        $("#component_tab").click();
-    }
-}

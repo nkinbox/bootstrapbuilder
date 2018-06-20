@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Components;
+use Validator;
 
 class ComponentController extends Controller
-{
+{   
+    private $stack;
     public function index() {
         return view('Component.create');
     }
@@ -151,5 +153,123 @@ class ComponentController extends Controller
             $response_[] = $response;
         }
         return response()->json($response_);
+    }
+    public function saveComponent(Request $request) {
+        $error = false;
+        $rules = [
+            "name" => "required|string|max:50|unique:components,name",
+            "category" => "required|in:basic,element,component",
+            "node" => "required|in:self,parent,child",
+            "visibility" => "required|in:auth,guest,show,none",
+            "content_type" => "required|in:static,variable,element",
+            "child_order" => "required_if:node,child|numeric",
+            "nested_component" => "nullable|string",
+            "start_tag" => "required|string|max:10",
+            "end_tag" => "required|nullable|string|max:10",
+            "attributes" => "required|json|max:500",
+            "var_attributes" => "nullable|json|max:500",
+            "classes" => "required|json|max:500",
+            "style" => "required|json|max:500",
+            "content" => "required_if:content_type,static,variable|nullable|string|max:1000"
+        ];
+        $component = $request->component;
+        $this->stack = [];
+        $this->component($this->stack['base'], $component, "base", (($request->name)?$request->name:''), 0);
+        foreach($this->stack as $elements) {
+            foreach($elements as $element) {
+                $validator = Validator::make($element, $rules);
+                if ($validator->fails()) {
+                    $error = $validator->errors()->first();
+                    break 2;
+                }
+            }
+        }
+        if($error) {
+            return response()->json(["success" => 0, "error"=> $error, "stack"=>$this->stack]);
+        } else {
+            $this->insertComponent($this->stack['base']);
+        }
+        return response()->json(["success" => 1]);
+    }
+    private function component(&$stack, $component, $pointer, $name, $index) {
+        if(empty($component))
+        return;
+        if(isset($component["child"])) {
+            $i = 1;
+            foreach($component["child"] as $child) {
+                $component["child"]["node"] = "child";
+                $component["child"]["category"] = "element";
+                $this->element($stack, $child, $pointer.'_'.($i++), $name, $index);
+            }
+        }
+        if(isset($component["parent"])) {
+            $component["parent"]["node"] = "parent";
+            $component["parent"]["category"] = "element";
+            $this->element($stack,$component["parent"], '', $name, $index);
+        }
+        if(isset($component["self"])) {
+            $component["self"]["node"] = "self";
+            $component["self"]["category"] = (($pointer == "base")?"component":"element");
+            $this->element($stack,$component["self"], $pointer.'_self', $name, $index);
+        }
+    }
+    private function element(&$stack, $element, $pointer, $name, $index) {
+        if(empty($element))
+        return;
+        $nextComponent = null;
+        if($index)
+        $element["name"] = $name.$index;
+        else
+        $element["name"] = $name;
+        $element["nested_component"] = null;
+        $element["loop_source"] = null;
+        $element["var_attributes"] = "[]";
+        $element["attributes"] = json_encode(array_unique($element["attributes"]));
+        $element["classes"] = json_encode(array_unique($element["classes"]));
+        $element["style"] = json_encode($element["style"]);
+        if($element["content_type"] == "element" && !empty($element["content"])) {
+            $nextComponent = $element["content"];
+            $element["content"] = null;
+            if($nextComponent && $pointer != '')
+            $element['nested_component'] = $pointer;
+        }
+        $stack[] = $element;
+        if($nextComponent && $pointer != '') {
+            $this->component($this->stack[$pointer], $nextComponent, $pointer, $name, ++$index);
+        }
+    }
+    private function insertComponent($elements) {
+        $id = null;
+        foreach($elements as $element) {
+            $return = $this->insertElement($element);
+            if($element["node"] == "self")
+            $id = $return;
+        }
+        return $id;
+    }
+    private function insertElement($element) {
+        $id = null;
+        if($element['nested_component']) {
+            $id = $this->insertComponent($this->stack[$element['nested_component']]);
+        }
+        $ele = new Components;
+        $ele->name = $element['name'];
+        $ele->category = $element['category'];
+        $ele->node = $element['node'];
+        $ele->visibility = $element['visibility'];
+        $ele->content_type = $element['content_type'];
+        $ele->child_order = $element['child_order'];
+        $ele->nested_component = $id;
+        $ele->start_tag = $element['start_tag'];
+        $ele->end_tag = $element['end_tag'];
+        $ele->attributes = $element['attributes'];
+        $ele->var_attributes = $element['var_attributes'];
+        $ele->classes = $element['classes'];
+        $ele->style = $element['style'];
+        $ele->content = $element['content'];
+        $ele->save();
+        if($element['node'] == "self")
+        return $ele->id;
+        else return 0;
     }
 }

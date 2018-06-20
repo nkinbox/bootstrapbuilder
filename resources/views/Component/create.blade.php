@@ -30,10 +30,12 @@
             <div class="row">
                 <div class="col-md-4">
                     <div class="form-group">
-                        <label for="component">Component</label>
+                        <label>Component</label>
                         <div class="input-group mb-3">
                             <input id="component_name" type="text" class="form-control" placeholder="Select Component" disabled>
                             <div class="input-group-append">
+                                <button id="component_new" class="btn btn-outline-secondary" type="button"><i class="fa fa-plus"></i></button>
+                                <button id="component_reset" class="btn btn-outline-secondary" type="button"><i class="fa fa-refresh"></i></button>
                                 <button id="BrowseComponents" class="btn btn-outline-secondary" type="button"><i class="fa fa-cloud-download"></i></button>
                             </div>
                         </div>
@@ -58,24 +60,17 @@
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <div>
-                                <label title="Highlight Selected Element"><input type="checkbox" id="highlight"><i class="fa fa-object-ungroup"></i></label>
-                            </div>
-                            <div>
-                                <label title="Load Component ALL/Current"><input type="checkbox" id="loadstack"><i class="fa fa-cubes"></i></label>
-                            </div>
-                            <div>
-                                <label title="Add to Component Stack"><button class="btn btn-default" type="button" id="addtostack"><i class="fa fa-plus"></i><i class="fa fa-window-restore"></i></button></label>
-                                <label title="Show Component Stack"><button class="btn btn-warning" type="button" id="showstack"><i class="fa fa-sitemap"></i></button></label>
-                                <label title="Save Component Stack"><button class="btn btn-success" type="button" id="savestack" disabled><i class="fa fa-save"></i></button></label>
-                            </div>
-                        </div>
-                        <div>
-                            
-                        </div>
+                    <div>
+                        <label title="Highlight Selected Element"><input type="checkbox" id="highlight"> <i class="fa fa-object-ungroup"></i></label>
                     </div>
+                    <div>
+                        <label title="Load Component ALL/Current"><input type="checkbox" id="loadstack"> <i class="fa fa-cubes"></i></label>
+                    </div>
+                    <div>
+                        <label title="Add to Component Stack"><button class="btn btn-default" type="button" id="addtostack" data-wait="none"><i class="fa fa-fast-forward"></i></button></label>
+                        <label title="Show Component Stack"><button class="btn btn-warning" type="button" id="showstack"><i class="fa fa-sitemap"></i></button></label>
+                        <label title="Save Component Stack"><button class="btn btn-success" type="button" id="savestack"><i class="fa fa-save"></i></button></label>
+                    </div>     
                 </div>
             </div>
     </div>
@@ -91,8 +86,17 @@
           </button>
         </div>
         <div class="modal-body">
-            <div class="d-flex flex-row-reverse align-items-center">
-                <label title="Load Node to Editor"><input type="checkbox" id="movetoeditor"> Move Selected Node to EDITOR</label>
+            <div class="d-flex flex-row-reverse">
+                <div class="switch-field">
+                <input type="radio" id="switch_3_left" name="mode" value="select" checked>
+                <label for="switch_3_left">Select</label>
+                <input type="radio" id="switch_3_center" name="mode" value="copy">
+                <label for="switch_3_center">Copy</label>
+                <input type="radio" id="switch_3_right" name="mode" value="delete">
+                <label for="switch_3_right">Delete</label>
+                <input type="radio" id="switch_4_right" name="mode" value="edit">
+                <label for="switch_4_right">Edit</label>
+                </div>
             </div>
             <div class="tree"></div>
         </div>
@@ -108,9 +112,10 @@
     var stack = {};
     var stackPointer = "";
     var ele_id = 0;
-    var url = {
+    var urls = {
         "loadComponent":"{{ route('LoadComponent') }}",
-        "loadComponents":"{{ route('LoadComponents') }}"
+        "loadComponents":"{{ route('LoadComponents') }}",
+        "saveComponent":"{{ route('SaveComponent') }}"
     }
 </script>
 @endpush
@@ -227,6 +232,55 @@
     .tree li a:hover + ul ul::before {
     border-color: #004894;
     }
+    .switch-field input {
+        position: absolute !important;
+        clip: rect(0, 0, 0, 0);
+        height: 1px;
+        width: 1px;
+        border: 0;
+        overflow: hidden;
+    }
 
+    .switch-field label {
+    float: left;
+    }
+
+    .switch-field label {
+    display: inline-block;
+    width: 70px;
+    background-color: #e4e4e4;
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 14px;
+    font-weight: normal;
+    text-align: center;
+    text-shadow: none;
+    padding: 6px 14px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    -webkit-box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px rgba(255, 255, 255, 0.1);
+    -webkit-transition: all 0.1s ease-in-out;
+    -moz-transition:    all 0.1s ease-in-out;
+    -ms-transition:     all 0.1s ease-in-out;
+    -o-transition:      all 0.1s ease-in-out;
+    transition:         all 0.1s ease-in-out;
+    }
+
+    .switch-field label:hover {
+        cursor: pointer;
+    }
+
+    .switch-field input:checked + label {
+    background-color: #A5DC86;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    }
+
+    .switch-field label:first-of-type {
+    border-radius: 4px 0 0 4px;
+    }
+
+    .switch-field label:last-of-type {
+    border-radius: 0 4px 4px 0;
+    }
 </style>
 @endpush
