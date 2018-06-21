@@ -5,7 +5,8 @@ Route::get('/', function () {
 
 Auth::routes();
 
-Route::get('/component/create','ComponentController@index')->name("CreateComponent");
+Route::get('/component/create','ComponentController@create')->name("CreateComponent");
+Route::get('/component/edit/{name}','ComponentController@edit')->name("EditComponent");
 Route::get('/component/add_basic','ComponentController@addBasic')->name("AddBasicComponent");
 Route::post('/component/add','ComponentController@add')->name("AddComponent");
 

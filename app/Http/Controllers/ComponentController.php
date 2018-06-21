@@ -7,10 +7,159 @@ use App\Models\Components;
 use Validator;
 
 class ComponentController extends Controller
-{   
+{
     private $stack;
-    public function index() {
-        return view('Component.create');
+    private function validateComponent() {
+        $error = false;
+        $rules = [
+            "name" => "required|string|max:50|unique:components,name",
+            "category" => "required|in:basic,element,component",
+            "node" => "required|in:self,parent,child",
+            "visibility" => "required|in:auth,guest,show,none",
+            "content_type" => "required|in:static,variable,element",
+            "child_order" => "required_if:node,child|numeric",
+            "nested_component" => "nullable|string",
+            "start_tag" => "required|string|max:10",
+            "end_tag" => "required|nullable|string|max:10",
+            "attributes" => "required|json|max:500",
+            "var_attributes" => "nullable|json|max:500",
+            "classes" => "required|json|max:500",
+            "style" => "required|json|max:500",
+            "content" => "required_if:content_type,static,variable|nullable|string|max:1000"
+        ];        
+        foreach($this->stack as $elements) {
+            foreach($elements as $element) {
+                $validator = Validator::make($element, $rules);
+                if ($validator->fails()) {
+                    $error = $validator->errors()->first();
+                    break 2;
+                }
+            }
+        }
+        return $error;
+    }
+    private function component(&$stack, $component, $pointer, $name, $index) {
+        if(empty($component))
+        return;
+        if($pointer == "component" || $pointer == "basic") {
+            $category = $pointer;
+            $pointer = "base";
+        } else $category = "element";
+        if(isset($component["child"])) {
+            $i = 1;
+            foreach($component["child"] as $child) {
+                $component["child"]["node"] = "child";
+                $component["child"]["category"] = "element";
+                $this->element($stack, $child, $pointer.'_'.($i++), $name, $index);
+            }
+        }
+        if(isset($component["parent"])) {
+            $component["parent"]["node"] = "parent";
+            $component["parent"]["category"] = "element";
+            $this->element($stack, $component["parent"], '', $name, $index);
+        }
+        if(isset($component["self"])) {
+            $component["self"]["node"] = "self";
+            $component["self"]["category"] = $category;            
+            $this->element($stack,$component["self"], $pointer.'_self', $name, $index);
+        }
+    }
+    private function element(&$stack, $element, $pointer, $name, $index) {
+        if(empty($element))
+        return;
+        $nextComponent = null;
+        if($index)
+        $element["name"] = $name.$index;
+        else
+        $element["name"] = $name;
+        $element["nested_component"] = null;
+        $element["loop_source"] = null;
+        $element["var_attributes"] = "[]";
+        $element["attributes"] = json_encode(array_unique($element["attributes"]));
+        $element["classes"] = json_encode(array_unique($element["classes"]));
+        $element["style"] = json_encode($element["style"]);
+        if($element["content_type"] == "element" && !empty($element["content"])) {
+            $nextComponent = $element["content"];
+            $element["content"] = null;
+            if($nextComponent && $pointer != '')
+            $element['nested_component'] = $pointer;
+        }
+        $stack[] = $element;
+        if($nextComponent && $pointer != '') {
+            $this->component($this->stack[$pointer], $nextComponent, $pointer, $name, ++$index);
+        }
+    }
+    private function insertComponent($elements) {
+        $id = null;
+        foreach($elements as $element) {
+            $return = $this->insertElement($element);
+            if($element["node"] == "self")
+            $id = $return;
+        }
+        return $id;
+    }
+    private function insertElement($element) {
+        $id = null;
+        if($element['nested_component']) {
+            $id = $this->insertComponent($this->stack[$element['nested_component']]);
+        }
+        $ele = new Components;
+        $ele->name = $element['name'];
+        $ele->category = $element['category'];
+        $ele->node = $element['node'];
+        $ele->visibility = $element['visibility'];
+        $ele->content_type = $element['content_type'];
+        $ele->child_order = $element['child_order'];
+        $ele->nested_component = $id;
+        $ele->start_tag = $element['start_tag'];
+        $ele->end_tag = $element['end_tag'];
+        $ele->attributes = $element['attributes'];
+        $ele->var_attributes = $element['var_attributes'];
+        $ele->classes = $element['classes'];
+        $ele->style = $element['style'];
+        $ele->content = $element['content'];
+        $ele->save();
+        if($element['node'] == "self")
+        return $ele->id;
+        else return 0;
+    }
+    private function fetchComponent($name) {
+        $components = Components::where("name", $name)->orderBy("child_order")->get();
+        $response = [];
+        foreach($components as $key => $component) {
+            if($component->nested_component != null) {
+                $nested = Components::find($component->nested_component);
+                $components[$key]->content = $this->fetchComponent($nested->name);
+            }
+            $components[$key]->var_attributes = json_decode($component->var_attributes);
+            $components[$key]->classes = json_decode($component->classes);
+            $components[$key]->attributes = json_decode($component->attributes);
+            $components[$key]->style = json_decode($component->style);
+            if($component->node == "child")
+            $response[$component->node][] = $components[$key];
+            else
+            $response[$component->node] = $components[$key];
+        }
+        return $response;
+    }
+    private function fetchComponentID($name, &$id) {
+        $components = Components::where("name", $name)->orderBy("child_order")->get();
+        foreach($components as $key => $component) {
+            $id[] = $component->id;
+            if($component->nested_component != null) {
+                $nested = Components::find($component->nested_component);
+                $this->fetchComponentID($nested->name, $id);
+            }
+        }
+    }
+    public function create() {
+        return view('Component.editor', ["edit" => false]);
+    }
+    public function edit($name) {
+        $stack = $this->fetchComponent($name);
+        if(empty($stack))
+        abort(404);
+        return view('Component.editor', ["edit" => true, "name" => $name, "stack" => $stack]);
     }
     public function addBasic() {
         return view('Component.addBasic');
@@ -108,27 +257,8 @@ class ComponentController extends Controller
         }
         return redirect()->back()->with("message", "Component Added Successfully.");
     }
-    public function loadComponent($name = null, $json = true) {
-        $components = Components::where("name", $name)->orderBy("child_order")->get();
-        $response = [];
-        foreach($components as $key => $component) {
-            if($component->nested_component != null) {
-                $nested = Components::find($component->nested_component);
-                $components[$key]->content = $this->loadComponent($nested->name)->original;
-            }
-            $components[$key]->var_attributes = json_decode($component->var_attributes);
-            $components[$key]->classes = json_decode($component->classes);
-            $components[$key]->attributes = json_decode($component->attributes);
-            $components[$key]->style = json_decode($component->style);
-            if($component->node == "child")
-            $response[$component->node][] = $components[$key];
-            else
-            $response[$component->node] = $components[$key];
-        }
-        if($json)
-        return response()->json($response);
-        else
-        return $response;
+    public function loadComponent($name = null) {
+        return response()->json($this->fetchComponent($name));
     }
     public function loadComponents() {
         $basiccomponents = Components::where("category", "basic")->select("id", "name")->get();
@@ -139,7 +269,7 @@ class ComponentController extends Controller
                 foreach($components as $key => $component) {
                 if($component->nested_component != null) {
                     $nested = Components::find($component->nested_component);
-                    $components[$key]->content = $this->loadComponent($nested->name)->original;
+                    $components[$key]->content = $this->fetchComponent($nested->name);
                 }
                 $components[$key]->var_attributes = json_decode($component->var_attributes);
                 $components[$key]->classes = json_decode($component->classes);
@@ -155,35 +285,11 @@ class ComponentController extends Controller
         return response()->json($response_);
     }
     public function saveComponent(Request $request) {
-        $error = false;
-        $rules = [
-            "name" => "required|string|max:50|unique:components,name",
-            "category" => "required|in:basic,element,component",
-            "node" => "required|in:self,parent,child",
-            "visibility" => "required|in:auth,guest,show,none",
-            "content_type" => "required|in:static,variable,element",
-            "child_order" => "required_if:node,child|numeric",
-            "nested_component" => "nullable|string",
-            "start_tag" => "required|string|max:10",
-            "end_tag" => "required|nullable|string|max:10",
-            "attributes" => "required|json|max:500",
-            "var_attributes" => "nullable|json|max:500",
-            "classes" => "required|json|max:500",
-            "style" => "required|json|max:500",
-            "content" => "required_if:content_type,static,variable|nullable|string|max:1000"
-        ];
+        // $request = name category stack
         $component = $request->component;
         $this->stack = [];
-        $this->component($this->stack['base'], $component, "base", (($request->name)?$request->name:''), 0);
-        foreach($this->stack as $elements) {
-            foreach($elements as $element) {
-                $validator = Validator::make($element, $rules);
-                if ($validator->fails()) {
-                    $error = $validator->errors()->first();
-                    break 2;
-                }
-            }
-        }
+        $this->component($this->stack['base'], $component, (($request->category)?$request->category:'component'), (($request->name)?$request->name:''), 0);
+        $error = $this->validateComponent();
         if($error) {
             return response()->json(["success" => 0, "error"=> $error, "stack"=>$this->stack]);
         } else {
@@ -191,85 +297,26 @@ class ComponentController extends Controller
         }
         return response()->json(["success" => 1]);
     }
-    private function component(&$stack, $component, $pointer, $name, $index) {
-        if(empty($component))
-        return;
-        if(isset($component["child"])) {
-            $i = 1;
-            foreach($component["child"] as $child) {
-                $component["child"]["node"] = "child";
-                $component["child"]["category"] = "element";
-                $this->element($stack, $child, $pointer.'_'.($i++), $name, $index);
-            }
+    public function editComponent(Request $request) {
+        if($request->name) {
+            $component = Components::where("name", $request->name)->first();
+            if(!$component)
+            return response()->json(["success" => 0, "error"=> "Invalid Component Name", "stack"=>[]]);
         }
-        if(isset($component["parent"])) {
-            $component["parent"]["node"] = "parent";
-            $component["parent"]["category"] = "element";
-            $this->element($stack,$component["parent"], '', $name, $index);
+        $component = $request->component;
+        $this->stack = [];
+        $this->component($this->stack['base'], $component, (($request->category)?$request->category:'component'), "temp_name", 0);
+        $error = $this->validateComponent();
+        if($error) {
+            return response()->json(["success" => 0, "error"=> $error, "stack"=>$this->stack]);
+        } else {
+            $delete = [];
+            $this->fetchComponentID($request->name, $delete);
+            Components::destroy($delete);
+            $this->stack = [];
+            $this->component($this->stack['base'], $component, (($request->category)?$request->category:'component'), (($request->name)?$request->name:''), 0);
+            $this->insertComponent($this->stack['base']);
         }
-        if(isset($component["self"])) {
-            $component["self"]["node"] = "self";
-            $component["self"]["category"] = (($pointer == "base")?"component":"element");
-            $this->element($stack,$component["self"], $pointer.'_self', $name, $index);
-        }
-    }
-    private function element(&$stack, $element, $pointer, $name, $index) {
-        if(empty($element))
-        return;
-        $nextComponent = null;
-        if($index)
-        $element["name"] = $name.$index;
-        else
-        $element["name"] = $name;
-        $element["nested_component"] = null;
-        $element["loop_source"] = null;
-        $element["var_attributes"] = "[]";
-        $element["attributes"] = json_encode(array_unique($element["attributes"]));
-        $element["classes"] = json_encode(array_unique($element["classes"]));
-        $element["style"] = json_encode($element["style"]);
-        if($element["content_type"] == "element" && !empty($element["content"])) {
-            $nextComponent = $element["content"];
-            $element["content"] = null;
-            if($nextComponent && $pointer != '')
-            $element['nested_component'] = $pointer;
-        }
-        $stack[] = $element;
-        if($nextComponent && $pointer != '') {
-            $this->component($this->stack[$pointer], $nextComponent, $pointer, $name, ++$index);
-        }
-    }
-    private function insertComponent($elements) {
-        $id = null;
-        foreach($elements as $element) {
-            $return = $this->insertElement($element);
-            if($element["node"] == "self")
-            $id = $return;
-        }
-        return $id;
-    }
-    private function insertElement($element) {
-        $id = null;
-        if($element['nested_component']) {
-            $id = $this->insertComponent($this->stack[$element['nested_component']]);
-        }
-        $ele = new Components;
-        $ele->name = $element['name'];
-        $ele->category = $element['category'];
-        $ele->node = $element['node'];
-        $ele->visibility = $element['visibility'];
-        $ele->content_type = $element['content_type'];
-        $ele->child_order = $element['child_order'];
-        $ele->nested_component = $id;
-        $ele->start_tag = $element['start_tag'];
-        $ele->end_tag = $element['end_tag'];
-        $ele->attributes = $element['attributes'];
-        $ele->var_attributes = $element['var_attributes'];
-        $ele->classes = $element['classes'];
-        $ele->style = $element['style'];
-        $ele->content = $element['content'];
-        $ele->save();
-        if($element['node'] == "self")
-        return $ele->id;
-        else return 0;
+        return response()->json(["success" => 1]);
     }
 }

@@ -1,4 +1,7 @@
 @extends('layouts.app')
+@push("title")
+<title>Component Creator</title>
+@endpush
 @section('content')
 <div id="setting_panel" class="d-flex flex-row-reverse p-1">
 @include('Component.componentSetting')
@@ -69,7 +72,6 @@
                     <div>
                         <label title="Add to Component Stack"><button class="btn btn-default" type="button" id="addtostack" data-wait="none"><i class="fa fa-fast-forward"></i></button></label>
                         <label title="Show Component Stack"><button class="btn btn-warning" type="button" id="showstack"><i class="fa fa-sitemap"></i></button></label>
-                        <label title="Save Component Stack"><button class="btn btn-success" type="button" id="savestack"><i class="fa fa-save"></i></button></label>
                     </div>     
                 </div>
             </div>
@@ -86,16 +88,28 @@
           </button>
         </div>
         <div class="modal-body">
-            <div class="d-flex flex-row-reverse">
+            <div class="d-flex justify-content-between">
+                <div class="input-group mb-3" style="width:350px">
+                    <div class="input-group-prepend">
+                            <input id="new_component_name" type="text" class="form-control" placeholder="Component Name" value="{{($edit)?$name:''}}"{{($edit)?' disabled':''}}>
+                    </div>
+                    <select class="custom-select" id="component_category">
+                        <option value="component"{{ ($edit && $stack['self']['category'] == "component")?' selected':'' }}>Component</option>
+                        <option value="basic"{{ ($edit && $stack['self']['category'] == "basic")?' selected':'' }}>Basic</option>
+                    </select>
+                    <div class="input-group-append">
+                        <button class="btn btn-success" type="button" id="savestack" save-mode="{{ ($edit)?'edit':'save' }}"><i class="fa fa-save"></i></button>
+                    </div>
+                </div>
                 <div class="switch-field">
-                <input type="radio" id="switch_3_left" name="mode" value="select" checked>
-                <label for="switch_3_left">Select</label>
-                <input type="radio" id="switch_3_center" name="mode" value="copy">
-                <label for="switch_3_center">Copy</label>
-                <input type="radio" id="switch_3_right" name="mode" value="delete">
-                <label for="switch_3_right">Delete</label>
-                <input type="radio" id="switch_4_right" name="mode" value="edit">
-                <label for="switch_4_right">Edit</label>
+                    <input type="radio" id="switch_3_left" name="mode" value="select" checked>
+                    <label for="switch_3_left">Select</label>
+                    <input type="radio" id="switch_3_center" name="mode" value="copy">
+                    <label for="switch_3_center">Copy</label>
+                    <input type="radio" id="switch_3_right" name="mode" value="delete">
+                    <label for="switch_3_right">Delete</label>
+                    <input type="radio" id="switch_4_right" name="mode" value="edit">
+                    <label for="switch_4_right">Edit</label>
                 </div>
             </div>
             <div class="tree"></div>
@@ -109,13 +123,14 @@
 @push("scripts")
 <script>
     var component = {};
-    var stack = {};
+    var stack = {!! ($edit)?"JSON.parse('".json_encode($stack)."')":'{}' !!};
     var stackPointer = "";
     var ele_id = 0;
     var urls = {
         "loadComponent":"{{ route('LoadComponent') }}",
         "loadComponents":"{{ route('LoadComponents') }}",
-        "saveComponent":"{{ route('SaveComponent') }}"
+        "saveComponent":"{{ route('SaveComponent') }}",
+        "editComponent":"{{ route('UpdateComponent') }}"
     }
 </script>
 @endpush
@@ -256,8 +271,6 @@
     text-shadow: none;
     padding: 6px 14px;
     border: 1px solid rgba(0, 0, 0, 0.2);
-    -webkit-box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px rgba(255, 255, 255, 0.1);
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px rgba(255, 255, 255, 0.1);
     -webkit-transition: all 0.1s ease-in-out;
     -moz-transition:    all 0.1s ease-in-out;
     -ms-transition:     all 0.1s ease-in-out;
@@ -270,7 +283,7 @@
     }
 
     .switch-field input:checked + label {
-    background-color: #A5DC86;
+    background-color: #83b6ff;
     -webkit-box-shadow: none;
     box-shadow: none;
     }

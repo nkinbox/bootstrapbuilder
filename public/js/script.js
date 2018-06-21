@@ -440,6 +440,8 @@ function nodeEditor(mode) {
             } else stackPointer = "";
             $("#component_name").val("HTML Node");
             $("#component_setting_panel").addClass('d-block').removeClass('d-none');
+            $("#loading_component_setting").addClass('d-none').removeClass('d-block');
+            $("#component_setting_form_container").addClass('d-block').removeClass('d-none');
             $("#component_tab").click();
         }
     }
@@ -870,21 +872,25 @@ $("#savestack").click(function(){
     var r = confirm("Do you want to save this Stack?");
     if(!r) {
         return false;
-    } else {
-        var Cname = prompt("Give Component Name", "");
-        if (Cname == null) {
-            return false;
-        }
     }
     $("#component_reset").click();
     if(!$.isEmptyObject(stack)) {
+        var name = $("#new_component_name");
+        var apiURL = urls.saveComponent;
+        if(name.val() == "") {
+            name.focus();
+            return;
+        }
+        if($(this).attr("save-mode") == "edit")
+        apiURL = urls.editComponent;
+        $("#stackTree").modal("hide");
         var display = $('#component_display');
         display.addClass("d-block").removeClass("d-none");
         display.html("<div id=\"basicLoader\" class=\"m-2 p-2 text-center\"><h2><i class=\"fa fa-spinner\"></i> Saving Component.</h2></div>");
         $.ajax({
             type: "POST",
-            url: urls.saveComponent,
-            data: JSON.stringify({name:Cname,component:stack}),
+            url: apiURL,
+            data: JSON.stringify({name:name.val(), category:$("#component_category").val(),component:stack}),
             contentType: "application/json; charset=utf-8",
             dataType: "json",
             success: function(data){
@@ -893,6 +899,7 @@ $("#savestack").click(function(){
                 var display = $('#component_display');
                 display.addClass("d-block").removeClass("d-none");
                 if(data.success) {
+                    $("#new_component_name").val("");
                     stack = {};
                     display.html("<div id=\"basicLoader\" class=\"m-2 p-2 text-center text-success\"><h2><i class=\"fa fa-check-square-o\"></i> Saved.</h2></div>");
                 } else {
