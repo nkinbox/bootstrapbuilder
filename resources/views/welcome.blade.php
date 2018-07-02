@@ -83,7 +83,7 @@
                 </div>
 
                 <div class="links">
-                        <a href="{{ route('CreateComponent') }}">CreateComponent</a>
+                        <a href="{{ route('Component.Create') }}">CreateComponent</a>
 
                 </div>
             </div>

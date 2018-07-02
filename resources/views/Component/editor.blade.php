@@ -129,10 +129,13 @@
     var urls = {
         "loadComponent":"{{ route('LoadComponent') }}",
         "loadComponents":"{{ route('LoadComponents') }}",
-        "saveComponent":"{{ route('SaveComponent') }}",
-        "editComponent":"{{ route('UpdateComponent') }}"
+        "saveComponent":"{{ route('Component.Save') }}",
+        "editComponent":"{{ route('Component.Update') }}"
     }
 </script>
+@endpush
+@push('scripts')
+<script src="{{ asset('js/component_script.js') }}" defer></script>
 @endpush
 @push("styles")
 <style>
