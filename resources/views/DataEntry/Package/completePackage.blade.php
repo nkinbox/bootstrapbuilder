@@ -96,7 +96,7 @@
                             <td>{{$marker->title}}</td>
                             <td><?php echo preg_replace_callback('/id=@@image\.(.*?)@@/', function($m) {                        
                                 $image = App\Models\Images::find($m[1]);
-                                return 'src="' .asset('storage/'.$image->file_name). '"';
+                                return 'src="' .(($image)?asset('storage/'.$image->file_name):'#'). '"';
                                 },$marker->content); ?>
                                 @if($marker->content_id)
                                 <script> var content_{{$marker->content_id}} = {!!json_encode($marker->getContent->content)!!};</script>
@@ -138,7 +138,7 @@
                             <td>{{$price->title}}</td>
                             <td>{{$price->price_start}} {{$price->currency}}</td>
                             <td>{{($price->price_end)?$price->price_end.' '.$price->currency:'-'}}</td>
-                            <td>{{ ($price->discount_percent)?$price->discount_percent:'-' }}</td>
+                            <td>{{ ($price->discount_percent)?$price->discount_percent.'%':'-' }}</td>
                             @if(Auth::user()->admin)
                             <td>{{($price->user_id)?$price->getUser->name:'-'}}</td>
                             <td>{{$price->created_at}}</td>

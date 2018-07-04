@@ -25,4 +25,10 @@ class PackageDetail extends Model
     public function PackagePrice() {
         return $this->hasMany('App\Models\PackagePrice');
     }
+    protected static function boot() {
+        parent::boot();        
+        static::deleting(function($model) {
+            $model->getContent()->delete();
+        });
+    }
 }

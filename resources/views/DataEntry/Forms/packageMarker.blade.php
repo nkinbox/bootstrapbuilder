@@ -11,13 +11,12 @@
                     @csrf
                     @php
                     $markers_type = App\Models\DataMarker::select('type')->where('category', 'packg')->groupBy('type')->orderBy('type')->get();
-                    //$markers_type = App\Models\DataMarker::where('category', 'packg')->groupBy('type')->get();
                     @endphp
                     @foreach($markers_type as $marker_type)
                     <div class="card my-2">
-                            <h4 class="card-header">
-                                    {{$marker_type->type}}
-                            </h4>
+                        <h4 class="card-header">
+                            {{$marker_type->type}}
+                        </h4>
                     <div class="card-body">
                     <div class="card-text">
                     @php
@@ -43,9 +42,9 @@
                             <div class="input-group-text">
                                 <input type="checkbox" name="marker[{{$marker->id}}]" value="{{$marker->id}}" id="marker_{{$marker->id}}"{{($checked)?' checked':''}}>
                             </div>
-                            <div class="input-group-text {{($checked)?'bg-success text-light':'bg-light'}}">
+                            <label for="marker_{{$marker->id}}" class="input-group-text {{($checked)?'bg-success text-light':'bg-light'}}">
                                 {{$marker->title}}
-                            </div>
+                            </label>
                         </div>
                         <div class="input-group-append">
                         <select class="custom-select" name="order[{{$marker->id}}]">
@@ -73,3 +72,6 @@
     </div>
 </div>
 @endsection
+@push('title')
+<title>{{$package->title}} | {{ucwords((($packageDetail->days)?($packageDetail->days > 1)?$packageDetail->days.' Days':'1 Day':'Only')." ".(($packageDetail->nights)?($packageDetail->nights > 1)?$packageDetail->nights.' Nights':'1 Night':'Only'))}}</title>
+@endpush

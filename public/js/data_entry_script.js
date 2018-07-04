@@ -26,12 +26,14 @@ function content_textarea() {
     $(".submit_button").attr("tabindex",(tabindex));
     return dynamic_ele;
 }
-function preview_html(html = "") {
+function preview_html(html = "", select = "") {
     var content = "";
     var regex = /@@image.(.*?)@@/g;
     if(html)
     content += html;
-    else
+    else if(select) {
+    content += $(select).val();
+    } else
     content += $("textarea[name='content']").val();
     var images = content.match(regex);
     content = content.replace(regex, '"image_$1"');
@@ -193,7 +195,15 @@ $(".struct_content").click(function(e){
         $(".preview_html").click(function() {
             preview_html();
         });
+    } else {
+        ele.html("");
     }
+});
+$(".preview_html_hotel_content").click(function() {
+    preview_html("", "textarea[name='hotel_content']");
+});
+$(".preview_html_policy_content").click(function() {
+    preview_html("", "textarea[name='policy_content']");
 });
 $(".preview_html").click(function() {
     preview_html();
@@ -208,6 +218,9 @@ $("#geolocation_form").submit(function(e){
     $.each($(this).serializeArray(), function(i, field){
         data[field.name] = field.value;
     });
+    data['route'] = "";
+    if($(this).attr('data-route'))
+    data['route'] = $(this).attr('data-route');
     $("#ajax_status").addClass("fa-spinner").removeClass("fa-search");
     $.ajax({
         type: "POST",

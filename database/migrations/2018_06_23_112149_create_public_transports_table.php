@@ -18,7 +18,7 @@ class CreatePublicTransportsTable extends Migration
             $table->unsignedInteger('geolocation_id')->default(0);
             $table->string('type', 15); //['airport', 'bus_stand', 'railway_station']
             $table->string('title', 80);
-            $table->string('category', 20);
+            $table->string('category', 50);
             $table->unsignedDecimal('latitude', 10, 8)->default(null)->nullable();
             $table->unsignedDecimal('longitude', 10, 8)->default(null)->nullable();
             $table->unsignedInteger('content_id')->default(0);

@@ -27,4 +27,10 @@ class Package extends Model
     public function Images() {
         return $this->hasMany('App\Models\Images', 'belongs_to', 'id')->where('type', 'package');
     }
+    protected static function boot() {
+        parent::boot();        
+        static::deleting(function($model) {
+            $model->getContent()->delete();
+        });
+    }
 }

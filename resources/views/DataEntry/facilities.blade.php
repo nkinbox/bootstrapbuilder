@@ -36,7 +36,7 @@
                     <td><span class="badge badge-light">{!!($facility->type == "hotel")?'<i class="fa fa-building"></i> Hotel':'<i class="fa fa-hotel"></i> Room'!!}</span></td>
                     <td><?php echo preg_replace_callback('/id=@@image\.(.*?)@@/', function($m) {                        
                         $image = App\Models\Images::find($m[1]);
-                        return 'src="' .asset('storage/'.$image->file_name). '"';
+                        return 'src="' .(($image)?asset('storage/'.$image->file_name):'#'). '"';
                         },$facility->content); ?>
                         @if($facility->content_id)
                         <script> var content_{{$facility->content_id}} = {!!json_encode($facility->getContent->content)!!};</script>

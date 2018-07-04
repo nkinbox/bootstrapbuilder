@@ -16,7 +16,7 @@ class CreateHotelContactsTable extends Migration
         Schema::create('hotel_contacts', function (Blueprint $table) {
             $table->increments('id');
             $table->unsignedInteger('hotel_id');
-            $table->string('type', 10);
+            $table->string('type', 10); //email mobile landline website
             $table->string('content', 200);
             $table->unsignedInteger('user_id')->default(0);
             $table->timestamps();

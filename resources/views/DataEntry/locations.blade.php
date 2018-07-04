@@ -9,10 +9,14 @@
         @if(!$operation)
         <h6 class="card-subtitle mb-2 text-muted">These are global locations can be Landmark or Attraction</h6>
         @endif
+        @if($operation == "geography")
+        @include('DataEntry.Forms.geolocation', ["route" => Route::currentRouteName()])
+        @endif
         <p class="card-text">
             @if($operation && ($operation == "add" || $operation == "edit"))
             @include('DataEntry.Forms.location')
             @else
+            {{ $locations->links() }}
             <table class="table table-hover">
                 <thead>
                     <tr>
@@ -59,6 +63,7 @@
                 @endforeach
                 </tbody>
             </table>
+            {{ $locations->links() }}
             @endif
         </p>
     </div>

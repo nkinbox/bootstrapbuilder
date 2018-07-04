@@ -13,4 +13,10 @@ class PackageMarker extends Model
     public function getContent() {
         return $this->hasOne('App\Models\Content', 'id', 'content_id');
     }
+    protected static function boot() {
+        parent::boot();        
+        static::deleting(function($model) {
+            $model->getContent()->delete();
+        });
+    }
 }

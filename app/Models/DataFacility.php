@@ -13,4 +13,10 @@ class DataFacility extends Model
     public function getUser() {
         return $this->hasOne('App\Models\User', 'id', 'user_id');
     }
+    protected static function boot() {
+        parent::boot();        
+        static::deleting(function($model) {
+            $model->getContent()->delete();
+        });
+    }
 }

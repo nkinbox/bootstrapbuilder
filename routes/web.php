@@ -22,7 +22,10 @@ Route::middleware('auth')->prefix('data')->group(function () {
     
     Route::post('/image/get', 'DataEntryController@image_get')->name('Image.get');
     Route::post('/image/upload', 'DataEntryController@image_upload')->name('Image.upload');
+    
+    Route::get('/geolocation', 'DataEntryController@geolocation')->name('Geolocation');
     Route::post('/geolocation/get', 'DataEntryController@geolocation_get')->name('Geolocation.get');
+    Route::post('/geolocation/add', 'DataEntryController@geolocation_add')->name('Geolocation.add');
 
     Route::post('/hotel/get', 'DataEntryController@hotel_get')->name('Hotel.get');
 
@@ -40,6 +43,11 @@ Route::middleware('auth')->prefix('data')->group(function () {
     Route::post('/locations', 'DataEntryController@locations_add')->name('DataEntry.Locations.add');
     Route::put('/locations', 'DataEntryController@locations_edit')->name('DataEntry.Locations.edit');
     Route::get('/delete/location/{id}', 'DataEntryController@locations_delete')->name('DataEntry.Locations.delete')->middleware('canDelete');
+
+    Route::get('/transports/{operation?}/{id?}', 'DataEntryController@transports')->name('DataEntry.Transports');
+    Route::post('/transports', 'DataEntryController@transports_add')->name('DataEntry.Transports.add');
+    Route::put('/transports', 'DataEntryController@transports_edit')->name('DataEntry.Transports.edit');
+    Route::get('/delete/transport/{id}', 'DataEntryController@transports_delete')->name('DataEntry.Transports.delete')->middleware('canDelete');
 
     Route::get('/package/itineraries/{package_id}/{package_detail_id}/{operation?}/{id?}', 'DataEntryController@package_itineraries')->name('DataEntry.Package.Itineraries');
     Route::post('/package/itineraries', 'DataEntryController@package_itineraries_add')->name('DataEntry.Package.Itineraries.add');
@@ -69,10 +77,10 @@ Route::middleware('auth')->prefix('data')->group(function () {
     Route::put('/hotel/contact', 'DataEntryController@hotel_contact_edit')->name('DataEntry.Hotel.Contact.edit');
     Route::get('/delete/hotel/contact/{id}', 'DataEntryController@hotel_contact_delete')->name('DataEntry.Hotel.Contact.delete')->middleware('canDelete');
     
-    Route::get('/hotel/facility/{hotel_id}/{operation?}/{id?}', 'DataEntryController@hotel_facility')->name('DataEntry.Hotel.Facility');
+    Route::get('/hotel/facility/{hotel_id}/{operation?}/{hotel_room_id?}', 'DataEntryController@hotel_facility')->name('DataEntry.Hotel.Facility');
     Route::post('/hotel/facility', 'DataEntryController@hotel_facilities')->name('DataEntry.Hotel.Facility.option');
     
-    Route::get('/hotel/marker/{hotel_id}/{operation?}/{id?}', 'DataEntryController@hotel_marker')->name('DataEntry.Hotel.Marker');
+    Route::get('/hotel/marker/{hotel_id}', 'DataEntryController@hotel_marker')->name('DataEntry.Hotel.Marker');
     Route::post('/hotel/marker', 'DataEntryController@hotel_markers')->name('DataEntry.Hotel.Markers');
     
     Route::get('/hotel/room/{hotel_id}/{operation?}/{id?}', 'DataEntryController@hotel_room')->name('DataEntry.Hotel.Room');
@@ -80,11 +88,10 @@ Route::middleware('auth')->prefix('data')->group(function () {
     Route::put('/hotel/room', 'DataEntryController@hotel_room_edit')->name('DataEntry.Hotel.Room.edit');
     Route::get('/delete/hotel/room/{id}', 'DataEntryController@hotel_room_delete')->name('DataEntry.Hotel.Room.delete')->middleware('canDelete');
     
-    Route::get('/hotel/{operation?}/{id?}', 'DataEntryController@hotel')->name('DataEntry.Hotel');
+    Route::get('/hotel/{operation?}/{id?}/{tab?}', 'DataEntryController@hotel')->name('DataEntry.Hotel');
     Route::post('/hotel', 'DataEntryController@hotel_add')->name('DataEntry.Hotel.add');
     Route::put('/hotel', 'DataEntryController@hotel_edit')->name('DataEntry.Hotel.edit');
     Route::get('/delete/hotel/{id}', 'DataEntryController@hotel_delete')->name('DataEntry.Hotel.delete')->middleware('canDelete');
-    
     
 });
 

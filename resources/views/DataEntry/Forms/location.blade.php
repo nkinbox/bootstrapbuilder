@@ -28,7 +28,7 @@
                 <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" tabindex="5">
                 </button>
                 <div class="dropdown-menu">
-                <a class="dropdown-item struct_content" href="#">Add Content</a>
+                <a class="dropdown-item struct_content" href="#">Add / Remove Content</a>
                 </div>
             </div>
         </div>

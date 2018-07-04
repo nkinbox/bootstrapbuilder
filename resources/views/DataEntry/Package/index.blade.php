@@ -5,17 +5,22 @@
         @if(!$operation)
         <a class="nav-link pull-right" href="{{ route('DataEntry.Package',['operation' => 'add']) }}"><i class="fa fa-plus-circle"></i> Add New</a>
         <h2 class="card-title">Tour Packages</h2>
+        @elseif($operation == "geography")
+        <a class="nav-link pull-right" href="{{ route('DataEntry.Package',['operation' => 'add']) }}"><i class="fa fa-plus-circle"></i> Add New</a>
+        <h2 class="card-title">Tour Packages by GeoLocation</h2>
         @elseif($operation == "add")
         <h2 class="card-title">Add Tour Package</h2>
-        @else
+        @elseif($operation == "edit")
         <h2 class="card-title">{{ ucwords((($operation == "edit")?'Edit ':'').$package->title)." " }}</h2>
         @endif
         <p class="card-text">
-            @if($operation)
-            @if($operation == "add" || $operation == "edit")
+            @if($operation && $operation == "add" || $operation == "edit")
             @include('DataEntry.Forms.package')
-            @endif
             @else
+            @if($operation && $operation == "geography")
+            @include('DataEntry.Forms.geolocation', ["route" => Route::currentRouteName()])
+            @endif
+            {{ $packages->links() }}
             <table class="table table-hover">
                 <thead>
                     <tr>
@@ -48,7 +53,7 @@
                         @foreach($package->PackageItinerary as $itinerary)
                         @if($itinerary->geolocation_id && !in_array($itinerary->geolocation_id, $arrGeoLocation))
                         <?php $arrGeoLocation[] = $itinerary->geolocation_id; ?>
-                        @component('DataEntry.Forms.ComponentGeoLocation', ["geoLocation" => $itinerary->geoLocation, "routeName" => null, "routePram" => []])
+                        @component('DataEntry.Forms.ComponentGeoLocation', ["geoLocation" => $itinerary->geoLocation, "routeName" => 'DataEntry.Package', "routePram" => ['operation' => 'geography', 'id' =>$itinerary->geolocation_id]])
                         @endcomponent
                         <br>
                         @endif
@@ -56,7 +61,7 @@
                     </td>
                     <td><?php echo preg_replace_callback('/id=@@image\.(.*?)@@/', function($m) {                        
                         $image = App\Models\Images::find($m[1]);
-                        return 'src="' .asset('storage/'.$image->file_name). '"';
+                        return 'src="' .(($image)?asset('storage/'.$image->file_name):'#'). '"';
                         },$package->content); ?>
                         @if($package->content_id)
                         <script> var content_{{$package->content_id}} = {!!json_encode($package->getContent->content)!!};</script>
@@ -77,6 +82,7 @@
                 @endforeach
                 </tbody>
             </table>
+            {{ $packages->links() }}
             @endif
         </p>
     </div>

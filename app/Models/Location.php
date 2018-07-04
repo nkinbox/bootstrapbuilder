@@ -15,4 +15,10 @@ class Location extends Model
     public function geoLocation() {
         return $this->hasOne('App\Models\GeoLocation', 'id', 'geolocation_id');
     }
+    protected static function boot() {
+        parent::boot();        
+        static::deleting(function($model) {
+            $model->getContent()->delete();
+        });
+    }
 }

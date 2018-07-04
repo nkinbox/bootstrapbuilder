@@ -36,7 +36,7 @@
                     <td><a href="{{route('DataEntry.Markers', ["operation"=>"type", "id"=>$marker->type])}}">{{$marker->type}}</a></td>
                     <td><?php echo preg_replace_callback('/id=@@image\.(.*?)@@/', function($m) {                        
                         $image = App\Models\Images::find($m[1]);
-                        return 'src="' .asset('storage/'.$image->file_name). '"';
+                        return 'src="' .(($image)?asset('storage/'.$image->file_name):'#'). '"';
                         },$marker->content); ?>
                         @if($marker->content_id)
                         <script> var content_{{$marker->content_id}} = {!!json_encode($marker->getContent->content)!!};</script>

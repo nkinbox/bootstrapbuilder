@@ -28,7 +28,7 @@
             @csrf
             <div class="form-group">
                 <label>Component Name</label>
-                <input type="text" autocomplete="off" class="form-control" name="self[name]">
+                <input type="text" class="form-control" name="self[name]">
                 <small class="form-text text-muted">Display name of Component MAX(50)</small>
             </div>
             <div class="form-group">
@@ -49,12 +49,12 @@
                             <input type="hidden" name="self[var_attributes]" value="[]">
                             <div class="form-group">
                                 <label>Start Tag</label>
-                                <input type="text" autocomplete="off" class="form-control" name="self[start_tag]">
+                                <input type="text" class="form-control" name="self[start_tag]">
                                 <small class="form-text text-muted">Starting HTML eg &lt;p&gt;,&lt;div&gt;</small>
                             </div>
                             <div class="form-group">
                                 <label>End Tag</label>
-                                <input type="text" autocomplete="off" class="form-control" name="self[end_tag]">
+                                <input type="text" class="form-control" name="self[end_tag]">
                                 <small class="form-text text-muted">Ending HTML eg &lt;/p&gt;,&lt;/div&gt;</small>
                             </div>
                             <div class="form-group">
@@ -67,22 +67,22 @@
                             </div>
                             <div class="form-group">
                                 <label>Content</label>
-                                <input type="text" autocomplete="off" class="form-control" name="self[content]" value="May Contain Some Text or Another Component">
+                                <input type="text" class="form-control" name="self[content]" value="May Contain Some Text or Another Component">
                                 <small class="form-text text-muted">Only if Content Type STATIC</small>
                             </div>
                             <div class="form-group">
                                 <label>Classes</label>
-                                <input type="text" autocomplete="off" class="form-control" name="self[classes]" value="[]">
+                                <input type="text" class="form-control" name="self[classes]" value="[]">
                                 <small class="form-text text-muted">Classes in JSON eg: ["class1", "class2"]</small>
                             </div>
                             <div class="form-group">
                                 <label>Attributes</label>
-                                <input type="text" autocomplete="off" class="form-control" name="self[attributes]" value="{}">
+                                <input type="text" class="form-control" name="self[attributes]" value="{}">
                                 <small class="form-text text-muted">Attributes in JSON eg: {"attr1":"value1", "attr2":"value2"}</small>
                             </div>
                             <div class="form-group">
                                 <label>Style</label>
-                                <input type="text" autocomplete="off" class="form-control" name="self[style]" value="{&quot;selector&quot;:&quot;&quot;, &quot;style&quot;:{}}">
+                                <input type="text" class="form-control" name="self[style]" value="{&quot;selector&quot;:&quot;&quot;, &quot;style&quot;:{}}">
                                 <small class="form-text text-muted">Style in JSON eg: {&quot;selector&quot;:&quot;&quot;, &quot;style&quot;:{&quot;width&quot;:&quot;100%&quot;}}</small>
                             </div>
                         </div>
