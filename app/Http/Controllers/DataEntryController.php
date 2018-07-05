@@ -38,6 +38,11 @@ class DataEntryController extends Controller
         ];
     }
     public function index() {
+        $this->response['breadcrumbs'][] = [
+            "route" => "",
+            "routePar" => [],
+            "name" => ucwords(Auth::user()->name)
+        ];
         return view('DataEntry.dataEntry', $this->response);
     }
     public function geolocation() {
@@ -53,7 +58,26 @@ class DataEntryController extends Controller
     public function geolocation_add(Request $request) {
         if(!Auth::user()->admin)
         return redirect()->back()->with("error", "You must be Administrator to add geolocation");
-
+        $request->validate([
+            "continent" => ['required',new alpha_dash_space,'max:15'],
+            "country" => ['required',new alpha_dash_space,'max:45'],
+            "division" => ['nullable',new alpha_dash_space,'max:50'],
+            "subdivision" => ['nullable',new alpha_dash_space,'max:50'],
+            "city" => ['nullable',new alpha_dash_space,'max:50'],
+            "time_zone" => ['required','string','max:50'],
+            "is_in_european_union" => "required|boolean"
+        ]);
+        $geoLocation = new GeoLocation;
+        $geoLocation->continent = ucwords($request->continent);
+        $geoLocation->country = ucwords($request->country);
+        $geoLocation->division = ($request->division)?ucwords($request->division):"";
+        $geoLocation->subdivision = ($request->subdivision)?ucwords($request->subdivision):"";
+        $geoLocation->city = ($request->city)?ucwords($request->city):"";
+        $geoLocation->time_zone = $request->time_zone;
+        $geoLocation->is_in_european_union = $request->is_in_european_union;
+        $geoLocation->save();
+        $result = (($geoLocation && $geoLocation->city)?$geoLocation->city.", ":'').(($geoLocation && $geoLocation->subdivision)?$geoLocation->subdivision.", ":'').(($geoLocation && $geoLocation->division)?$geoLocation->division.", ":'').(($geoLocation && $geoLocation->country)?$geoLocation->country:'');
+        return redirect()->back()->with("message", "(".$result.") Added Successfully!");
     }
     public function geolocation_get(Request $request) {
         $response = ["countries" => "", "divisions" => "", "subdivisions" => "", "cities" => ""];

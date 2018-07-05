@@ -209,6 +209,9 @@ $(".preview_html").click(function() {
     preview_html();
 });
 $("#geolocation_form input").change(function(){
+    if(typeof sync !== "undefined" && sync) {
+        $("#" + this.id + "_sync").val($(this).val());
+    }
     $(this).nextAll().val("");
     $("#geolocation_form").submit();
 });
