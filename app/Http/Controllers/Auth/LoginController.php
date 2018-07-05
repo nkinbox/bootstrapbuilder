@@ -27,7 +27,6 @@ class LoginController extends Controller
      * @var string
      */
     protected $redirectTo = '/home';
-
     /**
      * Create a new controller instance.
      *
@@ -42,5 +41,13 @@ class LoginController extends Controller
         $credential = $request->only($this->username(), 'password');
         $credential["status"] = 1;
         return $credential;
+    }
+    protected function authenticated(Request $request, $user)
+    {
+        session()->flash('message', "Welcome! ".$user->name.(($user->position)?' ('.$user->position.')':''). ".");
+        if($user->position == "Data Manager") {
+            $this->redirectTo = route("DataEntry.Home");
+        }
+        
     }
 }

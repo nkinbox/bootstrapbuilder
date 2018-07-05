@@ -5,7 +5,7 @@ Route::get('/', function () {
 
 Auth::routes();
 
-Route::middleware('auth')->prefix('component')->group(function () {
+Route::middleware('auth', 'access:Template')->prefix('component')->group(function () {
     Route::get('/create','ComponentController@create')->name("Component.Create");
     Route::get('/edit/{name}','ComponentController@edit')->name("Component.Edit");
     Route::get('/add_basic','ComponentController@addBasic')->name("Component.AddBasic");
@@ -16,8 +16,7 @@ Route::middleware('auth')->prefix('component')->group(function () {
     Route::post('/component/edit', 'ComponentController@editComponent')->name("Component.Update");
 });
 
-
-Route::middleware('auth')->prefix('data')->group(function () {
+Route::middleware('auth', 'access:Data')->prefix('data')->group(function () {
     Route::get('/', 'DataEntryController@index')->name('DataEntry.Home');
     
     Route::post('/image/get', 'DataEntryController@image_get')->name('Image.get');

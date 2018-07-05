@@ -43,7 +43,7 @@ class DataEntryController extends Controller
             "routePar" => [],
             "name" => ucwords(Auth::user()->name)
         ];
-        return view('DataEntry.dataEntry', $this->response);
+        return view('DataEntry.index', $this->response);
     }
     public function geolocation() {
         if(!Auth::user()->admin)

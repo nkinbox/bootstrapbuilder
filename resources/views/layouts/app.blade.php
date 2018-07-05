@@ -34,12 +34,9 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <!-- Left Side Of Navbar -->
                     <ul class="navbar-nav mr-auto">
 
                     </ul>
-
-                    <!-- Right Side Of Navbar -->
                     <ul class="navbar-nav ml-auto">
                         <!-- Authentication Links -->
                         @guest
@@ -50,14 +47,19 @@
                                 <a class="nav-link" href="{{ route('register') }}">{{ __('Register') }}</a>
                             </li>
                         @else
-                            <li class="nav-item">
-                                <a class="nav-link{{(Route::is("Component.*"))?' active':''}}" href="{{ route('Component.Create') }}">Component</a>
+                            <li class="nav-item dropdown">
+                                <a id="navbarDropdown" class="nav-link dropdown-toggle{{(Route::is("Component.*"))?' active':''}}" href="#" role="button" data-toggle="dropdown">
+                                    Template <span class="caret"></span>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item{{(Route::is("Component.*"))?' active':''}}" href="{{ route('Component.Create') }}">Component</a>
+                                </div>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link{{(Route::is("DataEntry.*"))?' active':''}}" href="{{ route('DataEntry.Home') }}">Data Management</a>
                             </li>
                             <li class="nav-item dropdown">
-                                <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
+                                <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown">
                                     {{ Auth::user()->name }} <span class="caret"></span>
                                 </a>
 
@@ -79,6 +81,34 @@
             </div>
         </nav>
         <main>
+            @if ($errors->any())
+            <div class="alert alert-danger m-3">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <ul class="list-group p-1">
+                    @foreach ($errors->all() as $error)
+                        <li class="list-group-item">{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
+            @if (session('message'))
+                <div class="alert alert-success m-3">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    {{ session('message') }}
+                </div>
+            @endif
+            @if (session('error'))
+                <div class="alert alert-danger m-3">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    {{ session('error') }}
+                </div>
+            @endif
             @yield('content')
         </main>
     </div>

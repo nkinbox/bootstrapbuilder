@@ -16,8 +16,8 @@ class canDelete
      */
     public function handle($request, Closure $next)
     {   
-        if(Auth::user()->can_delete)
+        if($request->user()->can_delete)
         return $next($request);
-        return redirect()->back()->with('error', 'You do not have permission to delete content.');
+        return redirect()->back()->with('error', 'Denied! You do not have permission to Delete.');
     }
 }

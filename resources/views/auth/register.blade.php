@@ -83,3 +83,6 @@
     </div>
 </div>
 @endsection
+@push('title')
+<title>Register | TripClues India PVT LTD | Centralized Panel</title>
+@endpush
