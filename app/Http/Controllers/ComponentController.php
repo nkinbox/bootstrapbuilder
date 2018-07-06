@@ -13,7 +13,7 @@ class ComponentController extends Controller
         $error = false;
         $rules = [
             "name" => "required|string|max:50|unique:components,name",
-            "category" => "required|in:basic,element,component",
+            "category" => "required|in:basic,element,component,web",
             "node" => "required|in:self,parent,child",
             "visibility" => "required|in:auth,guest,show,none",
             "content_type" => "required|in:static,variable,element",
@@ -41,7 +41,7 @@ class ComponentController extends Controller
     private function component(&$stack, $component, $pointer, $name, $index) {
         if(empty($component))
         return;
-        if($pointer == "component" || $pointer == "basic") {
+        if($pointer == "component" || $pointer == "basic" || $pointer == "web") {
             $category = $pointer;
             $pointer = "base";
         } else $category = "element";
@@ -302,21 +302,32 @@ class ComponentController extends Controller
             $component = Components::where("name", $request->name)->first();
             if(!$component)
             return response()->json(["success" => 0, "error"=> "Invalid Component Name", "stack"=>[]]);
-        }
-        $component = $request->component;
-        $this->stack = [];
-        $this->component($this->stack['base'], $component, (($request->category)?$request->category:'component'), "temp_name", 0);
-        $error = $this->validateComponent();
-        if($error) {
-            return response()->json(["success" => 0, "error"=> $error, "stack"=>$this->stack]);
-        } else {
-            $delete = [];
-            $this->fetchComponentID($request->name, $delete);
-            Components::destroy($delete);
+            $component = $request->component;
             $this->stack = [];
-            $this->component($this->stack['base'], $component, (($request->category)?$request->category:'component'), (($request->name)?$request->name:''), 0);
-            $this->insertComponent($this->stack['base']);
+            $this->component($this->stack['base'], $component, (($request->category)?$request->category:'component'), "temp_name", 0);
+            $error = $this->validateComponent();
+            if($error) {
+                return response()->json(["success" => 0, "error"=> $error, "stack"=>$this->stack]);
+            } else {
+                $delete = [];
+                $this->fetchComponentID($request->name, $delete);
+                Components::destroy($delete);
+                $this->stack = [];
+                $this->component($this->stack['base'], $component, (($request->category)?$request->category:'component'), (($request->name)?$request->name:''), 0);
+                $this->insertComponent($this->stack['base']);
+            }
         }
         return response()->json(["success" => 1]);
+    }
+    public function deleteComponent($name = null) {
+        if($name) {
+            $component = Components::where("name", $name)->first();
+            if(!$component)
+            return redirect()->back()->with("error", "Component does not exists!");
+        }
+        $delete = [];
+        $this->fetchComponentID($name, $delete);
+        Components::destroy($delete);
+        return redirect()->back()->with("message", "Component " .$name. " deleted successfully!");
     }
 }

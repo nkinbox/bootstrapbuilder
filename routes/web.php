@@ -14,6 +14,7 @@ Route::middleware('auth', 'access:Template')->prefix('component')->group(functio
     Route::get('/components/load', 'ComponentController@loadComponents')->name("LoadComponents");
     Route::post('/component/save', 'ComponentController@saveComponent')->name("Component.Save");
     Route::post('/component/edit', 'ComponentController@editComponent')->name("Component.Update");
+    Route::get('/component/delete/{name}', 'ComponentController@deleteComponent')->name("Component.Delete")->middleware('canDelete');
 });
 
 Route::middleware('auth', 'access:Data')->prefix('data')->group(function () {

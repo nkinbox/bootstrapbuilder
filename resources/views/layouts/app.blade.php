@@ -48,15 +48,16 @@
                             </li>
                         @else
                             <li class="nav-item dropdown">
-                                <a id="navbarDropdown" class="nav-link dropdown-toggle{{(Route::is("Component.*"))?' active':''}}" href="#" role="button" data-toggle="dropdown">
-                                    Template <span class="caret"></span>
+                                <a id="navbarDropdown" class="nav-link dropdown-toggle{{(Route::is("Component.*"))?' active bg-light':''}}" href="#" role="button" data-toggle="dropdown">
+                                   <i class="fa fa-html5"></i> Template <span class="caret"></span>
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
-                                    <a class="dropdown-item{{(Route::is("Component.*"))?' active':''}}" href="{{ route('Component.Create') }}">Component</a>
+                                    <a class="dropdown-item{{(Route::is("Component.Create") || Route::is("Component.Edit"))?' active':''}}" href="{{ route('Component.Create') }}"><i class="fa fa-cubes"></i> Component Editor</a>
+                                    <a class="dropdown-item{{(Route::is("Component.AddBasic"))?' active':''}}" href="{{ route('Component.AddBasic') }}"><i class="fa fa-database"></i> Basic Component</a>
                                 </div>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link{{(Route::is("DataEntry.*"))?' active':''}}" href="{{ route('DataEntry.Home') }}">Data Management</a>
+                                <a class="nav-link{{(Route::is("DataEntry.*"))?' active bg-light':''}}" href="{{ route('DataEntry.Home') }}"><i class="fa fa-database"></i> Data Management</a>
                             </li>
                             <li class="nav-item dropdown">
                                 <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button" data-toggle="dropdown">
@@ -67,7 +68,7 @@
                                     <a class="dropdown-item" href="{{ route('logout') }}"
                                        onclick="event.preventDefault();
                                                      document.getElementById('logout-form').submit();">
-                                        {{ __('Logout') }}
+                                        <i class="fa fa-sign-out"></i> {{ __('Logout') }}
                                     </a>
 
                                     <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">

@@ -24,7 +24,7 @@
     <div class="card-body">
         <h3 class="card-title">Add Basic Component</h3>
         <hr>
-        <form method="post" action="{{ route("AddComponent") }}">
+        <form method="post" action="{{ route("Component.Add") }}">
             @csrf
             <div class="form-group">
                 <label>Component Name</label>
@@ -129,6 +129,9 @@
     </div>
 </div>
 @endsection
+@push('title')
+<title>Add Basic Component</title>
+@endpush
 @push('scripts')
 <script src="{{ asset('js/component_script.js') }}" defer></script>
 @endpush

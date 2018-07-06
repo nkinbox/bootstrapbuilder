@@ -20,3 +20,6 @@
     </div>
 </div>
 @endsection
+@push('title')
+<title>Centralized Panel | Tripclues India PVT LTD</title>
+@endpush

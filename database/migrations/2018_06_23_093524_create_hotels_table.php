@@ -20,7 +20,6 @@ class CreateHotelsTable extends Migration
             $table->string('hotel_name', 100);
             $table->string('address', 100)->default(null)->nullable();
             $table->unsignedInteger('no_of_rooms')->default(null)->nullable();
-            $table->unsignedInteger('meta_id')->default(0);
             $table->unsignedInteger('content_id')->default(0);
             $table->unsignedInteger('policy_id')->default(0);
             $table->unsignedDecimal('latitude', 10, 8)->default(null)->nullable();

@@ -17,7 +17,7 @@ class CreateComponentsTable extends Migration
             $table->increments('id');
             $table->unsignedInteger("geolocation")->default(0);
             $table->string("name", 50);
-            $table->enum("category",["basic", "element", "component"]);
+            $table->string("category", 10); //["basic", "element", "component", "web"]
             $table->enum("node", ["parent", "self", "child"]);
             $table->enum("visibility", ["auth", "guest", "show", "none"])->default("show");
             $table->enum("content_type", ["static", "variable", "element"]);
@@ -31,6 +31,8 @@ class CreateComponentsTable extends Migration
             $table->string("classes", 500)->default("[]")->nullable();
             $table->string("style", 500)->default("{}")->nullable();
             $table->string("content", 1000)->default(null)->nullable();
+            $table->index('name');
+            $table->index('category');
         });
     }
 

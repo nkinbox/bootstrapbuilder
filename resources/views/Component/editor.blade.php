@@ -96,6 +96,7 @@
                     <select class="custom-select" id="component_category">
                         <option value="component"{{ ($edit && $stack['self']['category'] == "component")?' selected':'' }}>Component</option>
                         <option value="basic"{{ ($edit && $stack['self']['category'] == "basic")?' selected':'' }}>Basic</option>
+                        <option value="web"{{ ($edit && $stack['self']['category'] == "web")?' selected':'' }}>Website</option>
                     </select>
                     <div class="input-group-append">
                         <button class="btn btn-success" type="button" id="savestack" save-mode="{{ ($edit)?'edit':'save' }}"><i class="fa fa-save"></i></button>
@@ -120,6 +121,9 @@
 {{-- Stack Tree Modal End --}}
 
 @endsection
+@push('scripts')
+<script src="{{ asset('js/component_script.js') }}"></script>
+@endpush
 @push("scripts")
 <script>
     var component = {};
@@ -132,15 +136,19 @@
         "saveComponent":"{{ route('Component.Save') }}",
         "editComponent":"{{ route('Component.Update') }}"
     }
+    @if($edit)
+    $("#loadstack").prop("checked", true);
+    if(!$.isEmptyObject(stack) && typeof stack.self !== 'undefined') {
+    loadComponent();
+    }
+    @endif
 </script>
 @endpush
-@push('scripts')
-<script src="{{ asset('js/component_script.js') }}" defer></script>
-@endpush
+
 @push("styles")
 <style>
     .position-absolute {
-        z-index: 999999;
+        z-index: 999;
         margin-bottom: 200px;
     }
     #component_display {

@@ -373,12 +373,13 @@ function stackSettingRender(ele, pointer = "") {
             $.each(ele.child, function(k, val){
                 branch = stackSettingRender(val.content, pointer+k);
                 if(branch) {
-                    node.find("ul").prepend(branch);
+                    node.find("> ul").prepend('<li><a>'+val.start_tag.replace("<","").replace(">","")+'</b>_'+val.id+'</a><ul></ul></li>').find("ul").prepend(branch);
+                    //node.find("> ul").prepend(branch);
                 } else {
                     if(val.content_type == "element")
-                    node.find("ul").prepend('<li><a href="#" data-pointer="'+pointer+k+'" class="selectPointer">'+val.start_tag.replace("<","").replace(">","")+'</b>_'+val.id+'</a></li>');
+                    node.find("> ul").prepend('<li><a href="#" data-pointer="'+pointer+k+'" class="selectPointer" ischild="true">'+val.start_tag.replace("<","").replace(">","")+'</b>_'+val.id+'</a></li>');
                     else
-                    node.find("ul").prepend('<li><a>'+val.start_tag.replace("<","").replace(">","")+'</b>_'+val.id+'</a></li>');
+                    node.find("> ul").prepend('<li><a>'+val.start_tag.replace("<","").replace(">","")+'</b>_'+val.id+'</a></li>');
                 }
             });
         } else if(typeof ele.self === "object" && ele.self != null) {
@@ -386,7 +387,7 @@ function stackSettingRender(ele, pointer = "") {
                 node.append('<a href="#" data-pointer="'+pointer+'self" class="selectPointer">'+ele.self.start_tag.replace("<","").replace(">","")+'</b>_'+ele.self.id+'</a><ul></ul>');
                 branch = stackSettingRender(ele.self.content, pointer+'self');
                 if(branch) {
-                    node.find("ul").append(branch);
+                    node.find("> ul").append(branch);
                 }
             } else {
                 if(ele.self.content_type == "element")
@@ -480,6 +481,7 @@ $("#BrowseComponents").click(function(){
     display.html("<div id=\"basicLoader\" class=\"m-2 p-2 text-center\"><h2><i class=\"fa fa-spinner\"></i> Loading Components.</h2></div>");
     $.getJSON(urls.loadComponents, function(response, status){
         if(status == "success") {
+            $("#loadstack").prop("checked", true);
             $.each(response, function(i, value){
                 container.find(".card-header").html(value.self.name);
                 container.find(".card-body").html("").append(component_renderer(value, true));
@@ -935,12 +937,17 @@ $("#showstack").click(function(){
             $("#stackTree").modal("hide");
             var mode = $("input[name='mode']:checked").val();
             $("#showstack").attr("data-mode", mode);
-            if(mode != "select")
-            nodeEditor(mode);
+            if(mode != "select") {
+                if($(this).is('[ischild]')){
+                    alert(mode+" not allowed on this node");
+                } else {
+                    nodeEditor(mode);
+                }
+            }
             else if($(this).is('[haschild]')) {
                 stackPointer = "";
                 alert("This Node Cannot be Selected.");
-            }            
+            }
             loadComponent();
         } else {
             alert("Editor have Node in Edit Mode.");
