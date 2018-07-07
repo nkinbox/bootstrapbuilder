@@ -23,6 +23,7 @@
             <select class="custom-select" tabindex="4" name="type">
                 <option value="landmark"{{(old("type", (($location)?$location->type:'')) == "landmark")?' selected':''}}>Landmark</option>
                 <option value="attraction"{{(old("type", (($location)?$location->type:'')) == "attraction")?' selected':''}}>Attraction</option>
+                <option value="locality"{{(old("type", (($location)?$location->type:'')) == "locality")?' selected':''}}>Locality</option>
             </select>
             <div class="input-group-append">
                 <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" tabindex="5">

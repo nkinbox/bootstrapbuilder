@@ -939,7 +939,8 @@ $("#showstack").click(function(){
             $("#showstack").attr("data-mode", mode);
             if(mode != "select") {
                 if($(this).is('[ischild]')){
-                    alert(mode+" not allowed on this node");
+                    $("#showstack").attr("data-mode", "select");
+                    alert(mode[0].toUpperCase() + mode.substring(1)+" not allowed on this node");
                 } else {
                     nodeEditor(mode);
                 }

@@ -27,7 +27,6 @@ Route::middleware('auth', 'access:Data')->prefix('data')->group(function () {
     Route::post('/geolocation/get', 'DataEntryController@geolocation_get')->name('Geolocation.get');
     Route::post('/geolocation/add', 'DataEntryController@geolocation_add')->name('Geolocation.add');
 
-    Route::post('/hotel/get', 'DataEntryController@hotel_get')->name('Hotel.get');
 
     Route::get('/facilities/{operation?}/{id?}', 'DataEntryController@facilities')->name('DataEntry.Facilities');
     Route::post('/facilities', 'DataEntryController@facilities_add')->name('DataEntry.Facilities.add');
@@ -40,6 +39,7 @@ Route::middleware('auth', 'access:Data')->prefix('data')->group(function () {
     Route::get('/delete/marker/{id}', 'DataEntryController@markers_delete')->name('DataEntry.Markers.delete')->middleware('canDelete');
 
     Route::get('/locations/{operation?}/{id?}', 'DataEntryController@locations')->name('DataEntry.Locations');
+    Route::post('/locations/get', 'DataEntryController@locations_get')->name('DataEntry.Locations.get');
     Route::post('/locations', 'DataEntryController@locations_add')->name('DataEntry.Locations.add');
     Route::put('/locations', 'DataEntryController@locations_edit')->name('DataEntry.Locations.edit');
     Route::get('/delete/location/{id}', 'DataEntryController@locations_delete')->name('DataEntry.Locations.delete')->middleware('canDelete');
@@ -89,6 +89,7 @@ Route::middleware('auth', 'access:Data')->prefix('data')->group(function () {
     Route::get('/delete/hotel/room/{id}', 'DataEntryController@hotel_room_delete')->name('DataEntry.Hotel.Room.delete')->middleware('canDelete');
     
     Route::get('/hotel/{operation?}/{id?}/{tab?}', 'DataEntryController@hotel')->name('DataEntry.Hotel');
+    Route::post('/hotel/get', 'DataEntryController@hotel_get')->name('Hotel.get');
     Route::post('/hotel', 'DataEntryController@hotel_add')->name('DataEntry.Hotel.add');
     Route::put('/hotel', 'DataEntryController@hotel_edit')->name('DataEntry.Hotel.edit');
     Route::get('/delete/hotel/{id}', 'DataEntryController@hotel_delete')->name('DataEntry.Hotel.delete')->middleware('canDelete');

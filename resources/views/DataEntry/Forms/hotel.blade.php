@@ -13,6 +13,8 @@
             <form action="{{ route('DataEntry.Hotel.add') }}" method="post">
             @endif
                 @csrf
+                    @component('DataEntry.Forms.locationSearch', ["default" => (($hotel && $hotel->location_id)?$hotel->Location->title:'')])
+                    @endcomponent
                     <div class="input-group mb-3">
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fa fa-map-marker"></i></span>

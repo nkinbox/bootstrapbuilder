@@ -89,44 +89,49 @@ class DataEntryController extends Controller
         $city = ($request->city)?$request->city:'';
         if($continent) {
             if($country) {
-                $countries = [["selected"=>$country]];
                 $geolocation_id = GeoLocation::where(["continent" => $continent, "country" => $country])->first();
-                if($geolocation_id)
-                Cookie::queue('geolocation_id', $geolocation_id->id, 0);
-                if($division) {
-                    $divisions = [["selected"=>$division]];
-                    $geolocation_id = GeoLocation::where(["continent" => $continent, "country" => $country, "division" => $division])->first();
-                    if($geolocation_id)
+                if($geolocation_id) {
+                    $countries = [["selected"=>$country]];
                     Cookie::queue('geolocation_id', $geolocation_id->id, 0);
-                    if($subdivision) {
-                        $subdivisions = [["selected"=>$subdivision]];
-                        $geolocation_id = GeoLocation::where(["continent" => $continent, "country" => $country, "division" => $division, "subdivision" => $subdivision])->first();
-                        if($geolocation_id)
-                        Cookie::queue('geolocation_id', $geolocation_id->id, 0);
-                        if($city) {
-                            $cities = [["selected"=>$city]];
-                            $geolocation_id = GeoLocation::where(["continent" => $continent, "country" => $country, "division" => $division, "subdivision" => "", "city" => $city])->first();
-                            if($geolocation_id)
+                    if($division) {
+                        $geolocation_id = GeoLocation::where(["continent" => $continent, "country" => $country, "division" => $division])->first();
+                        if($geolocation_id) {
+                            $divisions = [["selected"=>$division]];
                             Cookie::queue('geolocation_id', $geolocation_id->id, 0);
-                        } else {
-                            $cities = GeoLocation::select("city")->where(["continent" => $continent, "country" => $country, "division" => $division, "subdivision" => $subdivision])->get();
-                        }
-                    } else {
-                        $subdivisions = GeoLocation::select("subdivision")->where(["continent" => $continent, "country" => $country, "division" => $division])->groupBy("subdivision")->get();
-                        if($subdivisions[0]->subdivision == "") {
-                            $subdivisions = "";
-                            if($city) {
-                                $cities = [["selected"=>$city]];
-                                $geolocation_id = GeoLocation::where(["continent" => $continent, "country" => $country, "division" => $division, "subdivision" => "", "city" => $city])->first();
-                                if($geolocation_id)
-                                Cookie::queue('geolocation_id', $geolocation_id->id, 0);
+                            if($subdivision) {
+                                $geolocation_id = GeoLocation::where(["continent" => $continent, "country" => $country, "division" => $division, "subdivision" => $subdivision])->first();
+                                if($geolocation_id) {
+                                    $subdivisions = [["selected"=>$subdivision]];
+                                    Cookie::queue('geolocation_id', $geolocation_id->id, 0);
+                                    if($city) {
+                                        $geolocation_id = GeoLocation::where(["continent" => $continent, "country" => $country, "division" => $division, "subdivision" => "", "city" => $city])->first();
+                                        if($geolocation_id) {
+                                            $cities = [["selected"=>$city]];
+                                            Cookie::queue('geolocation_id', $geolocation_id->id, 0);
+                                        }
+                                    } else {
+                                        $cities = GeoLocation::select("city")->where(["continent" => $continent, "country" => $country, "division" => $division, "subdivision" => $subdivision])->get();
+                                    }
+                                }
                             } else {
-                                $cities = GeoLocation::select("city")->where(["continent" => $continent, "country" => $country, "division" => $division, "subdivision" => ""])->get();
+                                $subdivisions = GeoLocation::select("subdivision")->where(["continent" => $continent, "country" => $country, "division" => $division])->groupBy("subdivision")->get();
+                                if($subdivisions[0]->subdivision == "") {
+                                    $subdivisions = "";
+                                    if($city) {
+                                        $geolocation_id = GeoLocation::where(["continent" => $continent, "country" => $country, "division" => $division, "subdivision" => "", "city" => $city])->first();
+                                        if($geolocation_id) {
+                                            $cities = [["selected"=>$city]];
+                                            Cookie::queue('geolocation_id', $geolocation_id->id, 0);
+                                        }
+                                    } else {
+                                        $cities = GeoLocation::select("city")->where(["continent" => $continent, "country" => $country, "division" => $division, "subdivision" => ""])->get();
+                                    }
+                                }
                             }
                         }
+                    } else {
+                        $divisions = GeoLocation::select("division")->where(["continent" => $continent, "country" => $country])->groupBy("division")->get();
                     }
-                } else {
-                    $divisions = GeoLocation::select("division")->where(["continent" => $continent, "country" => $country])->groupBy("division")->get();
                 }
             } else {
                 $countries = GeoLocation::select("country")->where(["continent" => $continent])->groupBy("country")->get();
@@ -140,7 +145,7 @@ class DataEntryController extends Controller
 
         $response["current"] = (($request->route && $geolocation_id)?'<a href='.route($request->route, ['operation' => 'geography', 'id' => $geolocation_id]).' class="text-dark" tabindex="1">':'').
         (($geolocation_id)?"<ol class='breadcrumb bg-warning'>":'').
-        (($geolocation_id && $geolocation_id->country)?"<li class='breadcrumb-item'><i class='fa fa-map-marker'></i> ".$geolocation_id->country:'</li>').
+        (($geolocation_id && $geolocation_id->country)?"<li class='breadcrumb-item'><i class='fa fa-map-marker'></i> ".$geolocation_id->country.'</li>':'').
         (($geolocation_id && $geolocation_id->division)?"<li class='breadcrumb-item'>".$geolocation_id->division."</li>":'').
         (($geolocation_id && $geolocation_id->subdivision)?"<li class='breadcrumb-item'>".$geolocation_id->subdivision."</li>":'').
         (($geolocation_id && $geolocation_id->city)?"<li class='breadcrumb-item'>".$geolocation_id->city."</li>":'').
@@ -561,6 +566,20 @@ class DataEntryController extends Controller
         }
         return view('DataEntry.locations', $this->response);
     }
+    public function locations_get() {
+        $response = null;
+        if(Cookie::get('geolocation_id') == null) {
+            $response = ["message" => "Missing GeoLocation."];
+        }
+        $locations = Location::select('id', 'title')->where(['geolocation_id' => Cookie::get('geolocation_id'), 'type' => 'locality'])->get();
+        foreach($locations as $location) {
+            $response[$location->id] = $location->title;
+        }
+        if(!$response) {
+            $response = ["message" => "No Locality Found."];
+        }
+        return response()->json($response);
+    }
     public function locations_add(Request $request) {
         if(Cookie::get('geolocation_id') == null) {
             return redirect()->back()->with("error", "GeoLocation Missing!");
@@ -569,7 +588,7 @@ class DataEntryController extends Controller
             "latitude" => "nullable|regex:/^-?[0-9]{1,3}(?:\.[0-9]{1,8})?$/",
             "longitude" => "nullable|regex:/^-?[0-9]{1,3}(?:\.[0-9]{1,8})?$/",
             "title" => ['required',new alpha_dash_space,'max:100'],
-            "type" => "required|in:landmark,attraction",
+            "type" => "required|in:landmark,attraction,locality",
             "content_type" => "sometimes|required|in:html,text,blade",
             "content" => "required_with:content_type|string|max:65000"
         ]);
@@ -602,7 +621,7 @@ class DataEntryController extends Controller
             "latitude" => "nullable|regex:/^-?[0-9]{1,3}(?:\.[0-9]{1,8})?$/",
             "longitude" => "nullable|regex:/^-?[0-9]{1,3}(?:\.[0-9]{1,8})?$/",
             "title" => ['required',new alpha_dash_space,'max:100'],
-            "type" => "required|in:landmark,attraction",
+            "type" => "required|in:landmark,attraction,locality",
             "content_type" => "sometimes|required|in:html,text,blade",
             "content" => "required_with:content_type|string|max:65000"
         ]);
@@ -681,7 +700,7 @@ class DataEntryController extends Controller
     public function package_add(Request $request) {
         $request->validate([
             "title" => ['required',new alpha_dash_space,'max:250'],
-            "package_content" => "nullable|string|max:500",
+            "package_content" => "required|string|max:500",
             "content_type" => "sometimes|required|in:html,text,blade",
             "content" => "required_with:content_type|string|max:65000"
         ]);
@@ -712,7 +731,7 @@ class DataEntryController extends Controller
         $request->validate([
             "id" => "required|exists:packages",
             "title" => ['required',new alpha_dash_space,'max:250'],
-            "package_content" => "nullable|string|max:500",
+            "package_content" => "required|string|max:500",
             "content_type" => "sometimes|required|in:html,text,blade",
             "content" => "required_with:content_type|string|max:65000"
         ]);
@@ -1231,7 +1250,8 @@ class DataEntryController extends Controller
         if(Cookie::get('geolocation_id') == null) {
             return redirect()->back()->with("error", "Geolocation Missing.");
         }
-        $request->validate([            
+        $request->validate([
+            "location_name" => "nullable|exists:locations,title",
             "latitude" => "nullable|regex:/^-?[0-9]{1,3}(?:\.[0-9]{1,8})?$/",
             "longitude" => "nullable|regex:/^-?[0-9]{1,3}(?:\.[0-9]{1,8})?$/",
             "hotel_name" => ['required',new alpha_dash_space,'max:100'],
@@ -1246,6 +1266,17 @@ class DataEntryController extends Controller
         ]);
         $policy_id = 0;
         $content_id = 0;
+        $location_id = 0;
+        if($request->has('location_name') && $request->location_name) {
+            $location = Location::where([
+                "geolocation_id" => Cookie::get('geolocation_id'),
+                "type" => 'locality',
+                "title" => $request->location_name
+            ])->first();
+            if(!$location)
+            return redirect()->back()->with("error", "Location '" .$request->location_name. "' could not be found");
+            $location_id = $location->id;
+        }
         if($request->has("hotel_content") && $request->hotel_content) {
             $content = new Content;
             $content->content_type = $request->hotel_content_type;
@@ -1265,6 +1296,7 @@ class DataEntryController extends Controller
         $hotel = new Hotel;
         $hotel->geolocation_id = Cookie::get('geolocation_id');
         $hotel->visibility = $request->visibility;
+        $hotel->location_id = $location_id;
         $hotel->hotel_name = $request->hotel_name;
         $hotel->address = $request->address;
         $hotel->no_of_rooms = $request->no_of_rooms;
@@ -1291,6 +1323,7 @@ class DataEntryController extends Controller
         }
         $request->validate([
             "id" => "required|exists:hotels",
+            "location_name" => "nullable|exists:locations,title",
             "latitude" => "nullable|regex:/^-?[0-9]{1,3}(?:\.[0-9]{1,8})?$/",
             "longitude" => "nullable|regex:/^-?[0-9]{1,3}(?:\.[0-9]{1,8})?$/",
             "hotel_name" => ['required',new alpha_dash_space,'max:100'],
@@ -1306,6 +1339,17 @@ class DataEntryController extends Controller
         $hotel = Hotel::find($request->id);
         $policy_id = 0;
         $content_id = 0;
+        $location_id = 0;
+        if($request->has('location_name') && $request->location_name) {
+            $location = Location::where([
+                "geolocation_id" => Cookie::get('geolocation_id'),
+                "type" => 'locality',
+                "title" => $request->location_name
+            ])->first();
+            if(!$location)
+            return redirect()->back()->with("error", "Location '" .$request->location_name. "' could not be found");
+            $location_id = $location->id;
+        }
         if($request->has("hotel_content") && $request->hotel_content) {
             if($hotel->content_id)
             $content = Content::find($hotel->content_id);
@@ -1336,6 +1380,7 @@ class DataEntryController extends Controller
         }
         $hotel->geolocation_id = Cookie::get('geolocation_id');
         $hotel->visibility = $request->visibility;
+        $hotel->location_id = $location_id;
         $hotel->hotel_name = $request->hotel_name;
         $hotel->address = $request->address;
         $hotel->no_of_rooms = $request->no_of_rooms;

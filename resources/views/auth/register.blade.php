@@ -1,14 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-@if (session('message'))
-    <div class="alert alert-success m-3">
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-        {{ session('message') }}
-    </div>
-@endif
 <div class="container py-4">
     <div class="row justify-content-center">
         <div class="col-md-8">

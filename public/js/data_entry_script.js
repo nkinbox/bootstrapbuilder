@@ -273,3 +273,22 @@ $("#hotel_search").click(function(e){
         }
     });
 });
+$("#location_search").click(function(e){
+    e.preventDefault();
+    $("#ajax_status_location").addClass("fa-spinner").removeClass("fa-search");
+    $.ajax({
+        type: "POST",
+        url: urls.location,
+        dataType: "json",
+        success: function(data) {
+            $("#location_list").html("");
+            $.each(data, function(key, value){
+                $("#location_list").append('<option value="' +value+ '">');
+            });
+        $("#ajax_status_location").addClass("fa-search").removeClass("fa-spinner");
+        },
+        failure: function(errMsg) {
+            console.log(errMsg);
+        }
+    });
+});

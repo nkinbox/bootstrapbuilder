@@ -23,7 +23,7 @@ class CreatePackageMarkersTable extends Migration
             $table->string('content', 500)->nullable()->default(null);
             $table->unsignedInteger('content_id')->default(0);
             $table->unsignedInteger('user_id')->default(0);
-            $table->index(['package_id', 'type']);
+            $table->index(['package_detail_id', 'type']);
         });
     }
 

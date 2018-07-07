@@ -30,6 +30,7 @@
         "geolocation":"{{ route('Geolocation.get') }}",
         "imageUpload":"{{ route('Image.upload') }}",
         "hotel":"{{ route('Hotel.get') }}",
+        "location":"{{ route('DataEntry.Locations.get') }}",
         "image":"{{ route('Image.get') }}"
     }
 </script>

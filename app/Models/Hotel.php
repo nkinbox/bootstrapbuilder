@@ -46,4 +46,7 @@ class Hotel extends Model
     public function geoLocation() {
         return $this->hasOne('App\Models\GeoLocation', 'id', 'geolocation_id');
     }
+    public function Location() {
+        return $this->hasOne('App\Models\Location', 'id', 'location_id');
+    }
 }

@@ -10,6 +10,7 @@
     <th scope="col">Created at</th>
     <th scope="col">Updated at</th>
     @endif
+    <th scope="col">Action</th>
     </tr>
 </thead>
 <tbody>
@@ -48,6 +49,11 @@
         <td>{{$package->created_at}}</td>
         <td>{{$package->updated_at}}</td>
         @endif
+        <td>
+            <a href="{{ route('DataEntry.Package', ["operation"=>"edit", "id"=>$package->id]) }}"><i class="fa fa-edit"></i> Edit</a>
+            /
+            <a href="{{ route('DataEntry.Package.delete', ['id' => $package->id]) }}"><i class="fa fa-trash"></i> Delete</a>
+        </td>
         </tr>
 </tbody>
 </table>

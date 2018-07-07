@@ -37,7 +37,15 @@
                     <tr>
                     <th scope="row">{{$loop->iteration}}</th>
                     <td>{{$location->title}}</td>
-                    <td><span class="badge badge-light">{!!($location->type == "landmark")?'<i class="fa fa-map-pin"></i> Landmark':'<i class="fa fa-group"></i> Attraction'!!}</span></td>
+                    <td><span class="badge badge-light"><?php
+                    if($location->type == "landmark") {
+                        echo '<i class="fa fa-map-pin"></i> Landmark';
+                    } elseif($location->type == "attraction") {
+                        echo '<i class="fa fa-group"></i> Attraction';
+                    } elseif($location->type == "locality") {
+                        echo '<i class="fa fa-map-marker"></i> Locality';
+                    }
+                    ?></span></td>
                     <td{!! (!$location->geoLocation)?' class="bg-danger"':''!!}>
                     @component('DataEntry.Forms.ComponentGeoLocation', ["geoLocation" => $location->geoLocation, "routeName" => 'DataEntry.Locations', "routePram" => ["operation"=>"geography", "id"=>$location->geolocation_id]])
                     @endcomponent
