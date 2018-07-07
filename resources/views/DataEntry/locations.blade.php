@@ -50,7 +50,7 @@
                     @component('DataEntry.Forms.ComponentGeoLocation', ["geoLocation" => $location->geoLocation, "routeName" => 'DataEntry.Locations', "routePram" => ["operation"=>"geography", "id"=>$location->geolocation_id]])
                     @endcomponent
                     </td>
-                    <td{!! (!$location->latitude || !$location->longitude)?' class="bg-danger"':''!!}>{{ (($location->latitude)?$location->latitude.", ":'').$location->longitude }}</td>
+                    <td{!! ($location->type != "locality" && (!$location->latitude || !$location->longitude))?' class="bg-danger"':''!!}>{{ (($location->latitude)?$location->latitude.", ":'').$location->longitude }}</td>
                     <td>
                         @if($location->content_id)
                         <script> var content_{{$location->content_id}} = {!!json_encode($location->getContent->content)!!};</script>
