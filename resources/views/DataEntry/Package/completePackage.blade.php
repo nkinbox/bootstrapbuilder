@@ -24,6 +24,7 @@
                             <th scope="col">#</th>
                             <th scope="col">Title</th>
                             <th scope="col">Location</th>
+                            <th scope="col">Locality</th>
                             <th scope="col">Hotel</th>
                             <th scope="col">Content</th>
                             @if(Auth::user()->admin)
@@ -46,6 +47,12 @@
                                 @endcomponent
                                 @else
                                 -
+                                @endif
+                            </td>
+                            <td>
+                                @if($itinerary->location_id)
+                                <?php $arrLocation[] = $itinerary->location_id; ?>
+                                {{$itinerary->Location->title}}
                                 @endif
                             </td>
                             <td>{!! ($itinerary->hotel_id)?'<i class="fa fa-building-o"></i> '.$itinerary->hotel->hotel_name:'-' !!}</td>

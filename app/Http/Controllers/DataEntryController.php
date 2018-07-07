@@ -1119,6 +1119,7 @@ class DataEntryController extends Controller
         ]);
         $geolocation_id = 0;
         $hotel_id = 0;
+        $location_id = 0;
         if($request->itinerary_type) {
             if(Cookie::get('geolocation_id') == null) {
                 return redirect()->back()->with("error", "GeoLocation not found.");
@@ -1134,6 +1135,16 @@ class DataEntryController extends Controller
                 return redirect()->back()->with("error", "Hotel '" .$request->hotel_name. "' could not be found");
                 $hotel_id = $hotel->id;
             }
+            if($request->has('location_name') && $request->location_name) {
+                $location = Location::where([
+                    "geolocation_id" => $geolocation_id,
+                    "type" => 'locality',
+                    "title" => $request->location_name
+                ])->first();
+                if(!$location)
+                return redirect()->back()->with("error", "Location '" .$request->location_name. "' could not be found");
+                $location_id = $location->id;
+            }
         }
         $content = new Content;
         $content->content_type = $request->content_type;
@@ -1144,6 +1155,7 @@ class DataEntryController extends Controller
         $itinerary->package_detail_id = $request->package_detail_id;
         $itinerary->title = $request->title;
         $itinerary->geolocation_id = $geolocation_id;
+        $itinerary->location_id = $location_id;
         $itinerary->hotel_id = $hotel_id;
         $itinerary->content_id = $content->id;
         $itinerary->save();
@@ -1164,6 +1176,7 @@ class DataEntryController extends Controller
         $itinerary = PackageItinerary::find($request->id);
         $geolocation_id = 0;
         $hotel_id = 0;
+        $location_id = 0;
         if($request->itinerary_type) {
             if(Cookie::get('geolocation_id') == null) {
                 return redirect()->back()->with("error", "GeoLocation not found.");
@@ -1179,6 +1192,16 @@ class DataEntryController extends Controller
                 return redirect()->back()->with("error", "Hotel '" .$request->hotel_name. "' does not exist in selected GeoLocation.");
                 $hotel_id = $hotel->id;
             }
+            if($request->has('location_name') && $request->location_name) {
+                $location = Location::where([
+                    "geolocation_id" => $geolocation_id,
+                    "type" => 'locality',
+                    "title" => $request->location_name
+                ])->first();
+                if(!$location)
+                return redirect()->back()->with("error", "Location '" .$request->location_name. "' could not be found");
+                $location_id = $location->id;
+            }
         }
         $content = Content::find($itinerary->content_id);
         $content->content_type = $request->content_type;
@@ -1188,6 +1211,7 @@ class DataEntryController extends Controller
         $itinerary->package_detail_id = $request->package_detail_id;
         $itinerary->title = $request->title;
         $itinerary->geolocation_id = $geolocation_id;
+        $itinerary->location_id = $location_id;
         $itinerary->hotel_id = $hotel_id;
         $itinerary->save();
         $this->image_management($request->content, "package", $request->package_id);

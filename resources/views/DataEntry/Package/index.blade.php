@@ -27,6 +27,7 @@
                     <th scope="col">#</th>
                     <th scope="col">Title</th>
                     <th scope="col">Locations</th>
+                    <th scope="col">Locality</th>
                     <th scope="col">Content</th>
                     @if(Auth::user()->admin)
                     <th scope="col">User</th>
@@ -45,6 +46,7 @@
                         $isComplete = false;
                     } else $isComplete = false;
                     $arrGeoLocation = [];
+                    $arrLocation = [];
                     ?>
                     <tr>
                     <th scope="row"{!! (!$isComplete)?' class="bg-danger text-light"':'' !!}>{{$loop->iteration}}</th>
@@ -55,6 +57,15 @@
                         <?php $arrGeoLocation[] = $itinerary->geolocation_id; ?>
                         @component('DataEntry.Forms.ComponentGeoLocation', ["geoLocation" => $itinerary->geoLocation, "routeName" => 'DataEntry.Package', "routePram" => ['operation' => 'geography', 'id' =>$itinerary->geolocation_id]])
                         @endcomponent
+                        <br>
+                        @endif
+                        @endforeach
+                    </td>
+                    <td>
+                        @foreach($package->PackageItinerary as $itinerary)
+                        @if($itinerary->location_id && !in_array($itinerary->location_id, $arrLocation))
+                        <?php $arrLocation[] = $itinerary->location_id; ?>
+                        {{$itinerary->Location->title}}
                         <br>
                         @endif
                         @endforeach

@@ -187,7 +187,7 @@ $("#uploadImage").click(function(e){
 $(".struct_content").click(function(e){
     e.preventDefault();
     var ele = $("#struct_content_form_group");
-    if(!ele.html()) {
+    if(!ele.children().length) {
         var selectbox = content_select();
         ele.append(selectbox);
         ele.append(content_textarea());

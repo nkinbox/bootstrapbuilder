@@ -19,6 +19,9 @@ class PackageItinerary extends Model
     public function PackageDetail() {
         return $this->belongsTo('App\Models\PackageDetail');
     }
+    public function Location() {
+        return $this->hasOne('App\Models\Location', 'id', 'location_id');
+    }
     protected static function boot() {
         parent::boot();        
         static::deleting(function($model) {

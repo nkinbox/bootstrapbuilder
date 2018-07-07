@@ -19,6 +19,8 @@
                 @csrf
                 @component('DataEntry.Forms.hotelSearch', ["default" => (($itinerary && $itinerary->hotel_id)?$itinerary->hotel->hotel_name:'')])
                 @endcomponent
+                @component('DataEntry.Forms.locationSearch', ["default" => (($itinerary && $itinerary->location_id)?$itinerary->Location->title:'')])
+                @endcomponent
                 <div class="input-group mb-3">
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fa fa-text-width"></i></span>
