@@ -7,7 +7,7 @@
         @endif
         <h2 class="card-title">{{ ucwords($operation)." " }}Global {{($operation)?'Location':'Locations'}}</h2>
         @if(!$operation)
-        <h6 class="card-subtitle mb-2 text-muted">These are global locations can be Landmark or Attraction</h6>
+        <h6 class="card-subtitle mb-2 text-muted">These are global locations can be Landmark, Attraction and Locality</h6>
         @endif
         @if($operation == "geography")
         @include('DataEntry.Forms.geolocation', ["route" => Route::currentRouteName()])
