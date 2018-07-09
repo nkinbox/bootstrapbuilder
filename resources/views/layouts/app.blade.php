@@ -48,12 +48,14 @@
                             </li>
                         @else
                             <li class="nav-item dropdown">
-                                <a id="navbarDropdown" class="nav-link dropdown-toggle{{(Route::is("Component.*"))?' active bg-light':''}}" href="#" role="button" data-toggle="dropdown">
+                                <a id="navbarDropdown" class="nav-link dropdown-toggle{{(Route::is("Component.*") || Route::is("Template.*"))?' active bg-light':''}}" href="#" role="button" data-toggle="dropdown">
                                    <i class="fa fa-html5"></i> Template <span class="caret"></span>
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item{{(Route::is("Template.*") && !Route::is("Template.Page.editor"))?' active':''}}" href="{{ route('Template.index') }}"><i class="fa fa-home"></i> Home</a>
+                                    <a class="dropdown-item{{(Route::is("Template.Page.editor"))?' active':''}}" href="{{ route('Template.Page.editor') }}"><i class="fa fa-file-text"></i> Page Editor</a>
                                     <a class="dropdown-item{{(Route::is("Component.Create") || Route::is("Component.Edit"))?' active':''}}" href="{{ route('Component.Create') }}"><i class="fa fa-cubes"></i> Component Editor</a>
-                                    <a class="dropdown-item{{(Route::is("Component.AddBasic"))?' active':''}}" href="{{ route('Component.AddBasic') }}"><i class="fa fa-database"></i> Basic Component</a>
+                                    <a class="dropdown-item{{(Route::is("Component.AddBasic"))?' active':''}}" href="{{ route('Component.AddBasic') }}"><i class="fa fa-cube"></i> Basic Component</a>
                                 </div>
                             </li>
                             <li class="nav-item">
@@ -87,11 +89,11 @@
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
-                <ul class="list-group p-1">
+                <div class="p-1">
                     @foreach ($errors->all() as $error)
-                        <li class="list-group-item">{{ $error }}</li>
+                        <div>{{ $error }}</div>
                     @endforeach
-                </ul>
+                </div>
             </div>
             @endif
             @if (session('message'))

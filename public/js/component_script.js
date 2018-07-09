@@ -251,6 +251,8 @@ function addNewElement(node) {
             component["parent"] = element;
         }
     } else if(node == "child") {
+        component.self.content_type = "element";
+        component.self.content = null;
         if(typeof component.child == "undefined") {
             component["child"] = [];
             component["child"][0] = element;

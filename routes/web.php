@@ -5,16 +5,29 @@ Route::get('/', function () {
 
 Auth::routes();
 
-Route::middleware('auth', 'access:Template')->prefix('component')->group(function () {
-    Route::get('/create','ComponentController@create')->name("Component.Create");
-    Route::get('/edit/{name}','ComponentController@edit')->name("Component.Edit");
-    Route::get('/add_basic','ComponentController@addBasic')->name("Component.AddBasic");
-    Route::post('/add','ComponentController@add')->name("Component.Add");
-    Route::get('/component/load/{name?}', 'ComponentController@loadComponent')->name("LoadComponent");
-    Route::get('/components/load', 'ComponentController@loadComponents')->name("LoadComponents");
-    Route::post('/component/save', 'ComponentController@saveComponent')->name("Component.Save");
-    Route::post('/component/edit', 'ComponentController@editComponent')->name("Component.Update");
-    Route::get('/component/delete/{name}', 'ComponentController@deleteComponent')->name("Component.Delete")->middleware('canDelete');
+Route::middleware('auth', 'access:Template')->group(function () {
+    Route::prefix('template')->group(function(){
+        Route::get('/page/create', 'TemplateController@index')->name('Template.Page.editor');
+        Route::get('/page/{template_id}/{operation?}/{id?}', 'TemplateController@page')->name('Template.Page');
+        Route::post('/page/add', 'TemplateController@page_add')->name('Template.Page.add');
+        Route::put('/page/edit', 'TemplateController@page_edit')->name('Template.Page.edit');
+        Route::get('/delete/page/{template_id}/{id}', 'TemplateController@page_delete')->name('Template.Page.delete')->middleware('canDelete');
+        Route::post('/add', 'TemplateController@template_add')->name('Template.add');
+        Route::put('/edit', 'TemplateController@template_edit')->name('Template.edit');
+        Route::get('/delete/id/{id}', 'TemplateController@template_delete')->name('Template.delete')->middleware('canDelete');
+        Route::get('/{operation?}/{id?}', 'TemplateController@index')->name('Template.index');
+    });
+    Route::prefix('component')->group(function() {
+        Route::get('/create','ComponentController@create')->name("Component.Create");
+        Route::get('/edit/{name}','ComponentController@edit')->name("Component.Edit");
+        Route::get('/add_basic','ComponentController@addBasic')->name("Component.AddBasic");
+        Route::post('/add','ComponentController@add')->name("Component.Add");
+        Route::get('/load/{name?}', 'ComponentController@loadComponent')->name("LoadComponent");
+        Route::get('/basic/load', 'ComponentController@loadComponents')->name("LoadComponents");
+        Route::post('/save', 'ComponentController@saveComponent')->name("Component.Save");
+        Route::post('/edit', 'ComponentController@editComponent')->name("Component.Update");
+        Route::get('/delete/{name}', 'ComponentController@deleteComponent')->name("Component.Delete")->middleware('canDelete');
+    });
 });
 
 Route::middleware('auth', 'access:Data')->prefix('data')->group(function () {

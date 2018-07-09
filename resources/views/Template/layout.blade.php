@@ -14,23 +14,14 @@
                 @endforeach
             </ol>
         </nav>
-<div class="row">
-    <div class="col-2">
-        @include('DataEntry.leftNav')
-    </div>
-    <div class="col-10">
+    <div class="mx-auto my-3 w-75">
         @yield('card')
     </div>
-</div>
-</div>
 @endsection
 @push('scripts')
 <script>
     var urls = {
-        "geolocation":"{{ route('Geolocation.get') }}",
         "imageUpload":"{{ route('Image.upload') }}",
-        "hotel":"{{ route('Hotel.get') }}",
-        "location":"{{ route('DataEntry.Locations.get') }}",
         "image":"{{ route('Image.get') }}"
     }
 </script>

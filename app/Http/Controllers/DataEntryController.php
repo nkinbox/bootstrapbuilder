@@ -33,7 +33,7 @@ class DataEntryController extends Controller
             "breadcrumbs" => [[
                 "route" => "DataEntry.Home",
                 "routePar" => [],
-                "name" => "Home"
+                "name" => '<i class="fa fa-home"></i>'
             ]]
         ];
     }

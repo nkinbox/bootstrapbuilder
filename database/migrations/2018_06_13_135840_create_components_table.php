@@ -15,12 +15,14 @@ class CreateComponentsTable extends Migration
     {
         Schema::create('components', function (Blueprint $table) {
             $table->increments('id');
+            $table->unsignedInteger("page_id")->default(0);
+            $table->unsignedInteger("order")->default(1);
             $table->unsignedInteger("geolocation")->default(0);
             $table->string("name", 50);
             $table->string("category", 10); //["basic", "element", "component", "web"]
-            $table->enum("node", ["parent", "self", "child"]);
-            $table->enum("visibility", ["auth", "guest", "show", "none"])->default("show");
-            $table->enum("content_type", ["static", "variable", "element"]);
+            $table->string("node", 6); // ["parent", "self", "child"]
+            $table->string("visibility", 5)->default("show"); //["auth", "guest", "show", "none"]
+            $table->string("content_type", 8); //["static", "variable", "element"]
             $table->unsignedInteger("child_order")->default(1);
             $table->unsignedInteger("nested_component")->default(null)->nullable();
             $table->string("loop_source", "200")->default(null)->nullable();
@@ -31,7 +33,9 @@ class CreateComponentsTable extends Migration
             $table->string("classes", 500)->default("[]")->nullable();
             $table->string("style", 500)->default("{}")->nullable();
             $table->string("content", 1000)->default(null)->nullable();
+            $table->unsignedInteger("content_id")->default(0);
             $table->index('name');
+            $table->index('page_id');
             $table->index('category');
         });
     }
