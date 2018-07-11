@@ -59,8 +59,8 @@
                     </td>
                     @if(Auth::user()->admin)
                     <td>{{($hotel->user_id)?$hotel->getUser->name:'-'}}</td>
-                    <td>{{$hotel->created_at}}</td>
-                    <td>{{$hotel->updated_at}}</td>
+                    <td><small>{{$hotel->created_at}}</small></td>
+                    <td><small>{{$hotel->updated_at}}</small></td>
                     @endif
                     <td>
                         <a href="{{ route('DataEntry.Hotel', ["operation"=>"edit", "id"=>$hotel->id]) }}"><i class="fa fa-edit"></i> Edit</a>
@@ -126,8 +126,8 @@
                                     ?>{{$contact->content}}</td>
                                     @if(Auth::user()->admin)
                                     <td>{{($contact->user_id)?$contact->getUser->name:'-'}}</td>
-                                    <td>{{$contact->created_at}}</td>
-                                    <td>{{$contact->updated_at}}</td>
+                                    <td><small>{{$contact->created_at}}</small></td>
+                                    <td><small>{{$contact->updated_at}}</small></td>
                                     @endif
                                     <td>
                                         <a href="{{ route('DataEntry.Hotel.Contact', ['hotel_id' => $hotel->id, 'operation' => 'edit', 'id' => $contact->id]) }}"><i class="fa fa-edit"></i> Edit</a>
@@ -208,8 +208,8 @@
                                 <td>{{ ($hotelRoom->discount_percent)?$hotelRoom->discount_percent.'%':'-' }}</td>
                                 @if(Auth::user()->admin)
                                 <td>{{($hotelRoom->user_id)?$hotelRoom->getUser->name:'-'}}</td>
-                                <td>{{$hotelRoom->created_at}}</td>
-                                <td>{{$hotelRoom->updated_at}}</td>
+                                <td><small>{{$hotelRoom->created_at}}</small></td>
+                                <td><small>{{$hotelRoom->updated_at}}</small></td>
                                 <td>
                                     <a href="{{ route('DataEntry.Hotel.Room',['hotel_id' => $hotel->id, 'operation' => 'edit', 'id' => $hotelRoom->id]) }}"><i class="fa fa-edit"></i> Edit</a>
                                     /

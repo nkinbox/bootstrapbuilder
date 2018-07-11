@@ -30,6 +30,15 @@ class Template extends Model
             $model->getScript()->delete();
             $model->getCSS()->delete();
             $model->URLs()->delete();
+            foreach($model->Pages as $page) {
+                $page->getMetadata()->delete();
+                $page->getScript()->delete();
+                $page->getCSS()->delete();
+                $page->URLs()->delete();
+                foreach($page->AllComponents as $c)
+                $c->getContent()->delete();
+                $page->AllComponents()->delete();
+            }
             $model->Pages()->delete();
         });
     }

@@ -25,7 +25,10 @@ class Page extends Model
         return $this->hasOne('App\Models\Content', 'id', 'css_id');
     }
     public function Components() {
-        return $this->hasMany('App\Models\Components')->orderBy('order');
+        return $this->hasMany('App\Models\Components')->where('category', 'web')->orderBy('order');
+    }
+    public function AllComponents() {
+        return $this->hasMany('App\Models\Components');
     }
     protected static function boot() {
         parent::boot();        
@@ -34,6 +37,9 @@ class Page extends Model
             $model->getScript()->delete();
             $model->getCSS()->delete();
             $model->URLs()->delete();
+            foreach($model->AllComponents as $c)
+            $c->getContent()->delete();
+            $model->AllComponents()->delete();
         });
     }
 }

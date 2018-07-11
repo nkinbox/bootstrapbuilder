@@ -81,8 +81,8 @@
                     </td>
                     @if(Auth::user()->admin)
                     <td>{{($package->user_id)?$package->getUser->name:'-'}}</td>
-                    <td>{{$package->created_at}}</td>
-                    <td>{{$package->updated_at}}</td>
+                    <td><small>{{$package->created_at}}</small></td>
+                    <td><small>{{$package->updated_at}}</small></td>
                     @endif
                     <td>
                         <a href="{{ route('DataEntry.Package', ["operation"=>"edit", "id"=>$package->id]) }}"><i class="fa fa-edit"></i> Edit</a>

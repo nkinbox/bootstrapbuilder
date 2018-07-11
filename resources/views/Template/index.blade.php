@@ -41,8 +41,8 @@
                             </td>
                             @if(Auth::user()->admin)
                             <td>{{($template->user_id)?$template->getUser->name:'-'}}</td>
-                            <td>{{$template->created_at}}</td>
-                            <td>{{$template->updated_at}}</td>
+                            <td><small>{{$template->created_at}}</small></td>
+                            <td><small>{{$template->updated_at}}</small></td>
                             @endif
                             <td>
                                 <a href="{{ route('Template.index', ["operation"=>"edit", "id"=>$template->id]) }}"><i class="fa fa-edit"></i> Edit</a>

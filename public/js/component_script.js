@@ -155,6 +155,10 @@ function settingFormData(node, element) {
     setting += '<option selected>guest</option>';
     else
     setting += '<option>guest</option>';
+    if(element.visibility == "none")
+    setting += '<option selected>none</option>';
+    else
+    setting += '<option>none</option>';
     // if(node == "child") {
     //     if(element.visibility == "none")
     //     setting += '<option selected>none</option>';
@@ -249,6 +253,7 @@ function addNewElement(node) {
     if(node == "parent") {
         if(typeof component.parent == "undefined") {
             component["parent"] = element;
+            component["parent"].content_type = "element";
         }
     } else if(node == "child") {
         component.self.content_type = "element";
@@ -395,7 +400,8 @@ function stackSettingRender(ele, pointer = "") {
                 if(ele.self.content_type == "element")
                 node.append('<a href="#" data-pointer="'+pointer+'self" class="selectPointer">'+ele.self.start_tag.replace("<","").replace(">","")+'</b>_'+ele.self.id+'</a>');
                 else
-                node.append('<a>'+ele.self.start_tag.replace("<","").replace(">","")+'</b>_'+ele.self.id+'</a>');
+                node.append('<a href="#" data-pointer="'+pointer+'self" class="selectPointer" isbarren="true">'+ele.self.start_tag.replace("<","").replace(">","")+'</b>_'+ele.self.id+'</a>');
+                //node.append('<a>'+ele.self.start_tag.replace("<","").replace(">","")+'</b>_'+ele.self.id+'</a>');
             }
         }
     } else return false;
@@ -947,7 +953,7 @@ $("#showstack").click(function(){
                     nodeEditor(mode);
                 }
             }
-            else if($(this).is('[haschild]')) {
+            else if($(this).is('[haschild]') || $(this).is('[isbarren]')) {
                 stackPointer = "";
                 alert("This Node Cannot be Selected.");
             }

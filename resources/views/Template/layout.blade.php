@@ -27,5 +27,5 @@
 </script>
 @endpush
 @push('scripts')
-<script src="{{ asset('js/data_entry_script.js') }}" defer></script>
+<script src="{{ asset('js/data_entry_script.js') }}"></script>
 @endpush

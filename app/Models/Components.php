@@ -10,4 +10,19 @@ class Components extends Model
     public function nestedComponent() {
         return $this->hasOne('App\Models\Components', 'id', 'nested_component');
     }
+    public function Parent() {
+        return $this->hasOne('App\Models\Components', 'name', 'name')->where('node', 'parent');
+    }
+    public function Children() {
+        return $this->hasMany('App\Models\Components', 'name', 'name')->where('node', 'child')->orderBy('child_order');
+    }
+    public function getContent() {
+        return $this->hasOne('App\Models\Content', 'id', 'content_id');
+    }
+    protected static function boot() {
+        parent::boot();        
+        static::deleting(function($model) {
+            $model->getContent()->delete();
+        });
+    }
 }

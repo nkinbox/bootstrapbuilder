@@ -65,8 +65,8 @@
                     </td>
                     @if(Auth::user()->admin)
                     <td>{{($hotel->user_id)?$hotel->getUser->name:'-'}}</td>
-                    <td>{{$hotel->created_at}}</td>
-                    <td>{{$hotel->updated_at}}</td>
+                    <td><small>{{$hotel->created_at}}</small></td>
+                    <td><small>{{$hotel->updated_at}}</small></td>
                     @endif
                     <td>
                         <a href="{{ route('DataEntry.Hotel', ["operation"=>"edit", "id"=>$hotel->id]) }}"><i class="fa fa-edit"></i> Edit</a>

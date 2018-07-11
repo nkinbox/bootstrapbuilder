@@ -17,6 +17,7 @@ class CreateComponentsTable extends Migration
             $table->increments('id');
             $table->unsignedInteger("page_id")->default(0);
             $table->unsignedInteger("order")->default(1);
+            $table->string("type", 6)->default("body");
             $table->unsignedInteger("geolocation")->default(0);
             $table->string("name", 50);
             $table->string("category", 10); //["basic", "element", "component", "web"]

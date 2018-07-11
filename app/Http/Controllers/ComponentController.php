@@ -5,14 +5,20 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Components;
 use Validator;
-
+use Storage;
 class ComponentController extends Controller
 {
     private $stack;
+    private function replaceNULL($value) {
+        array_walk_recursive($value, function (&$item, $key) {
+            $item = null === $item ? '' : $item;
+        });
+        return $value;
+    }
     private function validateComponent() {
         $error = false;
         $rules = [
-            "name" => "required|string|max:50|unique:components,name",
+            "name" => "required|string|max:45|unique:components,name",
             "category" => "required|in:basic,element,component,web",
             "node" => "required|in:self,parent,child",
             "visibility" => "required|in:auth,guest,show,none",
@@ -73,11 +79,10 @@ class ComponentController extends Controller
         else
         $element["name"] = $name;
         $element["nested_component"] = null;
-        $element["loop_source"] = null;
-        $element["var_attributes"] = "[]";
-        $element["attributes"] = json_encode(array_unique($element["attributes"]));
-        $element["classes"] = json_encode(array_unique($element["classes"]));
-        $element["style"] = json_encode($element["style"]);
+        $element["var_attributes"] = ((isset($element["var_attributes"]))?json_encode(array_unique($this->replaceNULL($element["var_attributes"]))):"[]");
+        $element["attributes"] = json_encode(array_unique($this->replaceNULL($element["attributes"])));
+        $element["classes"] = json_encode(array_unique($this->replaceNULL($element["classes"])));
+        $element["style"] = json_encode($this->replaceNULL($element["style"]));
         if($element["content_type"] == "element" && !empty($element["content"])) {
             $nextComponent = $element["content"];
             $element["content"] = null;
@@ -104,6 +109,10 @@ class ComponentController extends Controller
             $id = $this->insertComponent($this->stack[$element['nested_component']]);
         }
         $ele = new Components;
+        $ele->page_id = ((isset($element['page_id']))?$element['page_id']:0);
+        $ele->order = ((isset($element['order']))?$element['order']:1);
+        $ele->type = ((isset($element['type']))?$element['type']:'body');
+        $ele->geolocation = ((isset($element['geolocation']))?$element['geolocation']:0);
         $ele->name = $element['name'];
         $ele->category = $element['category'];
         $ele->node = $element['node'];
@@ -111,6 +120,7 @@ class ComponentController extends Controller
         $ele->content_type = $element['content_type'];
         $ele->child_order = $element['child_order'];
         $ele->nested_component = $id;
+        $ele->loop_source = ((isset($element['loop_source']))?$element['loop_source']:null);
         $ele->start_tag = $element['start_tag'];
         $ele->end_tag = $element['end_tag'];
         $ele->attributes = $element['attributes'];
@@ -118,6 +128,7 @@ class ComponentController extends Controller
         $ele->classes = $element['classes'];
         $ele->style = $element['style'];
         $ele->content = $element['content'];
+        $ele->content_id = ((isset($element['content_id']))?$element['content_id']:0);
         $ele->save();
         if($element['node'] == "self")
         return $ele->id;
@@ -262,6 +273,30 @@ class ComponentController extends Controller
     }
     public function loadComponents() {
         $basiccomponents = Components::where("category", "basic")->select("id", "name")->get();
+        $response_ = [];
+        foreach($basiccomponents as $key => $basiccomponent) {
+                $response = [];
+                $components = Components::where("name", $basiccomponent->name)->orderBy("child_order")->get();
+                foreach($components as $key => $component) {
+                if($component->nested_component != null) {
+                    $nested = Components::find($component->nested_component);
+                    $components[$key]->content = $this->fetchComponent($nested->name);
+                }
+                $components[$key]->var_attributes = json_decode($component->var_attributes);
+                $components[$key]->classes = json_decode($component->classes);
+                $components[$key]->attributes = json_decode($component->attributes);
+                $components[$key]->style = json_decode($component->style);
+                if($component->node == "child")
+                $response[$component->node][] = $components[$key];
+                else
+                $response[$component->node] = $components[$key];
+            }
+            $response_[] = $response;
+        }
+        return response()->json($response_);
+    }
+    public function load_Components() {
+        $basiccomponents = Components::where("category", "component")->select("id", "name")->get();
         $response_ = [];
         foreach($basiccomponents as $key => $basiccomponent) {
                 $response = [];

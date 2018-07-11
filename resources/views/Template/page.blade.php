@@ -40,8 +40,8 @@
                             </td>
                             @if(Auth::user()->admin)
                             <td>{{($template->user_id)?$template->getUser->name:'-'}}</td>
-                            <td>{{$template->created_at}}</td>
-                            <td>{{$template->updated_at}}</td>
+                            <td><small>{{$template->created_at}}</small></td>
+                            <td><small>{{$template->updated_at}}</small></td>
                             @endif
                             <td>
                                 <a href="{{ route('Template.index', ["operation"=>"edit", "id"=>$template->id]) }}"><i class="fa fa-edit"></i> Edit</a>
@@ -60,6 +60,7 @@
                             <th scope="col">#</th>
                             <th scope="col">Title</th>
                             <th scope="col">URL</th>
+                            <th scope="col">GeoBased</th>
                             <th scope="col">MetaData</th>
                             <th scope="col">Script</th>
                             <th scope="col">CSS</th>
@@ -75,8 +76,12 @@
                             @foreach($template->Pages as $page)
                                 <tr>
                                     <th scope="row"{!! (!$page->Components->count())?' class="bg-danger text-light"':'' !!}>{{ $loop->iteration }}</th>
-                                    <td><a href="">{{$page->title}}</a></td>
+                                    <td>
+                                        <a href="{{ route('Template.Page.Component', ['page_id' => $page->id]) }}">{{$page->title}}</a>
+                                        <a href="{{ route('view', ['id' => $page->id, 'mode' => 'guest']) }}" target="_blank"><i class="fa fa-eye"></i></a>
+                                    </td>
                                     <td>{{$page->url}}</td>
+                                    <td>SKIPPED</td>
                                     <td>
                                         @if($page->meta_id)
                                         <script> var meta_content_{{$page->meta_id}} = {!!json_encode($page->getMetadata->content)!!};</script>
@@ -97,8 +102,8 @@
                                     </td>
                                     @if(Auth::user()->admin)
                                     <td>{{($page->user_id)?$page->getUser->name:'-'}}</td>
-                                    <td>{{$page->created_at}}</td>
-                                    <td>{{$page->updated_at}}</td>
+                                    <td><small>{{$page->created_at}}</small></td>
+                                    <td><small>{{$page->updated_at}}</small></td>
                                     @endif
                                     <td>
                                         <a href="{{ route('Template.Page', ['template_id' => $template->id, "operation"=>"edit", "id"=>$page->id]) }}"><i class="fa fa-edit"></i> Edit</a>

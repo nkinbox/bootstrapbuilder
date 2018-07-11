@@ -6,8 +6,14 @@ Route::get('/', function () {
 Auth::routes();
 
 Route::middleware('auth', 'access:Template')->group(function () {
+    //mode = auth guest country
+    Route::get('page/{id}/{mode}', 'TemplateController@view')->name('view');
     Route::prefix('template')->group(function(){
-        Route::get('/page/create', 'TemplateController@index')->name('Template.Page.editor');
+        Route::get('/page_component/{page_id}/{operation?}/{id?}', 'TemplateController@page_component')->name('Template.Page.Component');
+        Route::post('/page_component/add', 'TemplateController@page_component_add')->name('Template.Page.Component.add');
+        Route::put('/page_component/edit', 'TemplateController@page_component_edit')->name('Template.Page.Component.edit');
+        Route::put('/page_component/order', 'TemplateController@page_component_order')->name('Template.Page.Component.order');
+        Route::get('/delete_page_component/{id?}', 'TemplateController@page_component_delete')->name('Template.Page.Component.delete')->middleware('canDelete');
         Route::get('/page/{template_id}/{operation?}/{id?}', 'TemplateController@page')->name('Template.Page');
         Route::post('/page/add', 'TemplateController@page_add')->name('Template.Page.add');
         Route::put('/page/edit', 'TemplateController@page_edit')->name('Template.Page.edit');
@@ -24,6 +30,7 @@ Route::middleware('auth', 'access:Template')->group(function () {
         Route::post('/add','ComponentController@add')->name("Component.Add");
         Route::get('/load/{name?}', 'ComponentController@loadComponent')->name("LoadComponent");
         Route::get('/basic/load', 'ComponentController@loadComponents')->name("LoadComponents");
+        Route::get('/component/load', 'ComponentController@load_Components')->name("LoadComponents.component");
         Route::post('/save', 'ComponentController@saveComponent')->name("Component.Save");
         Route::post('/edit', 'ComponentController@editComponent')->name("Component.Update");
         Route::get('/delete/{name}', 'ComponentController@deleteComponent')->name("Component.Delete")->middleware('canDelete');
