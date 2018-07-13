@@ -25,21 +25,23 @@ class Page extends Model
         return $this->hasOne('App\Models\Content', 'id', 'css_id');
     }
     public function Components() {
-        return $this->hasMany('App\Models\Components')->where('category', 'web')->orderBy('order');
+        return $this->belongsToMany('App\Models\Components', 'page_components', 'page_id', 'component_id')->withPivot('order')->orderBy('pivot_order');
     }
     public function AllComponents() {
-        return $this->hasMany('App\Models\Components');
+        return $this->hasMany('App\Models\PageComponent');
+    }
+    public function PageContent() {
+        return $this->hasMany('App\Models\PageContent');
     }
     protected static function boot() {
-        parent::boot();        
+        parent::boot();
         static::deleting(function($model) {
             $model->getMetadata()->delete();
             $model->getScript()->delete();
             $model->getCSS()->delete();
             $model->URLs()->delete();
-            foreach($model->AllComponents as $c)
-            $c->getContent()->delete();
             $model->AllComponents()->delete();
+            $model->PageContent()->update(["page_id" => 0]);
         });
     }
 }

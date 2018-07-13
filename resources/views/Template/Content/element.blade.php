@@ -1,27 +1,3 @@
-<?php //visibility
-    $render = false;
-    if($element->visibility != "none") {
-        if($element->visibility != "show") {
-            if($element->visibility == $mode)
-            $render = true;
-            else
-            $render = false;
-        }
-        else $render = true;
-    } else $render = false;
-    if($element->node == "self" && $element->Parent) {
-        if($element->Parent->visibility != "none") {
-            if($element->Parent->visibility != "show") {
-                if($element->Parent->visibility == $mode)
-                $render = true;
-                else
-                $render = false;
-            }
-            else $render = true;
-        } else $render = false;
-    }
-?>
-@if($render)
 {{-- STYLE PUSH START --}}
 @if($element->style != '{"selector":"","style":[]}')
     <?php
@@ -92,17 +68,17 @@
         echo ' class="component"';
     }
     if($element->content_type != "element")
-    echo ' contenteditable="true" data-order="'.$order.'"';
+    echo ' contenteditable="true"';
 ?>>
 {{-- Content START --}}
 @if($element->content_type == "element")
     @if($element->node == "self" && count($element->Children))
         @foreach($element->Children as $child)
-        @include('Page.element', ["element" => $child])
+        @include('Template.Content.element', ["element" => $child])
         @endforeach
     @endif
     @if($element->nested_component)
-        @include('Page.element', ["element" => $element->nestedComponent])
+        @include('Template.Content.element', ["element" => $element->nestedComponent])
     @endif
 @else
 {!!($element->content)?$element->content:'__content__'!!}
@@ -115,4 +91,3 @@
 {!! $element->Parent->end_tag !!}
 @endif
 {{-- Parent Footer START --}}
-@endif

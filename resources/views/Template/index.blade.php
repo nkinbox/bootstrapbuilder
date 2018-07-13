@@ -11,6 +11,7 @@
                     <th scope="col">#</th>
                     <th scope="col">Title</th>
                     <th scope="col">Pages</th>
+                    <th scope="col">Components</th>
                     <th scope="col">Script</th>
                     <th scope="col">CSS</th>
                     @if(Auth::user()->admin)
@@ -25,8 +26,9 @@
                     @foreach($templates as $template)
                         <tr>
                             <th scope="row">{{$loop->iteration}}</th>
-                            <td><a href="{{ route('Template.Page', ['template_id' => $template->id]) }}">{{$template->title}}</a></td>
-                            <td>{{$template->Pages->count()}}</td>
+                            <td>{{$template->title}}</td>
+                            <td><a href="{{ route('Template.Page', ['template_id' => $template->id]) }}">{{$template->Pages->count()}}</a></td>
+                            <td><a href="{{ route('Template.Component', ['template_id' => $template->id]) }}">{{$template->Components->count()}}</a></td>
                             <td>
                                 @if($template->script_id)
                                 <script> var script_content_{{$template->script_id}} = {!!json_encode($template->getScript->content)!!};</script>

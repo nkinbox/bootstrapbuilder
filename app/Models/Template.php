@@ -24,6 +24,15 @@ class Template extends Model
     public function Images() {
         return $this->hasMany('App\Models\Images', 'belongs_to', 'id')->where('type', 'page');
     }
+    public function Components() {
+        return $this->hasMany('App\Models\Components')->where('category', 'web');
+    }
+    public function AllComponents() {
+        return $this->hasMany('App\Models\Components');
+    }
+    public function PageContent() {
+        return $this->hasMany('App\Models\PageContent');
+    }
     protected static function boot() {
         parent::boot();        
         static::deleting(function($model) {
@@ -35,11 +44,11 @@ class Template extends Model
                 $page->getScript()->delete();
                 $page->getCSS()->delete();
                 $page->URLs()->delete();
-                foreach($page->AllComponents as $c)
-                $c->getContent()->delete();
                 $page->AllComponents()->delete();
             }
             $model->Pages()->delete();
+            $model->AllComponents()->delete();
+            $model->PageContent()->update(["template_id" => 0, "page_id" => 0]);
         });
     }
 }

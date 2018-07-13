@@ -8,6 +8,7 @@
     <a href="{{ route('DataEntry.Transports') }}" class="list-group-item list-group-item-action{{ (Route::is("DataEntry.Transports"))?' active':'' }}" tabindex="20"><i class="fa fa-motorcycle"></i> Transports</a>
     <a href="{{ route('DataEntry.Package') }}" class="list-group-item list-group-item-action{{ (Route::is("DataEntry.Package") || Route::is("DataEntry.Package.*"))?' active':'' }}" tabindex="20"><i class="fa fa-shopping-bag"></i> Package</a>
     <a href="{{ route('DataEntry.Hotel') }}" class="list-group-item list-group-item-action{{ (Route::is("DataEntry.Hotel") || Route::is("DataEntry.Hotel.*"))?' active':'' }}" tabindex="20"><i class="fa fa-building"></i> Hotel</a>
+    <a href="{{ route('DataEntry.Page') }}" class="list-group-item list-group-item-action{{ (Route::is("DataEntry.Page"))?' active':'' }}" tabindex="20"><i class="fa fa-file-text"></i> Web Pages</a>
     <div class="list-group-item list-group-item-action">
         <i class="fa fa-photo"></i> Image
         <a href="#" id="browseImage" class="" tabindex="21"><i class="fa fa-folder-open-o"></i></a>

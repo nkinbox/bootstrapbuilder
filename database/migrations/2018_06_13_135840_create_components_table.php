@@ -15,10 +15,10 @@ class CreateComponentsTable extends Migration
     {
         Schema::create('components', function (Blueprint $table) {
             $table->increments('id');
-            $table->unsignedInteger("page_id")->default(0);
-            $table->unsignedInteger("order")->default(1);
-            $table->string("type", 6)->default("body");
+            $table->unsignedInteger("template_id")->default(0);
+            $table->unsignedInteger("visibility_id")->default(0);
             $table->unsignedInteger("geolocation")->default(0);
+            $table->string("type", 6)->default("body");
             $table->string("name", 50);
             $table->string("category", 10); //["basic", "element", "component", "web"]
             $table->string("node", 6); // ["parent", "self", "child"]
@@ -33,10 +33,9 @@ class CreateComponentsTable extends Migration
             $table->string("var_attributes", 500)->default("[]")->nullable();
             $table->string("classes", 500)->default("[]")->nullable();
             $table->string("style", 500)->default("{}")->nullable();
-            $table->string("content", 1000)->default(null)->nullable();
-            $table->unsignedInteger("content_id")->default(0);
+            $table->text("content")->default(null)->nullable();
             $table->index('name');
-            $table->index('page_id');
+            $table->index('template_id');
             $table->index('category');
         });
     }

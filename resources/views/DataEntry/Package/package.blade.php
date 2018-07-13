@@ -26,6 +26,13 @@
         ?>
         <tr>
         <th scope="row"{!! (!$isComplete)?' class="bg-danger text-light"':' class="bg-success text-light"' !!}><i class="fa fa-thumb-tack"></i></th>
+        <td>
+            @if($package->from_geolocation_id)
+            @component('DataEntry.Forms.ComponentGeoLocation', ["geoLocation" => $package->fromGeoLocation, "routeName" => null, "routePram" => null])
+            @endcomponent
+            <br>
+            @endif
+        </td>
         <td><a href="{{ route('DataEntry.Package.Detail', ["package_id"=>$package->id]) }}">{{$package->title}}</a></td>
         <td>
             @foreach($package->PackageItinerary as $itinerary)

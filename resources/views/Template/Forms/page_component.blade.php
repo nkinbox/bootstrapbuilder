@@ -2,154 +2,24 @@
 @section('card')
 <div class="card">
     <div class="card-body">
-        <h2 class="card-title">@if($component){{ucwords($operation)}} Component | {{$component->name}} @else Select Component @endif</h2>
+        <h2 class="card-title">@if($component){{ucwords($operation)}} Component to {{$page->title}}| {{$component->name}} @else Select Component @endif</h2>
         <div class="card-text">
             @if($component)
-                @if($operation == "edit")
-                <form action="{{ (isset($template_id))?route('Template.Component.edit'):route('Template.Page.Component.edit') }}" method="post">
-                    <input type="hidden" name="_method" value="put">
-                    <input type="hidden" name="redirectTo" value="{{$redirectTo}}">
-                @else
-                <form action="{{ (isset($template_id))?route('Template.Component.add'):route('Template.Page.Component.add') }}" method="post">
-                @endif
+                <form action="{{ route('Template.Page.Component.add') }}" method="post">
                     <input type="hidden" name="id" value="{{$component->id}}">
                     @csrf
-                    <input type="hidden" name="template_id" value="{{$template_id}}">
+                    <input type="hidden" name="page_id" value="{{$page_id}}">
+                    <input type="hidden" name="component_id" value="{{$component->id}}">
                     <div class="input-group mb-3">
                         <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="fa fa-text-width"></i></span>
+                            <span class="input-group-text"><i class="fa fa-cube"></i></span>
                         </div>
-                        <input type="text" class="form-control" placeholder="Identifying Name" tabindex="1" name="name" value="{{ old("name", (($component && $component->category == "web")?$component->name:'')) }}" required>
+                        <input type="text" class="form-control" placeholder="Identifying Name" tabindex="1" value="{{ $component->name }}" disabled>
                     </div>
-                    @include('Template.Forms.componentSetting', ["element" => $component])
                     <div class="d-flex justify-content-end">
-                        <button type="submit" class="btn btn-success submit_button" tabindex="2">Save</button>
+                        <button type="submit" class="btn btn-success submit_button" tabindex="2">Add to Page</button>
                     </div>
                 </form>
-            @push('scripts')
-                <?php $html = View::make('Component.partialRender')->withelement($component);?>
-                <script>
-                    $(".component_type").change(function(){
-                        var val = $(this).val();
-                        $(".component_type").each(function(){
-                            $(this).val(val);
-                        });
-                    });
-                    $(".child_order").change(function(){
-                        var val = $(this).val();
-                        var prev = $(this).attr("data-value");
-                        var name = $(this).attr("name");
-                        $(this).attr("data-value", val);
-                        $("[data-group='"+$(this).attr("data-group")+"']").each(function(){
-                            if($(this).attr("name") != name && $(this).val() == val) {
-                                $(this).val(prev);
-                                $(this).attr("data-value", prev);
-                            }
-                        });
-                    });
-                    $(".list-group-item").click(function(){
-                        if($(this).hasClass("active"))
-                        $(this).removeClass("active")
-                        else
-                        $(this).addClass("active")
-                    });
-                    $("#node_source").click(function(){
-                        if($(this).hasClass("node_source_show")) {
-                            $(this).removeClass("node_source_show").addClass("node_source_hidden");
-                        }
-                        else {
-                            $(this).removeClass("node_source_hidden").addClass("node_source_show");
-                        }
-                    });
-                    $("#html_source").click(function(){
-                        if($(this).hasClass("html_source_show")) {
-                            $(this).removeClass("html_source_show").addClass("html_source_hidden");
-                        }
-                        else {
-                            $(this).removeClass("html_source_hidden").addClass("html_source_show");
-                        }
-                    });
-                    var component = {!! str_replace(['\n','\r'], '', json_encode($html->render())) !!};
-                    function html(str) {
-                        var div = document.createElement('div');
-                        div.innerHTML = str.trim();
-                        return format(div, 0).innerHTML;
-                    }
-                    function format(node, level) {
-                        var indentBefore = new Array(level++ + 1).join('  '),
-                            indentAfter  = new Array(level - 1).join('  '),
-                            textNode;
-                        for (var i = 0; i < node.children.length; i++) {
-                            textNode = document.createTextNode('\n' + indentBefore);
-                            node.insertBefore(textNode, node.children[i]);
-                            format(node.children[i], level);
-                            if (node.lastElementChild == node.children[i]) {
-                                textNode = document.createTextNode('\n' + indentAfter);
-                                node.appendChild(textNode);
-                            }
-                        }
-                        return node;
-                    }
-                    $("#html_source").text(html(component));
-                </script>
-            @endpush
-            @push('styles')
-                <style>
-                    .html_source_show {
-                        box-sizing: border-box;
-                        position: fixed;
-                        margin:0;
-                        width: 500px;
-                        height: 500px;
-                        right:0;
-                        bottom:0;
-                        overflow: scroll;
-                        z-index: 20;
-                        border-left: 20px solid #f1f1f1 !important;
-                        border-top: 20px solid #f1f1f1 !important;
-                        box-shadow: -1px 2px 6px 2px #aaa;
-                    }
-                    .html_source_hidden {
-                        box-sizing: border-box;
-                        position: fixed;
-                        margin:0;
-                        padding: 0 !important;
-                        width: 20px;
-                        height: 500px;
-                        right:0;
-                        bottom:0;
-                        overflow: hidden;
-                        z-index: 20;
-                        border-left: 20px solid #585858 !important;
-                        box-shadow: -1px 2px 6px 2px #aaa;
-                    }
-                    .node_source_show {
-                        position: fixed;
-                        width: 200px;
-                        height: 500px;
-                        left:0;
-                        bottom:0;
-                        overflow-y: scroll;
-                        z-index: 20;
-                        border-top: 20px solid #f1f1f1 !important;
-                        border-bottom: 20px solid #f1f1f1 !important;
-                        box-shadow: 1px 2px 6px 2px #aaa;
-                    }
-                    .node_source_hidden {
-                        box-sizing: border-box;
-                        position: fixed;
-                        width: 20px;
-                        padding: 0 !important;
-                        height: 500px;
-                        left:0;
-                        bottom:0;
-                        overflow: hidden;
-                        z-index: 20;
-                        border-right: 20px solid #585858 !important;
-                        box-shadow: 1px 2px 6px 2px #aaa;
-                    }
-                </style>
-            @endpush
             @else
                 <div id="ComponentContainer" class="p-1 rounded"></div>
                 @push('scripts')
@@ -254,7 +124,7 @@
                         '</div>'+
                         '</div>');
                         display.html("<div id=\"basicLoader\" class=\"m-2 p-2 text-center\"><h2><i class=\"fa fa-spinner\"></i> Loading Components.</h2></div>");
-                        $.getJSON('{{ route('LoadComponents.component') }}', function(response, status){
+                        $.getJSON('{{ route('LoadComponents.template', ["template_id" => $page->Template->id]) }}', function(response, status){
                             if(status == "success") {
                                 display.closest('.w-75').removeClass('w-75').addClass('w-100');
                                 $.each(response, function(i, value){
@@ -268,7 +138,7 @@
                                 $(".useComponent").click(function(e){
                                     e.preventDefault();
                                     var display = $("#ComponentContainer");
-                                    window.location = '{{ route('Template.Component', ['template_id' => $template_id, 'operation' => 'add']).'/' }}' + $(this).attr("data-name");
+                                    window.location = '{{ ((isset($page_id))?route('Template.Page.Component', ['page_id' => $page_id, 'operation' => 'add']):route('Template.Component', ['template_id' => $template_id, 'operation' => 'add'])).'/' }}' + $(this).attr("data-name");
                                     display.closest('.w-100').removeClass('w-100').addClass('w-75');
                                     display.removeClass("bg-dark").html("<div id=\"basicLoader\" class=\"m-2 p-2 text-center\"><h2><i class=\"fa fa-spinner\"></i> Loading Component.</h2></div>");
                                 });
@@ -284,12 +154,6 @@
         </div>
     </div>
 </div>
-@if($component)
-<div id="node_source" class="node_source_show bg-white border p-2 list-group">
-    @stack('nodes')
-</div>
-<pre id="html_source" class="html_source_hidden bg-white border p-2"></pre>
-@endif
 @endsection
 @push('title')
 <title>@if($component){{ucwords($operation)}} Component | {{$component->name}} @else Select Component @endif</title>

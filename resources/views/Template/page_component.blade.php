@@ -2,14 +2,17 @@
 @section('card')
 <div class="card">
     <div class="card-body">
-        <a class="nav-link pull-right" href="{{ route('Template.Component', ['template_id' => $template->id, 'operation' => 'add']) }}"><i class="fa fa-plus-circle"></i> Add Component</a>
-        <a class="nav-link pull-right" href="{{ route('Template.Component.view', ['template_id' => $template->id]) }}" target="_blank"><i class="fa fa-edit"></i> Content</a>
-        <h2 class="card-title">{{$template->title}} | Components</h2>
+        <a class="nav-link pull-right" href="{{ route('Template.Page.Component', ['page_id' => $page->id, 'operation' => 'add']) }}"><i class="fa fa-plus-circle"></i> Add Component</a>
+        <h2 class="card-title">{{$page->Template->title}} | {{$page->title}}</h2>
         <div class="card-text">
+        <form action="{{ route('Template.Page.Component.order') }}" method="post">
+                <input type="hidden" name="_method" value="put">
+                <input type="hidden" name="page_id" value="{{$page->id}}">
+                @csrf
             <table class="table table-hover table-bordered">
                 <thead class="thead-dark">
                     <tr>
-                    <th scope="col">#</th>
+                    <th scope="col" style="width: 30px"><button type="submit" class="btn btn-warning">Order</button></th>
                     <th scope="col">Type</th>
                     <th scope="col">Name</th>
                     <th scope="col">GeoBased</th>
@@ -18,13 +21,19 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($template->Components as $component)
+                    @foreach($page->Components as $component)
                     <?php
                         $geolocation = false;
                         $checkGeolocation($component, $geolocation);
                     ?>
                         <tr>
-                            <th scope="row">{{$loop->iteration}}</th>
+                            <th scope="row">
+                                        <select class="component_order" data-value="{{$component->pivot->order}}" tabindex="1" name="order[{{$component->id}}_{{$component->pivot->order}}]">
+                                            @foreach($page->Components as $order)
+                                            <option {{($component->pivot->order == $order->pivot->order)?' selected':''}}>{{$order->pivot->order}}</option>
+                                            @endforeach
+                                        </select>
+                            </th>
                             <td>{{$component->type}}</td>
                             <td>{{$component->name}}</td>
                             <td{!! ($geolocation)?' class="bg-success text-light"':'' !!}>{{($geolocation)?'yes':''}}</td>
@@ -32,14 +41,15 @@
                             <td>
                                 <a href="{{ route('Component.Edit', ['name' => $component->name]) }}" target="_blank" title="Component Editor"><i class="fa fa-cubes"></i></a>
                                 /
-                                <a href="{{ route('Template.Component', ['template_id' => $template->id, 'operation' => 'edit', 'id' => $component->id]) }}" title="Code Edit"><i class="fa fa-edit"></i></a>
+                                <a href="{{ route('Template.Component', ['template_id' => $page->Template->id, 'operation' => 'edit', 'id' => $component->id]) }}" title="Code Edit"><i class="fa fa-edit"></i></a>
                                 /
-                                <a href="{{ route('Component.Delete', ['name' => $component->name]) }}" title="Delete"><i class="fa fa-trash"></i></a>
+                                <a href="{{ route('Template.Page.Component.delete', ['page_id' => $page->id,'id' => $component->id, 'order' => $component->pivot->order]) }}"><i class="fa fa-trash"></i> Delete</a>
                             </td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
+        </form>
         </div>
     </div>
 </div>
@@ -67,5 +77,5 @@
 </style>
 @endpush
 @push('title')
-<title>{{$template->title}} | Components</title>
+<title>{{$page->Template->title}} | {{$page->title}}</title>
 @endpush

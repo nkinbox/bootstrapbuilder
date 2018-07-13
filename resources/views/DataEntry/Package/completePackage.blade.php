@@ -36,13 +36,11 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <?php $arrGeoLocation = []; ?>
                         @foreach($packageDetail->PackageItinerary as $itinerary)
                             <tr>
                             <th scope="row">{{$loop->iteration}}</th>
                             <td>{{ $itinerary->title }}</td>
-                            <td>@if($itinerary->geolocation_id && !in_array($itinerary->geolocation_id, $arrGeoLocation))
-                                <?php $arrGeoLocation[] = $itinerary->geolocation_id; ?>
+                            <td>@if($itinerary->geolocation_id)
                                 @component('DataEntry.Forms.ComponentGeoLocation', ["geoLocation" => $itinerary->geoLocation, "routeName" => null, "routePram" => null])
                                 @endcomponent
                                 @else

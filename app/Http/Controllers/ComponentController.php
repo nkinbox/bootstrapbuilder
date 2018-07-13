@@ -4,11 +4,14 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Components;
+use App\Models\PageComponent;
+use App\Models\PageContent;
 use Validator;
 use Storage;
 class ComponentController extends Controller
 {
     private $stack;
+    private $template_id;
     private function replaceNULL($value) {
         array_walk_recursive($value, function (&$item, $key) {
             $item = null === $item ? '' : $item;
@@ -31,7 +34,7 @@ class ComponentController extends Controller
             "var_attributes" => "nullable|json|max:500",
             "classes" => "required|json|max:500",
             "style" => "required|json|max:500",
-            "content" => "required_if:content_type,static,variable|nullable|string|max:1000"
+            "content" => "required_if:content_type,static,variable|nullable|string|max:65500"
         ];        
         foreach($this->stack as $elements) {
             foreach($elements as $element) {
@@ -65,6 +68,7 @@ class ComponentController extends Controller
             $this->element($stack, $component["parent"], '', $name, $index);
         }
         if(isset($component["self"])) {
+            $this->template_id = ((isset($component["self"]["template_id"]))?$component["self"]["template_id"]:0);
             $component["self"]["node"] = "self";
             $component["self"]["category"] = $category;            
             $this->element($stack,$component["self"], $pointer.'_self', $name, $index);
@@ -109,8 +113,8 @@ class ComponentController extends Controller
             $id = $this->insertComponent($this->stack[$element['nested_component']]);
         }
         $ele = new Components;
-        $ele->page_id = ((isset($element['page_id']))?$element['page_id']:0);
-        $ele->order = ((isset($element['order']))?$element['order']:1);
+        $ele->template_id = $this->template_id;
+        $ele->visibility_id = ((isset($element['visibility_id']))?$element['visibility_id']:0);
         $ele->type = ((isset($element['type']))?$element['type']:'body');
         $ele->geolocation = ((isset($element['geolocation']))?$element['geolocation']:0);
         $ele->name = $element['name'];
@@ -128,7 +132,6 @@ class ComponentController extends Controller
         $ele->classes = $element['classes'];
         $ele->style = $element['style'];
         $ele->content = $element['content'];
-        $ele->content_id = ((isset($element['content_id']))?$element['content_id']:0);
         $ele->save();
         if($element['node'] == "self")
         return $ele->id;
@@ -179,7 +182,7 @@ class ComponentController extends Controller
         $request->validate([
             "self.name" => "required|string|max:50|unique:components,name",
             "self.category" => "required|in:basic,component",
-            "self.content" => "required_if:self.content_type,static,variable|nullable|string|max:1000",
+            "self.content" => "required_if:self.content_type,static,variable|nullable|string|max:65500",
             "self.node" => "required|in:self",
             "self.var_attributes" => "nullable|json|max:500",
             "self.start_tag" => "required|string|max:10",
@@ -201,7 +204,7 @@ class ComponentController extends Controller
             "child.*.category" => "required_with:child.*.node|in:element",
             "child.*.child_order" => "required_with:child.*.node|numeric",
             "child.*.content_type" => "required_with:child.*.node|in:static,variable,component",
-            "child.*.content" => "required_if:child.*.content_type,static,variable|nullable|string|max:1000",
+            "child.*.content" => "required_if:child.*.content_type,static,variable|nullable|string|max:65500",
             "child.*.var_attributes" => "required_with:child.*.node|json|max:500",
             "child.*.start_tag" => "required_with:child.*.node|string|max:10",
             "child.*.end_tag" => "required_with:child.*.node|nullable|string|max:10",
@@ -319,6 +322,30 @@ class ComponentController extends Controller
         }
         return response()->json($response_);
     }
+    public function load_template_Components($template_id) {
+        $basiccomponents = Components::where("category", "web")->where("template_id", $template_id)->select("id", "name")->get();
+        $response_ = [];
+        foreach($basiccomponents as $key => $basiccomponent) {
+                $response = [];
+                $components = Components::where("name", $basiccomponent->name)->orderBy("child_order")->get();
+                foreach($components as $key => $component) {
+                if($component->nested_component != null) {
+                    $nested = Components::find($component->nested_component);
+                    $components[$key]->content = $this->fetchComponent($nested->name);
+                }
+                $components[$key]->var_attributes = json_decode($component->var_attributes);
+                $components[$key]->classes = json_decode($component->classes);
+                $components[$key]->attributes = json_decode($component->attributes);
+                $components[$key]->style = json_decode($component->style);
+                if($component->node == "child")
+                $response[$component->node][] = $components[$key];
+                else
+                $response[$component->node] = $components[$key];
+            }
+            $response_[] = $response;
+        }
+        return response()->json($response_);
+    }
     public function saveComponent(Request $request) {
         // $request = name category stack
         $component = $request->component;
@@ -334,9 +361,12 @@ class ComponentController extends Controller
     }
     public function editComponent(Request $request) {
         if($request->name) {
-            $component = Components::where("name", $request->name)->first();
+            $component = Components::where("name", $request->name)->whereIn("category", ["component", "basic", "web"])->first();
             if(!$component)
             return response()->json(["success" => 0, "error"=> "Invalid Component Name", "stack"=>[]]);
+            if($component->category == "web") {
+                $oldID = $component->id;
+            }
             $component = $request->component;
             $this->stack = [];
             $this->component($this->stack['base'], $component, (($request->category)?$request->category:'component'), "temp_name", 0);
@@ -350,19 +380,43 @@ class ComponentController extends Controller
                 $this->stack = [];
                 $this->component($this->stack['base'], $component, (($request->category)?$request->category:'component'), (($request->name)?$request->name:''), 0);
                 $this->insertComponent($this->stack['base']);
+                if($request->category == "web") {
+                    $component = Components::where("name", $request->name)->where("category", "web")->first();
+                    PageComponent::where('component_id', $oldID)->update(["component_id" => $component->id]);
+                    if($component->type == "main") {
+                        $component_pages = PageComponent::select('page_id')->where('component_id', $component->id)->groupBy('page_id')->get();
+                        foreach($component_pages as $component_page) {
+                            PageContent::where('page_id', $component_page->page_id)->update(["broked" => 1]);
+                        }
+                    }
+                }
             }
         }
         return response()->json(["success" => 1]);
     }
     public function deleteComponent($name = null) {
         if($name) {
-            $component = Components::where("name", $name)->first();
+            $component = Components::where("name", $name)->whereIn("category", ["component", "basic", "web"])->first();
             if(!$component)
             return redirect()->back()->with("error", "Component does not exists!");
         }
         $delete = [];
         $this->fetchComponentID($name, $delete);
         Components::destroy($delete);
+        if($component->category == "web") {
+            $component_pages = PageComponent::select('page_id')->where('component_id', $component->id)->groupBy('page_id')->get();
+            PageComponent::where('component_id', $component->id)->delete();
+            foreach($component_pages as $component_page) {
+                $components = PageComponent::where(["page_id" => $component_page->page_id])->orderBy('order')->get();
+                if($component->type == "main")
+                PageContent::where('page_id', $component_page->page_id)->update(["broked" => 1]);
+                $i = 1;
+                foreach($components as $component_) {
+                    $component_->order = $i++;
+                    $component_->save();
+                }
+            }
+        }
         return redirect()->back()->with("message", "Component " .$name. " deleted successfully!");
     }
 }

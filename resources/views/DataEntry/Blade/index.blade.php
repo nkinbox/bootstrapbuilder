@@ -1,4 +1,4 @@
-@extends('Page.layout')
+@extends('DataEntry.Blade.layout')
 @php
 $globalScript = $page->Template->getScript;
 $globalStyle = $page->Template->getCSS;
@@ -8,19 +8,31 @@ $pageStyle = $page->getCSS;
 @push('title')
 <title>{{$page->Template->title}} | {{$page->title}} | {{$mode}}</title>
 @endpush
+@php $up = true; @endphp
 @foreach($page->Components as $component)
 @php $order = $component->pivot->order; @endphp
 @if($component->type == "header")
 @push('header')
-@include('Page.element', ["element" => $component])
+@include('DataEntry.Blade.element', ["element" => $component])
 @endpush
-@elseif($component->type == "body" || $component->type == "main")
-@push('body')
-@include('Page.element', ["element" => $component])
+@elseif($component->type == "body")
+@if($up)
+@push('bodyup')
+@include('DataEntry.Blade.element', ["element" => $component])
+@endpush
+@else
+@push('bodydown')
+@include('DataEntry.Blade.element', ["element" => $component])
+@endpush
+@endif
+@elseif($component->type == "main")
+@php $up = false; @endphp
+@push('main')
+@include('DataEntry.Blade.element', ["element" => $component])
 @endpush
 @elseif($component->type == "footer")
 @push('footer')
-@include('Page.element', ["element" => $component])
+@include('DataEntry.Blade.element', ["element" => $component])
 @endpush
 @endif
 @endforeach
@@ -31,7 +43,7 @@ window.addEventListener('click', function (evt) {
         collectdata();
     }
 });
-var content = {"page_id":{{$page->id}}, "_token":"{{csrf_token()}}", "content":{}};
+var content = {"content_id":{{$page->id}}, "_token":"{{csrf_token()}}", "content":{}};
 function collectdata() {
     content['content'] = {};
     $(".component").each(function(){

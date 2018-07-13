@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreatePackagesTable extends Migration
+class CreatePageComponentsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,11 @@ class CreatePackagesTable extends Migration
      */
     public function up()
     {
-        Schema::create('packages', function (Blueprint $table) {
+        Schema::create('page_components', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('title', 250);
-            $table->string('content', 1500)->nullable()->default(null);
-            $table->unsignedInteger('content_id');
-            $table->unsignedInteger('user_id')->default(0);
-            $table->timestamps();
+            $table->unsignedInteger('page_id')->index();
+            $table->unsignedInteger('component_id')->index();
+            $table->unsignedInteger('order')->default(1);
         });
     }
 
@@ -30,6 +28,6 @@ class CreatePackagesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('packages');
+        Schema::dropIfExists('page_components');
     }
 }

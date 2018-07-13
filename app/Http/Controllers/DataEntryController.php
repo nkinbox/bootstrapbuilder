@@ -19,6 +19,9 @@ use App\Models\Hotel;
 use App\Models\HotelContact;
 use App\Models\HotelFacility;
 use App\Models\HotelMarker;
+use App\Models\PageContent;
+use App\Models\Template;
+use App\Models\Page;
 use App\Models\HotelRoom;
 use App\Rules\alpha_dash_space;
 use Auth;
@@ -36,6 +39,157 @@ class DataEntryController extends Controller
                 "name" => '<i class="fa fa-home"></i>'
             ]]
         ];
+    }
+    public function page_blade_content($page_id, $content_id) {
+        
+    }
+    public function page_blade_content_add(Request $request) {
+        return $request;
+    }
+    public function page_content($template_id = null, $operation = null, $id = null) {
+        $this->response['breadcrumbs'][] = [
+            "route" => "DataEntry.Page",
+            "routePar" => [],
+            "name" => "Website Page"
+        ];
+        $this->response["operation"] = $operation;
+        $this->response["template_id"] = (($template_id)?$template_id:0);
+        if($operation) {
+            $this->response["page"] = null;
+            if($template_id)
+            $this->response["template"] = Template::find($template_id);
+            else
+            $template_id = 0;
+            if($operation == "blade") {
+                //$this->response["page"] = PageContent::find($id);
+                return view('DataEntry.facilities', $this->response);
+            }
+            $this->response['breadcrumbs'][] = [
+                "route" => "DataEntry.Page",
+                "routePar" => ["operation" => $operation],
+                "name" => ucwords($operation)
+            ];
+            if($operation == "edit") {
+                $this->response["page"] = PageContent::find($id);
+            } elseif($operation == "show") {
+                $this->response["pages"] = PageContent::where(["template_id" => $template_id])->paginate(50);
+            }
+        } else {
+            $this->response["pages"] = [];
+            $groups = PageContent::select('template_id')->groupBy('template_id')->get();
+            foreach($groups as $group) {
+                $pageCount = PageContent::where(["template_id" => $group->template_id])->count();
+                $brokedPage = PageContent::where(["template_id" => $group->template_id, "broked" => 1])->count();
+                $withoutPage = PageContent::where(["template_id" => $group->template_id, "page_id" => 0])->count();
+                $withoutContent = PageContent::where(["template_id" => $group->template_id, "content_id" => 0])->count();
+                if($group->template_id == 0)
+                $this->response["pages"]["unknown"] = ["template_id" => 0, "count" => $pageCount, "broked" => $brokedPage, "pageless" => $withoutPage, "content" => $withoutContent];
+                else {
+                    $website = $group->Template->title;
+                    $this->response["pages"][$website] = ["template_id" => $group->Template->id, "count" => $pageCount, "broked" => $brokedPage, "pageless" => $withoutPage, "content" => $withoutContent];
+                }
+            }
+        }
+        return view('DataEntry.webpage', $this->response);
+    }
+    public function page_content_add(Request $request) {
+        $request->validate([
+            "url" => "required|alpha_dash|max:500",
+            "template_id" => "required|integer",
+            "page_id" => "required|integer",
+            "broked" => "required|boolean",
+            "title" => ['required',new alpha_dash_space,'max:250'],
+            "group_title" => ['required',new alpha_dash_space,'max:250'],
+            "type" => "required|in:header,footer,sitemap,other",
+            "content_type" => "required|in:blade,editor",
+            "content" => "required_if:content_type,blade|nullable|string|max:65500"
+        ]);
+        $template_id = 0;
+        $page_id = 0;
+        if($request->template_id != 0) {
+            $template = Template::find($request->template_id);
+            if($template) {
+                $template_id = $template->id;
+            }
+            if($request->page_id != 0) {
+                $page = Page::find($request->page_id);
+                if($page && $page->Template->id == $template_id) {
+                    $page_id = $page->id;
+                }
+            }
+        }
+        $content = new Content;
+        $content->content_type = "blade";
+        if($request->has('content') && $request->content) {
+            $content->content = $request->content;
+        } else {
+            $content->content = "";
+        }
+        $content->user_id = Auth::id();
+        $content->save();
+        $pageContent = new PageContent;
+        $pageContent->template_id = $template_id;
+        $pageContent->page_id = $page_id;
+        $pageContent->broked = $request->broked;
+        $pageContent->type = $request->type; 
+        $pageContent->group_title = $request->group_title; 
+        $pageContent->title = $request->title; 
+        $pageContent->url = $request->url;
+        $pageContent->content_id = $content->id;
+        $pageContent->user_id = Auth::id();
+        $pageContent->save();
+        if($request->content_type == "editor") {
+            return view('');
+        }
+        return redirect()->route('DataEntry.Page', ["template_id" => $template_id, "operation" => "show"])->with("message", $request->title." Added Successfully!");
+    }
+    public function page_content_edit(Request $request) {
+        $request->validate([
+            "id" => "required|exists:page_contents",
+            "url" => "required|alpha_dash|max:500",
+            "template_id" => "required|exists:templates,id",
+            "page_id" => "required|integer",
+            "broked" => "required|boolean",
+            "title" => ['required',new alpha_dash_space,'max:250'],
+            "group_title" => ['required',new alpha_dash_space,'max:250'],
+            "type" => "required|in:header,footer,sitemap,other",
+            "content_type" => "required|in:blade",
+            "content" => "required|string|max:65500"
+        ]);
+        $page_id = 0;
+        $content_id = 0;
+        $template = Template::find($request->template_id);
+        if($request->page_id != 0) {
+            $page = Page::find($request->page_id);
+            if($page && $page->Template->id == $template->id) {
+                $page_id = $page->id;
+            } else return redirect()->back()->withInput()->with("error", "Choose Page to display content.");
+        } else {
+            return redirect()->back()->withInput()->with("error", "Choose Page to display content.");
+        }
+        $pageContent = PageContent::find($request->id);
+        $pageContent->getContent->content_type = "blade";
+        $pageContent->getContent->content = $request->content;
+        $pageContent->getContent->user_id = Auth::id();
+        $pageContent->getContent->save();
+        $pageContent->template_id = $template->id;
+        $pageContent->page_id = $page_id;
+        $pageContent->broked = $request->broked;
+        $pageContent->type = $request->type; 
+        $pageContent->group_title = $request->group_title; 
+        $pageContent->title = $request->title; 
+        $pageContent->url = $request->url;
+        $pageContent->user_id = Auth::id();
+        $pageContent->save();
+        return redirect()->route('DataEntry.Page', ["template_id" => $request->template_id, "operation" => "show"])->with("message", $request->title." Edited Successfully!");
+    }
+    public function page_content_delete($id) {
+        $pageContent = PageContent::find($id);
+        if($pageContent) {
+            $pageContent->delete();
+            return redirect()->route('DataEntry.Page', ["template_id" => $pageContent->template_id, "operation" => "show"])->with("message", $pageContent->title." Deleted Successfully!");
+        }
+        return redirect()->back()->with("error", "An Error Occured!");
     }
     public function index() {
         $this->response['breadcrumbs'][] = [
@@ -254,7 +408,7 @@ class DataEntryController extends Controller
             "type" => "required|in:Airport,Busstand,Railwaystation,Taxistand",
             "category" => "required|string|max:50",
             "content_type" => "sometimes|required|in:html,text,blade",
-            "content" => "required_with:content_type|string|max:65000"
+            "content" => "required_with:content_type|string|max:65500"
         ]);
         $content_id = 0;
         if($request->has("content_type")) {
@@ -289,7 +443,7 @@ class DataEntryController extends Controller
             "type" => "required|in:Airport,Busstand,Railwaystation,Taxistand",
             "category" => "required|string|max:50",
             "content_type" => "sometimes|required|in:html,text,blade",
-            "content" => "required_with:content_type|string|max:65000"
+            "content" => "required_with:content_type|string|max:65500"
         ]);
         $transport = PublicTransport::find($request->id);
         $content_id = 0;
@@ -353,7 +507,7 @@ class DataEntryController extends Controller
             "facility_type" => "required|in:hotel,room",
             "facility_content" => "nullable|string|max:500",
             "content_type" => "sometimes|required|in:html,text,blade",
-            "content" => "required_with:content_type|string|max:65000"
+            "content" => "required_with:content_type|string|max:65500"
         ]);
         $content_id = 0;
         if($request->has("content_type")) {
@@ -380,7 +534,7 @@ class DataEntryController extends Controller
             "facility_type" => "required|in:hotel,room",
             "facility_content" => "nullable|string|max:500",
             "content_type" => "sometimes|required|in:html,text,blade",
-            "content" => "required_with:content_type|string|max:65000",
+            "content" => "required_with:content_type|string|max:65500",
         ]);
         $facility = DataFacility::find($request->id);
         $content_id = 0;
@@ -455,7 +609,7 @@ class DataEntryController extends Controller
             "type" => "required|in:label,category,tag,inclusions,exclusions,activity,theme",
             "marker_content" => "nullable|string|max:500",
             "content_type" => "sometimes|required|in:html,text,blade",
-            "content" => "required_with:content_type|string|max:65000"
+            "content" => "required_with:content_type|string|max:65500"
         ]);
         $content_id = 0;
         if($request->has("content_type")) {
@@ -484,7 +638,7 @@ class DataEntryController extends Controller
             "type" => "required|in:label,category,tag,inclusions,exclusions,activity,theme",
             "marker_content" => "nullable|string|max:500",
             "content_type" => "sometimes|required|in:html,text,blade",
-            "content" => "required_with:content_type|string|max:65000"
+            "content" => "required_with:content_type|string|max:65500"
         ]);
         $marker = DataMarker::find($request->id);
         $content_id = 0;
@@ -590,7 +744,7 @@ class DataEntryController extends Controller
             "title" => ['required',new alpha_dash_space,'max:100'],
             "type" => "required|in:landmark,attraction,locality",
             "content_type" => "sometimes|required|in:html,text,blade",
-            "content" => "required_with:content_type|string|max:65000"
+            "content" => "required_with:content_type|string|max:65500"
         ]);
         $content_id = 0;
         if($request->has("content_type")) {
@@ -623,7 +777,7 @@ class DataEntryController extends Controller
             "title" => ['required',new alpha_dash_space,'max:100'],
             "type" => "required|in:landmark,attraction,locality",
             "content_type" => "sometimes|required|in:html,text,blade",
-            "content" => "required_with:content_type|string|max:65000"
+            "content" => "required_with:content_type|string|max:65500"
         ]);
         $location = Location::find($request->id);
         $content_id = 0;
@@ -668,6 +822,13 @@ class DataEntryController extends Controller
         if($operation) {
             if($operation == "edit") {
                 $this->response["package"] = Package::find($id);
+                if(Cookie::get('geolocation_id') == null) {
+                    Cookie::queue('geolocation_id', $this->response['package']->from_geolocation_id, 0);
+                    $this->response['reload'] = true;
+                } elseif(Cookie::get('geolocation_id') != $this->response['package']->from_geolocation_id) {
+                    Cookie::queue('geolocation_id', $this->response['package']->from_geolocation_id, 0);
+                    $this->response['reload'] = true;
+                }
                 $this->response['breadcrumbs'][] = [
                     "route" => "DataEntry.Package",
                     "routePar" => ["operation" => $operation, "id" => $id],
@@ -693,16 +854,19 @@ class DataEntryController extends Controller
                 }
             }
         } else {
-            $this->response["packages"] = Package::orderBy('id', 'desc')->paginate(100);
+            $this->response["packages"] = Package::orderBy('title')->paginate(100);
         }
         return view('DataEntry.Package.index', $this->response);
     }
     public function package_add(Request $request) {
+        if(Cookie::get('geolocation_id') == null) {
+            return redirect()->back()->with("error", "GeoLocation Missing!");
+        }
         $request->validate([
             "title" => ['required',new alpha_dash_space,'max:250'],
-            "package_content" => "required|string|max:500",
+            "package_content" => "nullable|string|max:1500",
             "content_type" => "sometimes|required|in:html,text,blade",
-            "content" => "required_with:content_type|string|max:65000"
+            "content" => "required_with:content_type|string|max:65500"
         ]);
         $content_id = 0;
         if($request->has("content_type")) {
@@ -714,6 +878,7 @@ class DataEntryController extends Controller
             $content_id = $content->id;
         }
         $package = new Package;
+        $package->from_geolocation_id = Cookie::get('geolocation_id');
         $package->title = $request->title;
         $package->content = $request->package_content;
         $package->content_id = $content_id;
@@ -728,12 +893,15 @@ class DataEntryController extends Controller
         return redirect()->route('DataEntry.Package.Detail', ["package_id"=>$package->id])->with("message", "Package '" .$request->title. "' Added Successfully!");
     }
     public function package_edit(Request $request) {
+        if(Cookie::get('geolocation_id') == null) {
+            return redirect()->back()->with("error", "GeoLocation Missing!");
+        }
         $request->validate([
             "id" => "required|exists:packages",
             "title" => ['required',new alpha_dash_space,'max:250'],
-            "package_content" => "required|string|max:500",
+            "package_content" => "nullable|string|max:1500",
             "content_type" => "sometimes|required|in:html,text,blade",
-            "content" => "required_with:content_type|string|max:65000"
+            "content" => "required_with:content_type|string|max:65500"
         ]);
         $package = Package::find($request->id);
         $content_id = 0;
@@ -751,6 +919,7 @@ class DataEntryController extends Controller
             if($package->content_id)
             Content::destroy($package->content_id);
         }
+        $package->from_geolocation_id = Cookie::get('geolocation_id');
         $package->title = $request->title;
         $package->content = $request->package_content;
         $package->content_id = $content_id;
@@ -840,7 +1009,7 @@ class DataEntryController extends Controller
             "days" => "required|integer",
             "nights" => "required|integer",
             "content_type" => "sometimes|required|in:html,text,blade",
-            "content" => "required_with:content_type|string|max:65000"
+            "content" => "required_with:content_type|string|max:65500"
         ]);
         $content_id = 0;
         if($request->has("content_type")) {
@@ -870,7 +1039,7 @@ class DataEntryController extends Controller
             "days" => "required|integer",
             "nights" => "required|integer",
             "content_type" => "sometimes|required|in:html,text,blade",
-            "content" => "required_with:content_type|string|max:65000"
+            "content" => "required_with:content_type|string|max:65500"
         ]);        
         $packageDetail = PackageDetail::find($request->id);
         $content_id = 0;
@@ -1115,7 +1284,7 @@ class DataEntryController extends Controller
             "itinerary_type" => "nullable|in:geolocation,geo_hotel",
             "hotel_name" => "required_if:itinerary_type,geo_hotel|nullable|exists:hotels",          
             "content_type" => "required|in:html,text,blade",
-            "content" => "required|string|max:65000"
+            "content" => "required|string|max:65500"
         ]);
         $geolocation_id = 0;
         $hotel_id = 0;
@@ -1171,7 +1340,7 @@ class DataEntryController extends Controller
             "itinerary_type" => "nullable|in:geolocation,geo_hotel",
             "hotel_name" => "required_if:itinerary_type,geo_hotel|nullable|exists:hotels",          
             "content_type" => "required|in:html,text,blade",
-            "content" => "required|string|max:65000"
+            "content" => "required|string|max:65500"
         ]);
         $itinerary = PackageItinerary::find($request->id);
         $geolocation_id = 0;
@@ -1283,10 +1452,10 @@ class DataEntryController extends Controller
             "visibility" => "required|boolean",
             "address" => "required|string|max:100",
             "hotel_content_type" => "nullable|in:html,text,blade",
-            "hotel_content" => "nullable|string|max:65000",
+            "hotel_content" => "nullable|string|max:65500",
             "policy_content_type" => "nullable|in:html,text,blade",
-            "policy_content" => "nullable|string|max:65000",
-            "content" => "nullable|string|max:65000"
+            "policy_content" => "nullable|string|max:65500",
+            "content" => "nullable|string|max:65500"
         ]);
         $policy_id = 0;
         $content_id = 0;
@@ -1355,10 +1524,10 @@ class DataEntryController extends Controller
             "visibility" => "required|boolean",
             "address" => "required|string|max:100",
             "hotel_content_type" => "nullable|in:html,text,blade",
-            "hotel_content" => "nullable|string|max:65000",
+            "hotel_content" => "nullable|string|max:65500",
             "policy_content_type" => "nullable|in:html,text,blade",
-            "policy_content" => "nullable|string|max:65000",
-            "content" => "nullable|string|max:65000"
+            "policy_content" => "nullable|string|max:65500",
+            "content" => "nullable|string|max:65500"
         ]);
         $hotel = Hotel::find($request->id);
         $policy_id = 0;

@@ -24,6 +24,9 @@ class Package extends Model
     public function PackagePrice() {
         return $this->hasManyThrough('App\Models\PackagePrice', 'App\Models\PackageDetail');
     }
+    public function fromGeoLocation() {
+        return $this->hasOne('App\Models\GeoLocation', 'id', 'from_geolocation_id');
+    }
     public function Images() {
         return $this->hasMany('App\Models\Images', 'belongs_to', 'id')->where('type', 'package');
     }

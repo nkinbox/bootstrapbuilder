@@ -26,6 +26,7 @@
                     <tr>
                     <th scope="col">#</th>
                     <th scope="col">Title</th>
+                    <th scope="col">From</th>
                     <th scope="col">Locations</th>
                     <th scope="col">Locality</th>
                     <th scope="col">Content</th>
@@ -51,6 +52,13 @@
                     <tr>
                     <th scope="row"{!! (!$isComplete)?' class="bg-danger text-light"':'' !!}>{{$loop->iteration}}</th>
                     <td><a href="{{ route('DataEntry.Package.Detail', ["package_id"=>$package->id]) }}">{{$package->title}}</a></td>
+                    <td>
+                        @if($package->from_geolocation_id)
+                        @component('DataEntry.Forms.ComponentGeoLocation', ["geoLocation" => $package->fromGeoLocation, "routeName" => null, "routePram" => null])
+                        @endcomponent
+                        <br>
+                        @endif
+                    </td>
                     <td>
                         @foreach($package->PackageItinerary as $itinerary)
                         @if($itinerary->geolocation_id && !in_array($itinerary->geolocation_id, $arrGeoLocation))

@@ -10,10 +10,16 @@ Route::middleware('auth', 'access:Template')->group(function () {
     Route::get('page/{id}/{mode}', 'TemplateController@view')->name('view');
     Route::prefix('template')->group(function(){
         Route::get('/page_component/{page_id}/{operation?}/{id?}', 'TemplateController@page_component')->name('Template.Page.Component');
-        Route::post('/page_component/add', 'TemplateController@page_component_add')->name('Template.Page.Component.add');
-        Route::put('/page_component/edit', 'TemplateController@page_component_edit')->name('Template.Page.Component.edit');
         Route::put('/page_component/order', 'TemplateController@page_component_order')->name('Template.Page.Component.order');
-        Route::get('/delete_page_component/{id?}', 'TemplateController@page_component_delete')->name('Template.Page.Component.delete')->middleware('canDelete');
+        Route::post('/page_component/add', 'TemplateController@page_component_add')->name('Template.Page.Component.add');
+        Route::get('/delete_page_component/{page_id}/{id}/{order}', 'TemplateController@page_component_delete')->name('Template.Page.Component.delete')->middleware('canDelete');
+
+        Route::get('/component/{template_id}/{operation?}/{id?}', 'TemplateController@component')->name('Template.Component');
+        Route::post('/component/add', 'TemplateController@component_add')->name('Template.Component.add');
+        Route::put('/component/edit', 'TemplateController@component_edit')->name('Template.Component.edit');
+        Route::post('/content', 'TemplateController@all_components_content')->name('Template.Component.content');
+        Route::get('/component_content/{id}', 'TemplateController@all_components_view')->name('Template.Component.view');
+
         Route::get('/page/{template_id}/{operation?}/{id?}', 'TemplateController@page')->name('Template.Page');
         Route::post('/page/add', 'TemplateController@page_add')->name('Template.Page.add');
         Route::put('/page/edit', 'TemplateController@page_edit')->name('Template.Page.edit');
@@ -31,6 +37,7 @@ Route::middleware('auth', 'access:Template')->group(function () {
         Route::get('/load/{name?}', 'ComponentController@loadComponent')->name("LoadComponent");
         Route::get('/basic/load', 'ComponentController@loadComponents')->name("LoadComponents");
         Route::get('/component/load', 'ComponentController@load_Components')->name("LoadComponents.component");
+        Route::get('/component/template/{template_id}', 'ComponentController@load_template_Components')->name("LoadComponents.template");
         Route::post('/save', 'ComponentController@saveComponent')->name("Component.Save");
         Route::post('/edit', 'ComponentController@editComponent')->name("Component.Update");
         Route::get('/delete/{name}', 'ComponentController@deleteComponent')->name("Component.Delete")->middleware('canDelete');
@@ -47,7 +54,13 @@ Route::middleware('auth', 'access:Data')->prefix('data')->group(function () {
     Route::post('/geolocation/get', 'DataEntryController@geolocation_get')->name('Geolocation.get');
     Route::post('/geolocation/add', 'DataEntryController@geolocation_add')->name('Geolocation.add');
 
-
+    Route::get('/content/{template_id?}/{operation?}/{id?}', 'DataEntryController@page_content')->name('DataEntry.Page');
+    Route::post('/content', 'DataEntryController@page_content_add')->name('DataEntry.Page.add');
+    Route::put('/content', 'DataEntryController@page_content_edit')->name('DataEntry.Page.edit');
+    Route::get('/blade_content/{page_id}/{content_id}', 'DataEntryController@page_blade_content')->name('DataEntry.Blade');
+    Route::post('/blade_content', 'DataEntryController@page_blade_content_add')->name('DataEntry.Page.Blade.add');
+    Route::get('/delete/content/{id}', 'DataEntryController@page_content_delete')->name('DataEntry.Page.delete')->middleware('canDelete');
+    
     Route::get('/facilities/{operation?}/{id?}', 'DataEntryController@facilities')->name('DataEntry.Facilities');
     Route::post('/facilities', 'DataEntryController@facilities_add')->name('DataEntry.Facilities.add');
     Route::put('/facilities', 'DataEntryController@facilities_edit')->name('DataEntry.Facilities.edit');

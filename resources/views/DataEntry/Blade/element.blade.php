@@ -1,27 +1,3 @@
-<?php //visibility
-    $render = false;
-    if($element->visibility != "none") {
-        if($element->visibility != "show") {
-            if($element->visibility == $mode)
-            $render = true;
-            else
-            $render = false;
-        }
-        else $render = true;
-    } else $render = false;
-    if($element->node == "self" && $element->Parent) {
-        if($element->Parent->visibility != "none") {
-            if($element->Parent->visibility != "show") {
-                if($element->Parent->visibility == $mode)
-                $render = true;
-                else
-                $render = false;
-            }
-            else $render = true;
-        } else $render = false;
-    }
-?>
-@if($render)
 {{-- STYLE PUSH START --}}
 @if($element->style != '{"selector":"","style":[]}')
     <?php
@@ -65,8 +41,12 @@
     echo ' '.$attribute.'=""';
     $classes = json_decode($element->classes, true);
     if(count($classes)) {
-        echo ' class="'.implode(" ", $classes).'"';
+        echo ' class="'.(($element->content_type != "element" && $element->type == "main")?' component':'').implode(" ", $classes).'"';
+    } elseif($element->content_type != "element" && $element->type == "main") {
+        echo ' class="component"';
     }
+    if($element->content_type != "element" && $element->type == "main")
+    echo ' contenteditable="true"';
 ?>>
 @endif
 {{-- Parent Header END --}}
@@ -98,11 +78,11 @@
 @if($element->content_type == "element")
     @if($element->node == "self" && count($element->Children))
         @foreach($element->Children as $child)
-        @include('Page.element', ["element" => $child])
+        @include('DataEntry.Blade.element', ["element" => $child])
         @endforeach
     @endif
     @if($element->nested_component)
-        @include('Page.element', ["element" => $element->nestedComponent])
+        @include('DataEntry.Blade.element', ["element" => $element->nestedComponent])
     @endif
 @else
 {!!($element->content)?$element->content:'__content__'!!}
@@ -115,4 +95,3 @@
 {!! $element->Parent->end_tag !!}
 @endif
 {{-- Parent Footer START --}}
-@endif

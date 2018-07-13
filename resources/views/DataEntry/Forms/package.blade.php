@@ -1,3 +1,4 @@
+@include('DataEntry.Forms.geolocation')
 @if($operation == "edit")
 <form action="{{ route('DataEntry.Package.edit') }}" method="post">
     <input type="hidden" name="_method" value="put">

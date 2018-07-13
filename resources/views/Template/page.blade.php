@@ -11,6 +11,7 @@
                     <th scope="col">#</th>
                     <th scope="col">Title</th>
                     <th scope="col">Pages</th>
+                    <th scope="col">Components</th>
                     <th scope="col">Script</th>
                     <th scope="col">CSS</th>
                     @if(Auth::user()->admin)
@@ -24,8 +25,9 @@
                 <tbody>
                         <tr>
                             <th scope="row"><i class="fa fa-bookmark-o"></i></th>
-                            <td><a href="{{ route('Template.Page', ['template_id' => $template->id]) }}">{{$template->title}}</a></td>
-                            <td>{{$template->Pages->count()}}</td>
+                            <td>{{$template->title}}</td>
+                            <td><a href="{{ route('Template.Page', ['template_id' => $template->id]) }}">{{$template->Pages->count()}}</a></td>
+                            <td><a href="{{ route('Template.Component', ['template_id' => $template->id]) }}">{{$template->Components->count()}}</a></td>
                             <td>
                                 @if($template->script_id)
                                 <script> var content_{{$template->script_id}} = {!!json_encode($template->getScript->content)!!};</script>
@@ -60,6 +62,7 @@
                             <th scope="col">#</th>
                             <th scope="col">Title</th>
                             <th scope="col">URL</th>
+                            <th scope="col">Components</th>
                             <th scope="col">GeoBased</th>
                             <th scope="col">MetaData</th>
                             <th scope="col">Script</th>
@@ -77,10 +80,10 @@
                                 <tr>
                                     <th scope="row"{!! (!$page->Components->count())?' class="bg-danger text-light"':'' !!}>{{ $loop->iteration }}</th>
                                     <td>
-                                        <a href="{{ route('Template.Page.Component', ['page_id' => $page->id]) }}">{{$page->title}}</a>
-                                        <a href="{{ route('view', ['id' => $page->id, 'mode' => 'guest']) }}" target="_blank"><i class="fa fa-eye"></i></a>
+                                        <a href="{{ route('view', ['id' => $page->id, 'mode' => 'guest']) }}" target="_blank">{{$page->title}}</a>
                                     </td>
                                     <td>{{$page->url}}</td>
+                                    <td><a href="{{ route('Template.Page.Component', ['page_id' => $page->id]) }}">{{$page->Components->count()}}</a></td>
                                     <td>SKIPPED</td>
                                     <td>
                                         @if($page->meta_id)
