@@ -25,7 +25,7 @@ class Page extends Model
         return $this->hasOne('App\Models\Content', 'id', 'css_id');
     }
     public function Components() {
-        return $this->belongsToMany('App\Models\Components', 'page_components', 'page_id', 'component_id')->withPivot('order')->orderBy('pivot_order');
+        return $this->belongsToMany('App\Models\Components', 'page_components', 'page_id', 'component_id')->withPivot(['order', 'id'])->orderBy('pivot_order');
     }
     public function AllComponents() {
         return $this->hasMany('App\Models\PageComponent');

@@ -20,6 +20,15 @@
                             <span class="input-group-text"><i class="fa fa-text-width"></i></span>
                         </div>
                         <input type="text" class="form-control" placeholder="Identifying Name" tabindex="1" name="name" value="{{ old("name", (($component && $component->category == "web")?$component->name:'')) }}" required>
+                        <div class="input-group-prepend ml-1">
+                            <span class="input-group-text"><i class="fa fa-columns"></i></span>
+                        </div>
+                        <select class="custom-select component_type" tabindex="1">
+                            <option value="body"{{(old("type.".$component->id, $component->type) == "body")?' selected':''}}>Body</option>
+                            <option value="main"{{(old("type.".$component->id, $component->type) == "main")?' selected':''}}>Main</option>
+                            <option value="header"{{(old("type.".$component->id, $component->type) == "header")?' selected':''}}>Header</option>
+                            <option value="footer"{{(old("type.".$component->id, $component->type) == "footer")?' selected':''}}>Footer</option>
+                        </select>
                     </div>
                     @include('Template.Forms.componentSetting', ["element" => $component])
                     <div class="d-flex justify-content-end">

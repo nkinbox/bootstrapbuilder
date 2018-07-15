@@ -71,7 +71,7 @@ class TemplateController extends Controller
     }
     public function template_add(Request $request) {
         $request->validate([
-            "title" => ['required',new alpha_dash_space,'max:50','unique:templates,title'],
+            "title" => "required|string|max:50|unique:templates,title",
             "js_content" => "nullable|string|max:65500",
             "css_content" => "nullable|string|max:65500"
         ]);
@@ -104,7 +104,7 @@ class TemplateController extends Controller
     public function template_edit(Request $request) {
         $request->validate([
             "id" => "required|exists:templates",
-            "title" => ['required',new alpha_dash_space,'max:50'],
+            "title" => "required|string|max:50",
             "js_content" => "nullable|string|max:65500",
             "css_content" => "nullable|string|max:65500"
         ]);
@@ -436,7 +436,7 @@ class TemplateController extends Controller
         $change = false;
         foreach($components as $component) {
             if($component->component_id == $id && $component->order == $order) {
-                if($component->type == "main")
+                if($component->Component->type == "main")
                 $broked = 1;
                 $change = true;
                 $component->delete();
@@ -622,7 +622,10 @@ class TemplateController extends Controller
         if($template) {
             foreach($template->AllComponents as $component) {
                 if(array_key_exists($component->id, $request->content)) {
-                    $component->content = $request->content[$component->id];
+                    $text = str_replace("\"@@","@@", str_replace("@@\"","@@", $request->content[$component->id]));
+                    $text = preg_replace('/ src="(.*?)"/s', "", $text);
+                    $text = html_entity_decode($text);
+                    $component->content = $text;
                     $component->save();
                 }
             }

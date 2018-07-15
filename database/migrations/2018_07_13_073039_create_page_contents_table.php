@@ -15,8 +15,9 @@ class CreatePageContentsTable extends Migration
     {
         Schema::create('page_contents', function (Blueprint $table) {
             $table->increments('id');
-            $table->unsignedInteger('template_id')->default(0);
-            $table->unsignedInteger('page_id')->default(0);
+            $table->unsignedInteger('template_id')->default(0)->index();
+            $table->unsignedInteger('page_id')->default(0)->index();
+            $table->unsignedInteger('geolocation_id')->default(0)->index();
             $table->boolean('broked')->default(false);
             $table->string('type', 10)->default('sitemap');
             $table->string('group_title', 250)->nullable()->default(null);

@@ -41,12 +41,8 @@
     echo ' '.$attribute.'=""';
     $classes = json_decode($element->classes, true);
     if(count($classes)) {
-        echo ' class="'.(($element->content_type != "element" && $element->type == "main")?' component':'').implode(" ", $classes).'"';
-    } elseif($element->content_type != "element" && $element->type == "main") {
-        echo ' class="component"';
+        echo ' class="'.implode(" ", $classes).'"';
     }
-    if($element->content_type != "element" && $element->type == "main")
-    echo ' contenteditable="true"';
 ?>>
 @endif
 {{-- Parent Header END --}}
@@ -67,12 +63,12 @@
     echo ' '.$attribute.'=""';
     $classes = json_decode($element->classes, true);
     if(count($classes)) {
-        echo ' class="'.(($element->content_type != "element")?' component':'').implode(" ", $classes).'"';
-    } elseif($element->content_type != "element") {
+        echo ' class="'.(($element->content_type != "element" && $element->type == "main")?' component':'').implode(" ", $classes).'"';
+    } elseif($element->content_type != "element" && $element->type == "main") {
         echo ' class="component"';
     }
-    if($element->content_type != "element")
-    echo ' contenteditable="true" data-order="'.$order.'"';
+    if($element->content_type != "element" && $element->type == "main")
+    echo ' contenteditable="true" data-id="'.$id.'"';
 ?>>
 {{-- Content START --}}
 @if($element->content_type == "element")
@@ -85,7 +81,20 @@
         @include('DataEntry.Blade.element', ["element" => $element->nestedComponent])
     @endif
 @else
-{!!($element->content)?$element->content:'__content__'!!}
+<?php
+if(isset($content[$element->id.'_'.$id])) {
+    echo $content[$element->id.'_'.$id];
+} else {
+    if($element->content) {
+        echo preg_replace_callback('/id=@@image\.(.*?)@@/', function($match_) {
+        $image = App\Models\Images::find($match_[1]);
+        return $match_[0].' src="' .(($image)?asset('storage/'.$image->file_name):'#'). '"';
+    }, $element->content);
+    } else {
+        echo '__content__';
+    }
+}
+?>
 @endif
 {{-- Content END --}}
 {!! $element->end_tag !!}

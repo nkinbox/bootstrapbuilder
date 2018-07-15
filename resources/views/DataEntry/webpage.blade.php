@@ -4,11 +4,13 @@
     <div class="card-body">
         @if($operation)
         @if($operation == "show")
-        <a class="nav-link pull-right" href="{{ route('DataEntry.Page',['template_id'=> $template_id, 'operation' => 'add']) }}"><i class="fa fa-plus-circle"></i> Add New</a>
+        <a class="nav-link pull-right" href="{{ route('DataEntry.Page',['template_id'=> $template_id, 'operation' => 'add']) }}" target="_blank"><i class="fa fa-plus-circle"></i> Add New</a>
         <h2 class="card-title">{{($template_id)?$template->title:'Unknown'}} Pages</h2>
+        @else
+        <h2 class="card-title">{{ ucwords($operation)." " }}{{($template_id)?$template->title:'Unknown'}} Page</h2>
         @endif
         @else
-        <a class="nav-link pull-right" href="{{ route('DataEntry.Page',['template_id'=> 0, 'operation' => 'add']) }}"><i class="fa fa-plus-circle"></i> Add Page</a>
+        <a class="nav-link pull-right" href="{{ route('DataEntry.Page',['template_id'=> 0, 'operation' => 'add']) }}" target="_blank"><i class="fa fa-plus-circle"></i> Add Page</a>
         <h2 class="card-title">{{ ucwords($operation)." " }}Website Pages</h2>
         @endif
         <div class="card-text">
@@ -21,9 +23,10 @@
                 <thead>
                     <tr>
                     <th scope="col">#</th>
+                    <th scope="col">Title</th>
                     <th scope="col">Type</th>
                     <th scope="col">Group</th>
-                    <th scope="col">Title</th>
+                    <th scope="col">Location</th>
                     <th scope="col">URL</th>
                     <th scope="col">Content</th>
                     @if(Auth::user()->admin)
@@ -38,15 +41,20 @@
                 @foreach($pages as $page)
                     <tr>
                     <th scope="row"{!! ($page->broked || !$page->page_id || !$page->content_id)?' class="bg-danger text-light"':''!!}>{{$loop->iteration}}</th>
-                    <td><small>{{$page->type}}</small></td>
-                    <td><small>{{$page->group_title}}</small></td>
                     <td><small>{{$page->title}}</small></td>
-                    <td><small>{{($template_id)?$template->title:'websitename'}}/{{$page->url}}.html</small></td>
+                    <td><kbd>{{$page->type}}</kbd></td>
+                    <td><small>{{$page->group_title}}</small></td>
+                    <td><small>@if($page->geolocation_id)
+                        @component('DataEntry.Forms.ComponentGeoLocation', ["geoLocation" => $page->geoLocation, "routeName" => null, "routePram" => null])
+                        @endcomponent
+                    @else Global
+                    @endif</small></td>
+                    <td><small><small><a{!!($page->page_id && $page->content_id)?' href="'.route('DataEntry.Blade', ["page_id" => $page->page_id, "content_id" => $page->content_id]).'" target="_blank"':''!!}>{{($template_id)?$template->title:'websitename'}}/{{$page->url}}.html</a></small></small></td>
                     <td>{{($page->content_id)?'Yes':'No'}}</td>
                     @if(Auth::user()->admin)
                     <td>{{($page->user_id)?$page->getUser->name:'-'}}</td>
-                    <td><small>{{$page->created_at}}</small></td>
-                    <td><small>{{$page->updated_at}}</small></td>
+                    <td><small><small>{{$page->created_at}}</small></small></td>
+                    <td><small><small>{{$page->updated_at}}</small></small></td>
                     @endif
                     <td>
                         <a href="{{ route('DataEntry.Page', ["template_id" => $page->template_id, "operation" => "edit", "id" => $page->id]) }}"><i class="fa fa-edit"></i> Edit</a>

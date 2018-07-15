@@ -81,7 +81,16 @@
         @include('Template.Content.element', ["element" => $element->nestedComponent])
     @endif
 @else
-{!!($element->content)?$element->content:'__content__'!!}
+<?php
+if($element->content) {
+    echo preg_replace_callback('/id=@@image\.(.*?)@@/s', function($match_) {
+    $image = App\Models\Images::find($match_[1]);
+    return $match_[0].' src="' .(($image)?asset('storage/'.$image->file_name):'#'). '"';
+}, $element->content);
+} else {
+    echo '__content__';
+}
+?>
 @endif
 {{-- Content END --}}
 {!! $element->end_tag !!}

@@ -11,10 +11,10 @@
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
     <link href="{{ asset('css/font-awesome.min.css') }}" rel="stylesheet">
     <style>
-    @stack('styles')
+        @stack('styles')
     </style>
 </head>
-<body>
+<body onunload="refreshAndClose();">
     <header>
         @stack('header')
     </header>
@@ -28,7 +28,10 @@
     </footer>
     <script src="{{ asset('js/app.js') }}"></script>
     <script>
-    @stack('scripts')
+        function refreshAndClose() {
+            window.opener.location.reload();
+        }
+        @stack('scripts')
     </script>
 </body>
 </html>

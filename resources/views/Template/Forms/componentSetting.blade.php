@@ -47,10 +47,7 @@ if($element->visibility == 'none') {
                     <option value="guest"{{(old("visibility.".$element->id, $element->visibility) == "guest")?' selected':''}}>Guest</option>
                     <option value="none"{{(old("visibility.".$element->id, $element->visibility) == "none")?' selected':''}}>None</option>
                 </select>
-                <div class="input-group-prepend ml-1">
-                    <span class="input-group-text"><i class="fa fa-columns"></i></span>
-                </div>
-                <select class="custom-select component_type" tabindex="1" name="type[{{$element->id}}]">
+                <select class="custom-select component_type d-none" tabindex="1" name="type[{{$element->id}}]">
                     <option value="body"{{(old("type.".$element->id, $element->type) == "body")?' selected':''}}>Body</option>
                     <option value="main"{{(old("type.".$element->id, $element->type) == "main")?' selected':''}}>Main</option>
                     <option value="header"{{(old("type.".$element->id, $element->type) == "header")?' selected':''}}>Header</option>
