@@ -714,7 +714,7 @@ class DataEntryController extends Controller
         }
         $request->validate([
             "title" => ['required',new alpha_dash_space,'max:250'],
-            "package_content" => "nullable|string|max:1500",
+            "package_content" => "nullable|string|max:2500",
             "content_type" => "sometimes|required|in:html,text,blade",
             "content" => "required_with:content_type|string|max:65500"
         ]);
@@ -749,7 +749,7 @@ class DataEntryController extends Controller
         $request->validate([
             "id" => "required|exists:packages",
             "title" => ['required',new alpha_dash_space,'max:250'],
-            "package_content" => "nullable|string|max:1500",
+            "package_content" => "nullable|string|max:2500",
             "content_type" => "sometimes|required|in:html,text,blade",
             "content" => "required_with:content_type|string|max:65500"
         ]);

@@ -16,7 +16,7 @@ class CreatePackagesTable extends Migration
         Schema::create('packages', function (Blueprint $table) {
             $table->increments('id');
             $table->string('title', 250);
-            $table->string('content', 1500)->nullable()->default(null);
+            $table->string('content', 2500)->nullable()->default(null);
             $table->unsignedInteger('content_id');
             $table->unsignedInteger('user_id')->default(0);
             $table->timestamps();
