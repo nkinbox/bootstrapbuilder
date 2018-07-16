@@ -63,7 +63,7 @@
     echo ' '.$attribute.'=""';
     $classes = json_decode($element->classes, true);
     if(count($classes)) {
-        echo ' class="'.(($element->content_type != "element" && $element->type == "main")?' component':'').implode(" ", $classes).'"';
+        echo ' class="'.(($element->content_type != "element" && $element->type == "main")?'component ':'').implode(" ", $classes).'"';
     } elseif($element->content_type != "element" && $element->type == "main") {
         echo ' class="component"';
     }
