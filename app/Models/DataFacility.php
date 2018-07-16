@@ -13,10 +13,14 @@ class DataFacility extends Model
     public function getUser() {
         return $this->hasOne('App\Models\User', 'id', 'user_id');
     }
+    public function hotels() {
+        return $this->hasMany('App\Models\HotelFacility');
+    }
     protected static function boot() {
         parent::boot();        
         static::deleting(function($model) {
             $model->getContent()->delete();
+            $model->hotels()->delete();
         });
     }
 }

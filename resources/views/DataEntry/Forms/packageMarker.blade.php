@@ -29,11 +29,11 @@
                     $primary = 0;
                     $order = 0;
                         foreach($packageDetail->PackageMarker as $marked) {
-                            if($marked->title == $marker->title && $marker->type == $marked->type) {
-                                $checked = true;
-                                $primary = $marked->primary_marker;
-                                $order = $marked->order;
-                                break;
+                            if($marked->id == $marker->id) {
+                            $checked = true;
+                            $primary = $marked->pivot->primary_marker;
+                            $order = $marked->pivot->order;
+                            break;
                             }
                         }
                     ?>

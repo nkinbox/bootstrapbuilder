@@ -150,9 +150,6 @@
                                 <th scope="col">Content</th>
                                 <th scope="col">Order</th>
                                 <th scope="col">Primary</th>
-                                @if(Auth::user()->admin)
-                                <th scope="col">User</th>
-                                @endif
                                 </tr>
                             </thead>
                             <tbody>
@@ -170,11 +167,8 @@
                                     <i class="fa fa-window-maximize" style="cursor:pointer" onclick='preview_html(content_{{$marker->content_id}})'></i>
                                     @endif
                                 </td>
-                                <td>{{ $marker->order }}</td>
-                                <td>{!! ($marker->primary_marker)?'<span class="badge badge-primary">primary</span>':'-' !!}</td>
-                                @if(Auth::user()->admin)
-                                <td>{{($marker->user_id)?$marker->getUser->name:'-'}}</td>
-                                @endif
+                                <td>{{ $marker->pivot->order }}</td>
+                                <td>{!! ($marker->pivot->primary_marker)?'<span class="badge badge-primary">primary</span>':'-' !!}</td>
                                 </tr>
                             @endforeach
                             </tbody>
@@ -211,6 +205,8 @@
                                 <td><small>{{$hotelRoom->created_at}}</small></td>
                                 <td><small>{{$hotelRoom->updated_at}}</small></td>
                                 <td>
+                                    <a href="{{ route('DataEntry.Hotel.Facility',['hotel_id' => $hotel->id, 'operation' => 'room', 'hotel_room_id' => $hotelRoom->id]) }}"><i class="fa fa-bed"></i> Facility</a>
+                                    /
                                     <a href="{{ route('DataEntry.Hotel.Room',['hotel_id' => $hotel->id, 'operation' => 'edit', 'id' => $hotelRoom->id]) }}"><i class="fa fa-edit"></i> Edit</a>
                                     /
                                     <a href="{{ route('DataEntry.Hotel.Room.delete', ['id' => $hotelRoom->id]) }}"><i class="fa fa-trash"></i> Delete</a>
@@ -236,7 +232,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                            @foreach($hotel->AllHotelFacility as $facility)
+                            @foreach($hotel->HotelFacility->where('type', 'hotel') as $facility)
                                 <tr>
                                 <th scope="row">{{$loop->iteration}}</th>
                                 <td>{{$facility->title}}</td>
@@ -254,6 +250,25 @@
                                 <td>{{($facility->user_id)?$facility->getUser->name:'-'}}</td>
                                 @endif
                                 </tr>
+                            @endforeach
+                            @foreach($hotel->HotelFacility->where('type', 'room')->unique() as $facility)
+                            <tr>
+                            <th scope="row">{{$loop->iteration}}</th>
+                            <td>{{$facility->title}}</td>
+                            <td><span class="badge badge-light">{!!($facility->type == "hotel")?'<i class="fa fa-building"></i> Hotel':'<i class="fa fa-hotel"></i> Room'!!}</span></td>
+                            <td><?php echo preg_replace_callback('/id=@@image\.(.*?)@@/', function($m) {                        
+                                $image = App\Models\Images::find($m[1]);
+                                return 'src="' .(($image)?asset('storage/'.$image->file_name):'#'). '"';
+                                },$facility->content); ?>
+                                @if($facility->content_id)
+                                <script> var content_{{$facility->content_id}} = {!!json_encode($facility->getContent->content)!!};</script>
+                                <i class="fa fa-window-maximize" style="cursor:pointer" onclick='preview_html(content_{{$facility->content_id}})'></i>
+                                @endif
+                            </td>
+                            @if(Auth::user()->admin)
+                            <td>{{($facility->user_id)?$facility->getUser->name:'-'}}</td>
+                            @endif
+                            </tr>
                             @endforeach
                             </tbody>
                         </table>

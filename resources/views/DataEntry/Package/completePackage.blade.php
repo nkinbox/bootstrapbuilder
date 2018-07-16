@@ -88,9 +88,6 @@
                             <th scope="col">Content</th>
                             <th scope="col">Order</th>
                             <th scope="col">Primary</th>
-                            @if(Auth::user()->admin)
-                            <th scope="col">User</th>
-                            @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -108,11 +105,8 @@
                                 <i class="fa fa-window-maximize" style="cursor:pointer" onclick='preview_html(content_{{$marker->content_id}})'></i>
                                 @endif
                             </td>
-                            <td>{{ $marker->order }}</td>
-                            <td>{!! ($marker->primary_marker)?'<span class="badge badge-primary">primary</span>':'-' !!}</td>
-                            @if(Auth::user()->admin)
-                            <td>{{($marker->user_id)?$marker->getUser->name:'-'}}</td>
-                            @endif
+                            <td>{{ $marker->pivot->order }}</td>
+                            <td>{!! ($marker->pivot->primary_marker)?'<span class="badge badge-primary">primary</span>':'-' !!}</td>
                             </tr>
                         @endforeach
                         </tbody>

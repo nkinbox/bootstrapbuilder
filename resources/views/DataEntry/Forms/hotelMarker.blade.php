@@ -27,10 +27,10 @@
                 $primary = 0;
                 $order = 0;
                     foreach($hotel->HotelMarker as $marked) {
-                        if($marked->title == $marker->title && $marker->type == $marked->type) {
+                        if($marked->id == $marker->id) {
                             $checked = true;
-                            $primary = $marked->primary_marker;
-                            $order = $marked->order;
+                            $primary = $marked->pivot->primary_marker;
+                            $order = $marked->pivot->order;
                             break;
                         }
                     }

@@ -26,7 +26,7 @@
                 $checked = false;
                 $previousFacilities = (($operation == "hotel")?$hotel->HotelFacility:$hotelRoom->RoomFacility);
                 foreach($previousFacilities as $previousFacility) {
-                    if($previousFacility->title == $facility->title && $previousFacility->type == $facility->type) {
+                    if($previousFacility->id == $facility->id) {
                         $checked = true;
                         break;
                     }

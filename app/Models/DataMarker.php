@@ -13,10 +13,18 @@ class DataMarker extends Model
     public function getUser() {
         return $this->hasOne('App\Models\User', 'id', 'user_id');
     }
+    public function hotels() {
+        return $this->hasMany('App\Models\HotelMarker');
+    }
+    public function packages() {
+        return $this->hasMany('App\Models\PackageMarker');
+    }
     protected static function boot() {
         parent::boot();        
         static::deleting(function($model) {
             $model->getContent()->delete();
+            $model->hotels()->delete();
+            $model->packages()->delete();
         });
     }
 }

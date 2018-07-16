@@ -19,7 +19,7 @@ class Package extends Model
         return $this->hasManyThrough('App\Models\PackageItinerary', 'App\Models\PackageDetail');
     }
     public function PackageMarker() {
-        return $this->hasManyThrough('App\Models\PackageMarker', 'App\Models\PackageDetail')->orderBy('type')->orderBy('order');
+        return $this->hasMany('App\Models\PackageMarker');
     }
     public function PackagePrice() {
         return $this->hasManyThrough('App\Models\PackagePrice', 'App\Models\PackageDetail');
@@ -34,6 +34,10 @@ class Package extends Model
         parent::boot();        
         static::deleting(function($model) {
             $model->getContent()->delete();
+            $model->PackageDetail()->delete();
+            $model->PackageItinerary()->delete();
+            $model->PackageMarker()->delete();
+            $model->PackagePrice()->delete();
         });
     }
 }

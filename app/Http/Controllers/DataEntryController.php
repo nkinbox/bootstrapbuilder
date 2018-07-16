@@ -788,28 +788,16 @@ class DataEntryController extends Controller
         if(!$package) {
             return redirect()->back()->with("error", "No Package Found.");
         }
-        if(count($package->PackageDetail)) {
-            if(count($package->PackageItinerary)){
-                $package->PackageItinerary()->delete();
+        if(count($package->Images)) {
+            $images = [];
+            foreach($package->Images as $image) {
+                $images[] = 'public/'.$image->file_name;
             }
-            if(count($package->PackageMarker)) {
-                $package->PackageMarker()->delete();
-            }
-            if(count($package->PackagePrice)) {
-                $package->PackagePrice()->delete();
-            }
-            if(count($package->Images)) {
-                $images = [];
-                foreach($package->Images as $image) {
-                    $images[] = 'public/'.$image->file_name;
-                }
-                Storage::delete($images);
-                $package->Images()->delete();
-            }
-            $package->PackageDetail()->delete();
+            Storage::delete($images);
+            $package->Images()->delete();
         }
         $package->delete();
-        return redirect()->back()->with("message", $package->title." deleted successfully!");
+        return redirect()->route('DataEntry.Package')->with("message", $package->title." deleted successfully!");
     }
     public function package_detail($package_id, $operation = null, $id = null, $tab = null) {
         $package = Package::find($package_id);
@@ -921,15 +909,6 @@ class DataEntryController extends Controller
         if(!$packageDetail) {
             return redirect()->back()->with("error", "No Package Detail Found.");
         }
-        if(count($packageDetail->PackageItinerary)){
-            $packageDetail->PackageItinerary()->delete();
-        }
-        if(count($packageDetail->PackageMarker)) {
-            $packageDetail->PackageMarker()->delete();
-        }
-        if(count($packageDetail->PackagePrice)) {
-            $packageDetail->PackagePrice()->delete();
-        }
         $packageDetail->delete();
         return redirect()->back()->with("message", $packageDetail->title." deleted successfully!");
     }
@@ -976,33 +955,27 @@ class DataEntryController extends Controller
         $alreadyMarked = PackageMarker::where("package_detail_id",$request->package_detail_id)->get();
         $delete = [];
         foreach($alreadyMarked as $marked) {
-            $delete[$marked->id] = 1;
+            $delete[$marked->data_marker_id] = $marked->id;
         }
-        $markers = DataMarker::whereIn("id", $request->marker)->get();
-        foreach($markers as $marker) {
+        foreach($request->marker as $marker) {
             $packageMarker = null;
-            foreach($alreadyMarked as $marked) {
-                if($marked->type == $marker->type && $marked->title == $marker->title) {
-                    unset($delete[$marked->id]);
-                    $packageMarker = $marked;
-                    break;
-                }
+            if(array_key_exists($marker, $delete)) {
+                $packageMarker = PackageMarker::find($delete[$marker]);
+                unset($delete[$marker]);
+                $packageMarker->primary_marker = $request->primary[$marker];
+                $packageMarker->order = $request->order[$marker];
+                $packageMarker->save();
+            } else {
+                $packageMarker = new PackageMarker;
+                $packageMarker->package_id = $request->package_id;
+                $packageMarker->package_detail_id = $request->package_detail_id;
+                $packageMarker->data_marker_id = $marker;
+                $packageMarker->primary_marker = $request->primary[$marker];
+                $packageMarker->order = $request->order[$marker];
+                $packageMarker->save();
             }
-            if(!$packageMarker)
-            $packageMarker = new PackageMarker;
-            $packageMarker->package_detail_id = $request->package_detail_id;
-            $packageMarker->type = $marker->type;
-            $packageMarker->primary_marker = $request->primary[$marker->id];
-            $packageMarker->order = $request->order[$marker->id];
-            $packageMarker->title = $marker->title;
-            $packageMarker->content = $marker->content;
-            $packageMarker->content_id = $marker->content_id;
-            $packageMarker->user_id = Auth::id();
-            $packageMarker->save();
         }
-        foreach($delete as $key => $val) {
-            PackageMarker::destroy($key);
-        }
+        PackageMarker::destroy($delete);
         return redirect()->route('DataEntry.Package.Detail', ['package_id' => $request->package_id, 'operation' => 'show', 'id' => $request->package_detail_id, 'tab' => 'markers'])->with("message", "Markers Added Successfully!");
     }
     public function package_price($package_id, $package_detail_id, $operation = null, $id = null) {
@@ -1446,24 +1419,18 @@ class DataEntryController extends Controller
     }
     public function hotel_delete($id) {
         $hotel = Hotel::find($id);
-        if(count($hotel->HotelContact))
-        $hotel->HotelContact()->delete();
-        if(count($hotel->AllHotelFacility))
-        $hotel->AllHotelFacility()->delete();
-        if(count($hotel->HotelMarker))
-        $hotel->HotelMarker()->delete();
-        if(count($hotel->HotelRoom))
-        $hotel->HotelRoom()->delete();
-        if(count($hotel->Images)) {
-            $images = [];
-            foreach($hotel->Images as $image) {
-                $images[] = 'public/'.$image->file_name;
+        if($hotel) {
+            if(count($hotel->Images)) {
+                $images = [];
+                foreach($hotel->Images as $image) {
+                    $images[] = 'public/'.$image->file_name;
+                }
+                Storage::delete($images);
+                $hotel->Images()->delete();
             }
-            Storage::delete($images);
-            $hotel->Images()->delete();
+            $hotel->delete();
         }
-        $hotel->delete();
-        return redirect()->back()->with("message", $hotel->hotel_name." Deleted Successfully!");
+        return redirect()->route('DataEntry.Hotel')->with("message", $hotel->hotel_name." Deleted Successfully!");
     }
     public function hotel_get() {
         $response = null;
@@ -1609,7 +1576,7 @@ class DataEntryController extends Controller
         $hotelRoom->save();
         return redirect()->route('DataEntry.Hotel', ['operation' => 'show', 'id' => $request->hotel_id, 'tab' => "hotel_rooms"])->with("message", $request->title." Room Edited Successfully.");
     }
-    public function hotel_room_delete(Request $request) {
+    public function hotel_room_delete($id) {
         $room = HotelRoom::find($id);
         if($room) {
             $room->delete();
@@ -1659,41 +1626,29 @@ class DataEntryController extends Controller
             "facility" => "required|array",
             "facility.*" => "required|exists:data_facilities,id"
         ]);
-        $where = ["hotel_id" => $request->hotel_id];
         $hotel_room_id = 0;
         if($request->operation == "room") {
             $hotel_room_id = $request->hotel_room_id;
-            $where["hotel_room_id"] = $request->hotel_room_id;
         }
-        $alreadyMarked = HotelFacility::where($where)->get();
+        $alreadyMarked = HotelFacility::select('id', 'data_facility_id')->where(["hotel_id" => $request->hotel_id, "hotel_room_id" => $hotel_room_id])->get();
         $delete = [];
         foreach($alreadyMarked as $marked) {
-            $delete[$marked->id] = 1;
+            $delete[$marked->data_facility_id] = $marked->id;
         }
-        $facilities = DataFacility::whereIn("id", $request->facility)->get();
-        foreach($facilities as $facility) {
+        foreach($request->facility as $facility) {
             $HotelFacility = null;
-            foreach($alreadyMarked as $marked) {
-                if($marked->type == $facility->type && $marked->title == $facility->title) {
-                    unset($delete[$marked->id]);
-                    $HotelFacility = $marked;
-                    break;
-                }
+            if(array_key_exists($facility, $delete)) {
+                unset($delete[$facility]);
+            } else {
+                $HotelFacility = new HotelFacility;
+                $HotelFacility->hotel_id = $request->hotel_id;
+                $HotelFacility->hotel_room_id = $hotel_room_id;
+                $HotelFacility->data_facility_id = $facility;
+                $HotelFacility->user_id = Auth::id();
+                $HotelFacility->save();
             }
-            if(!$HotelFacility)
-            $HotelFacility = new HotelFacility;
-            $HotelFacility->hotel_id = $request->hotel_id;
-            $HotelFacility->title = $facility->title;
-            $HotelFacility->type = $facility->type;
-            $HotelFacility->hotel_room_id = $hotel_room_id;
-            $HotelFacility->content = $facility->content;
-            $HotelFacility->content_id = $facility->content_id;
-            $HotelFacility->user_id = Auth::id();
-            $HotelFacility->save();
         }
-        foreach($delete as $key => $val) {
-            HotelFacility::destroy($key);
-        }
+        HotelFacility::destroy($delete);
         if($request->operation == "room")
         $tab = "hotel_rooms";
         else
@@ -1721,7 +1676,7 @@ class DataEntryController extends Controller
     }
     public function hotel_markers(Request $request) {
         $request->validate([
-            "hotel_id" => "required|exists:packages,id",
+            "hotel_id" => "required|exists:hotels,id",
             "marker" => "required|array",
             "marker.*" => "required|exists:data_markers,id",
             "order" => "required|array",
@@ -1731,33 +1686,26 @@ class DataEntryController extends Controller
         $alreadyMarked = HotelMarker::where("hotel_id", $request->hotel_id)->get();
         $delete = [];
         foreach($alreadyMarked as $marked) {
-            $delete[$marked->id] = 1;
+            $delete[$marked->data_marker_id] = $marked->id;
         }
-        $markers = DataMarker::whereIn("id", $request->marker)->get();
-        foreach($markers as $marker) {
+        foreach($request->marker as $marker) {
             $HotelMarker = null;
-            foreach($alreadyMarked as $marked) {
-                if($marked->type == $marker->type && $marked->title == $marker->title) {
-                    unset($delete[$marked->id]);
-                    $HotelMarker = $marked;
-                    break;
-                }
+            if(array_key_exists($marker, $delete)) {
+                $HotelMarker = HotelMarker::find($delete[$marker]);
+                unset($delete[$marker]);
+                $HotelMarker->order = $request->order[$marker];
+                $HotelMarker->primary_marker = $request->primary[$marker];
+                $HotelMarker->save();
+            } else {
+                $HotelMarker = new HotelMarker;
+                $HotelMarker->hotel_id = $request->hotel_id;
+                $HotelMarker->data_marker_id = $marker;
+                $HotelMarker->order = $request->order[$marker];
+                $HotelMarker->primary_marker = $request->primary[$marker];
+                $HotelMarker->save();
             }
-            if(!$HotelMarker)
-            $HotelMarker = new HotelMarker;
-            $HotelMarker->hotel_id = $request->hotel_id;
-            $HotelMarker->type = $marker->type;
-            $HotelMarker->order = $request->order[$marker->id];
-            $HotelMarker->primary_marker = $request->primary[$marker->id];
-            $HotelMarker->title = $marker->title;
-            $HotelMarker->content = $marker->content;
-            $HotelMarker->content_id = $marker->content_id;
-            $HotelMarker->user_id = Auth::id();
-            $HotelMarker->save();
         }
-        foreach($delete as $key => $val) {
-            HotelMarker::destroy($key);
-        }
+        HotelMarker::destroy($delete);
         return redirect()->route('DataEntry.Hotel', ['operation' => 'show', 'id' => $request->hotel_id, 'tab' => 'hotel_markers'])->with("message", "Markers Added Successfully!");
     }
     public function page_blade_content($page_id, $content_id) {
