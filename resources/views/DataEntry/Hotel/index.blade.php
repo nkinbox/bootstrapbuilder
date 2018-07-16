@@ -14,6 +14,7 @@
                     <tr>
                     <th scope="col">#</th>
                     <th scope="col">Hotel Name</th>
+                    <th scope="col">Type</th>
                     <th scope="col">Address</th>
                     <th scope="col">Locatity</th>
                     <th scope="col">Location</th>
@@ -39,6 +40,7 @@
                     <tr{!! (!$hotel->visibility)?' class="bg-danger text-light"':'' !!}>
                     <th scope="row"{!! (!$isComplete)?' class="bg-danger text-light"':'' !!}>{{$loop->iteration}}</th>
                     <td><a href="{{ route('DataEntry.Hotel', ["operation" => "show", "id" => $hotel->id]) }}">{{$hotel->hotel_name}}</a></td>
+                    <td><kbd>{{$hotel->property_type}}</kbd></td>
                     <td>{{$hotel->address}}</td>
                     <td>{{($hotel->location_id)?$hotel->Location->title:''}}</td>
                     @if($hotel->geolocation_id)

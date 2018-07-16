@@ -33,7 +33,11 @@
                                 <option value="1"{{(old("visibility", (($hotel)?$hotel->visibility:'')) == "1")?' selected':''}}>Show</option>
                                 <option value="0"{{(old("visibility", (($hotel)?$hotel->visibility:'')) == "0")?' selected':''}}>Hide</option>
                             </select>
-
+                            <select class="custom-select" tabindex="5" name="property_type">
+                                <option{{(old("property_type", (($hotel)?$hotel->type:'')) == "Hotel")?' selected':''}}>Hotel</option>
+                                <option{{(old("property_type", (($hotel)?$hotel->type:'')) == "Resort")?' selected':''}}>Resort</option>
+                                <option{{(old("property_type", (($hotel)?$hotel->type:'')) == "Cottage")?' selected':''}}>Cottage</option>
+                            </select>
                         </div>
                     </div>
                     <div class="input-group mb-3">

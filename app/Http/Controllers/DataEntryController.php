@@ -1273,6 +1273,7 @@ class DataEntryController extends Controller
             "hotel_name" => ['required',new alpha_dash_space,'max:100'],
             "no_of_rooms" => "nullable|integer",
             "visibility" => "required|boolean",
+            "property_type" => "required|in:Hotel,Resort,Cottage",
             "address" => "required|string|max:100",
             "hotel_content_type" => "nullable|in:html,text,blade",
             "hotel_content" => "nullable|string|max:65500",
@@ -1313,6 +1314,7 @@ class DataEntryController extends Controller
         $hotel->geolocation_id = Cookie::get('geolocation_id');
         $hotel->visibility = $request->visibility;
         $hotel->location_id = $location_id;
+        $hotel->property_type = $request->property_type;
         $hotel->hotel_name = $request->hotel_name;
         $hotel->address = $request->address;
         $hotel->no_of_rooms = $request->no_of_rooms;
@@ -1344,6 +1346,7 @@ class DataEntryController extends Controller
             "longitude" => "nullable|regex:/^-?[0-9]{1,3}(?:\.[0-9]{1,8})?$/",
             "hotel_name" => ['required',new alpha_dash_space,'max:100'],
             "no_of_rooms" => "nullable|integer",
+            "property_type" => "required|in:Hotel,Resort,Cottage",
             "visibility" => "required|boolean",
             "address" => "required|string|max:100",
             "hotel_content_type" => "nullable|in:html,text,blade",
@@ -1397,6 +1400,7 @@ class DataEntryController extends Controller
         $hotel->geolocation_id = Cookie::get('geolocation_id');
         $hotel->visibility = $request->visibility;
         $hotel->location_id = $location_id;
+        $hotel->property_type = $request->property_type;
         $hotel->hotel_name = $request->hotel_name;
         $hotel->address = $request->address;
         $hotel->no_of_rooms = $request->no_of_rooms;
