@@ -18,8 +18,8 @@ class CreateLocationsTable extends Migration
             $table->unsignedInteger('geolocation_id')->default(0);
             $table->string('type', 10); //['attraction', 'landmark', 'locality']
             $table->string('title', 100);
-            $table->decimal('latitude', 10, 8)->default(null)->nullable();
-            $table->decimal('longitude', 10, 8)->default(null)->nullable();
+            $table->decimal('latitude', 12, 8)->default(null)->nullable();
+            $table->decimal('longitude', 12, 8)->default(null)->nullable();
             $table->unsignedInteger('content_id')->default(0);
             $table->unsignedInteger('user_id')->default(0);
             $table->timestamps();

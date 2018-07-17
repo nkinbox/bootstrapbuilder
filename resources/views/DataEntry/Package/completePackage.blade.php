@@ -142,12 +142,12 @@
                             <td>{{($price->user_id)?$price->getUser->name:'-'}}</td>
                             <td><small>{{$price->created_at}}</small></td>
                             <td><small>{{$price->updated_at}}</small></td>
+                            @endif
                             <td>
                                 <a href="{{ route('DataEntry.Package.Price',['package_id' => $package->id, 'package_detail_id' => $packageDetail->id, 'operation' => 'edit', 'id' => $price->id]) }}"><i class="fa fa-edit"></i> Edit</a>
                                 /
                                 <a href="{{ route('DataEntry.Package.Price.delete', ['id' => $price->id]) }}"><i class="fa fa-trash"></i> Delete</a>
                             </td>
-                            @endif
                             </tr>
                         @endforeach
                         </tbody>
