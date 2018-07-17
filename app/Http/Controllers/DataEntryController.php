@@ -704,7 +704,7 @@ class DataEntryController extends Controller
                 }
             }
         } else {
-            $this->response["packages"] = Package::orderBy('title')->paginate(100);
+            $this->response["packages"] = Package::orderBy('id', 'desc')->paginate(100);
         }
         return view('DataEntry.Package.index', $this->response);
     }
