@@ -1834,7 +1834,7 @@ class DataEntryController extends Controller
                 if(Auth::user()->admin)
                 $this->response["pages"] = PageContent::where(["template_id" => $template_id])->paginate(50);
                 else
-                $this->response["pages"] = PageContent::where(["template_id" => $template_id, "user_id" => Auth::id()])->paginate(50);
+                $this->response["pages"] = PageContent::where(["template_id" => $template_id, "user_id" => Auth::id()])->orderBy('id', 'desc')->paginate(50);
             }
         } else {
             $this->response["pages"] = [];
