@@ -28,8 +28,8 @@
                     <div class="input-group-prepend">
                         <span class="input-group-text"><i class="fa fa-clock-o"></i></span>
                     </div>
-                    <input name="days" type="number" class="form-control" placeholder="No of Days" tabindex="1" value="{{ old("days", (($packageDetail)?$packageDetail->days:'')) }}">
                     <input name="nights" type="number" class="form-control" placeholder="No of Nights" tabindex="2" value="{{ old("nights", (($packageDetail)?$packageDetail->nights:'')) }}">
+                    <input name="days" type="number" class="form-control" placeholder="No of Days" tabindex="1" value="{{ old("days", (($packageDetail)?$packageDetail->days:'')) }}">
                     <div class="input-group-append">
                         <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" tabindex="3">
                         </button>
