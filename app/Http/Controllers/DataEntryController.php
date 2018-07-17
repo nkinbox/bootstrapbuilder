@@ -243,7 +243,10 @@ class DataEntryController extends Controller
                 }
             }
         } else {
+            if(Auth::user()->admin)
             $this->response["transports"] = PublicTransport::orderBy('id', 'desc')->paginate(100);
+            else
+            $this->response["transports"] = PublicTransport::where('user_id', Auth::id())->orderBy('id', 'desc')->paginate(100);
         }
         return view('DataEntry.transports', $this->response);
     }
@@ -347,7 +350,10 @@ class DataEntryController extends Controller
                 $this->response["facility"] = DataFacility::find($id);
             }
         } else {
+            if(Auth::user()->admin)
             $this->response["facilities"] = DataFacility::all();
+            else
+            $this->response["facilities"] = DataFacility::where('user_id', Auth::id())->get();
         }
         return view('DataEntry.facilities', $this->response);
     }
@@ -448,7 +454,10 @@ class DataEntryController extends Controller
                 $this->response["markers"] = DataMarker::where("category", $id)->get();
             }
         } else {
+            if(Auth::user()->admin)
             $this->response["markers"] = DataMarker::all();
+            else
+            $this->response["markers"] = DataMarker::where("user_id", Auth::id())->get();
         }
         return view('DataEntry.markers', $this->response);
     }
@@ -704,7 +713,10 @@ class DataEntryController extends Controller
                 }
             }
         } else {
+            if(Auth::user()->admin)
             $this->response["packages"] = Package::orderBy('id', 'desc')->paginate(100);
+            else
+            $this->response["packages"] = Package::where('user_id', Auth::id())->orderBy('id', 'desc')->paginate(100);
         }
         return view('DataEntry.Package.index', $this->response);
     }
@@ -1258,7 +1270,10 @@ class DataEntryController extends Controller
             }
             return view('DataEntry.Forms.hotel', $this->response);
         } else {
+            if(Auth::user()->admin)
             $this->response['hotels'] = Hotel::orderBy('id', 'desc')->paginate(100);
+            else
+            $this->response['hotels'] = Hotel::where('user_id', Auth::id())->orderBy('id', 'desc')->paginate(100);
         }
         return view('DataEntry.Hotel.index', $this->response);
     }
@@ -1816,7 +1831,10 @@ class DataEntryController extends Controller
                     }
                 }
             } elseif($operation == "show") {
+                if(Auth::user()->admin)
                 $this->response["pages"] = PageContent::where(["template_id" => $template_id])->paginate(50);
+                else
+                $this->response["pages"] = PageContent::where(["template_id" => $template_id, "user_id" => Auth::id()])->paginate(50);
             }
         } else {
             $this->response["pages"] = [];
