@@ -1142,7 +1142,7 @@ class DataEntryController extends Controller
             if($request->has('location_name') && $request->location_name) {
                 $location = Location::where([
                     "geolocation_id" => $geolocation_id,
-                    "type" => 'locality',
+                    //"type" => 'locality',
                     "title" => $request->location_name
                 ])->first();
                 if(!$location)
@@ -1199,7 +1199,7 @@ class DataEntryController extends Controller
             if($request->has('location_name') && $request->location_name) {
                 $location = Location::where([
                     "geolocation_id" => $geolocation_id,
-                    "type" => 'locality',
+                    //"type" => 'locality',
                     "title" => $request->location_name
                 ])->first();
                 if(!$location)
