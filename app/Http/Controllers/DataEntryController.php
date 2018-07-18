@@ -584,12 +584,12 @@ class DataEntryController extends Controller
         if(Cookie::get('geolocation_id') == null) {
             $response = ["message" => "Missing GeoLocation."];
         }
-        $locations = Location::select('id', 'title')->where(['geolocation_id' => Cookie::get('geolocation_id'), 'type' => 'locality'])->get();
+        $locations = Location::select('id', 'title')->where(['geolocation_id' => Cookie::get('geolocation_id')])->get();
         foreach($locations as $location) {
-            $response[$location->id] = $location->title;
+            $response[$location->id] = $location->title." (" .$location->type. ")";
         }
         if(!$response) {
-            $response = ["message" => "No Locality Found."];
+            $response = ["message" => "No Locations Found."];
         }
         return response()->json($response);
     }
