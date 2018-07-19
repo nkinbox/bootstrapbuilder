@@ -206,6 +206,7 @@
                                 <td>{{($hotelRoom->user_id)?$hotelRoom->getUser->name:'-'}}</td>
                                 <td><small>{{$hotelRoom->created_at}}</small></td>
                                 <td><small>{{$hotelRoom->updated_at}}</small></td>
+                                @endif
                                 <td>
                                     <a href="{{ route('DataEntry.Hotel.Facility',['hotel_id' => $hotel->id, 'operation' => 'room', 'hotel_room_id' => $hotelRoom->id]) }}"><i class="fa fa-bed"></i> Facility</a>
                                     /
@@ -213,7 +214,6 @@
                                     /
                                     <a href="{{ route('DataEntry.Hotel.Room.delete', ['id' => $hotelRoom->id]) }}"><i class="fa fa-trash"></i> Delete</a>
                                 </td>
-                                @endif
                                 </tr>
                             @endforeach
                             </tbody>
