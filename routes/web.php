@@ -6,8 +6,7 @@ Route::get('/', function () {
 Auth::routes();
 
 Route::middleware('auth', 'access:Template')->group(function () {
-    //mode = auth guest country
-    Route::get('page/{id}', 'TemplateController@view')->name('view');
+    Route::get('page/{template_id}/{id}', 'TemplateController@view')->name('view');
     Route::post('page_mode', 'TemplateController@mode')->name('mode');
     Route::prefix('template')->group(function() {
         Route::get('/page_component/{page_id}/{operation?}/{id?}', 'TemplateController@page_component')->name('Template.Page.Component');
@@ -25,6 +24,11 @@ Route::middleware('auth', 'access:Template')->group(function () {
         Route::post('/database', 'TemplateController@data_variable_add')->name('Database.add');
         Route::put('/database', 'TemplateController@data_variable_edit')->name('Database.edit');
         Route::get('/delete/database/{id}', 'TemplateController@data_variable_delete')->name('Database.delete')->middleware('canDelete');
+        
+        Route::get('/variable/{template_id}/{operation?}/{id?}', 'TemplateController@variable')->name('Variable');
+        Route::post('/variable', 'TemplateController@variable_add')->name('Variable.add');
+        Route::put('/variable', 'TemplateController@variable_edit')->name('Variable.edit');
+        Route::get('/delete/variable/{template_id}/{id}', 'TemplateController@variable_delete')->name('Variable.delete')->middleware('canDelete');
         
         Route::get('/page/{template_id}/{operation?}/{id?}', 'TemplateController@page')->name('Template.Page');
         Route::post('/page/add', 'TemplateController@page_add')->name('Template.Page.add');

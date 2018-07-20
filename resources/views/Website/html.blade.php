@@ -36,11 +36,11 @@
 @if($element->content_type == "element")
     @if($element->node == "self" && count($element->Children))
         @foreach($element->Children as $child)
-        @include('Page.element', ["element" => $child])
+        @include('Website.element', ["element" => $child])
         @endforeach
     @endif
     @if($element->nested_component)
-        @include('Page.element', ["element" => $element->nestedComponent])
+        @include('Website.element', ["element" => $element->nestedComponent])
     @endif
 @else
 <?php

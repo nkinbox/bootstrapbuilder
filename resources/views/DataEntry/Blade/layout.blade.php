@@ -31,6 +31,9 @@
         function refreshAndClose() {
             window.opener.location.reload();
         }
+        $("a").click(function(e){
+            e.preventDefault();
+        });
         @stack('scripts')
     </script>
 </body>

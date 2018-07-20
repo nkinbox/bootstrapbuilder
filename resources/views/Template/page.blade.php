@@ -14,6 +14,7 @@
                     <th scope="col">Components</th>
                     <th scope="col">Script</th>
                     <th scope="col">CSS</th>
+                    <th scope="col">Variables</th>
                     @if(Auth::user()->admin)
                     <th scope="col">User</th>
                     <th scope="col">Created at</th>
@@ -40,6 +41,7 @@
                                 <i class="fa fa-window-maximize" style="cursor:pointer" onclick='preview_html(content_{{$template->css_id}})'></i>
                                 @endif
                             </td>
+                            <td><a href="{{ route('Variable', ['template_id' => $template->id]) }}">{{$template->GlobalVariables->count()}}</a></td>
                             @if(Auth::user()->admin)
                             <td>{{($template->user_id)?$template->getUser->name:'-'}}</td>
                             <td><small>{{$template->created_at}}</small></td>
@@ -89,6 +91,7 @@
                             <th scope="col">MetaData</th>
                             <th scope="col">Script</th>
                             <th scope="col">CSS</th>
+                            <th scope="col">Variables</th>
                             @if(Auth::user()->admin)
                             <th scope="col">User</th>
                             <th scope="col">Created at</th>
@@ -102,7 +105,7 @@
                                 <tr>
                                     <th scope="row"{!! (!$page->Components->count())?' class="bg-danger text-light"':'' !!}>{{ $loop->iteration }}</th>
                                     <td>
-                                        <a href="{{ route('view', ['id' => $page->id]) }}" target="_blank">{{$page->title}}</a>
+                                        <a href="{{ route('view', ['template_id' => $template->id, 'id' => $page->id]) }}" target="_blank">{{$page->title}}</a>
                                     </td>
                                     <td>{{$page->url}}</td>
                                     <td><a href="{{ route('Template.Page.Component', ['page_id' => $page->id]) }}">{{$page->Components->count()}}</a></td>
@@ -123,6 +126,12 @@
                                         @if($page->css_id)
                                         <script> var css_content_{{$page->css_id}} = {!!json_encode($page->getCSS->content)!!};</script>
                                         <i class="fa fa-window-maximize" style="cursor:pointer" onclick='preview_html(css_content_{{$page->css_id}})'></i>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($page->variables)
+                                        <script> var var_content_{{$page->id}} = {!!json_encode($page->variables)!!};</script>
+                                        <i class="fa fa-window-maximize" style="cursor:pointer" onclick='preview_html(var_content_{{$page->id}})'></i>
                                         @endif
                                     </td>
                                     @if(Auth::user()->admin)

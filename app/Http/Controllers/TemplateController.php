@@ -10,13 +10,164 @@ use App\Models\Components;
 use App\Models\PageContent;
 use App\Models\PageComponent;
 use App\Models\DatabaseVariable;
+use App\Models\Variables;
 use App\Rules\alpha_dash_space;
 use Auth;
 use Cookie;
+use View;
 
 class TemplateController extends Controller
 {
     private $response;
+    private $loopResolver;
+    private $propertyResolver;
+    function __construct() {
+        $this->loopResolver = function($database_variables, $query = ["all()",""], &$loop_count, &$loops) {
+            $loop_count++;
+            $loops[$loop_count] = [
+                "loaded" => [],
+                "related" => [],
+                "isArray" => false,
+                "model_var" => "",
+            ];
+            $continue = true;
+            $eval = "";
+            foreach($database_variables as $variable) {
+                if(!$continue)
+                break;
+                if($variable && $db_var = \App\Models\DatabaseVariable::find($variable)) {
+                    $isRelation = false;
+                    for($i = (count($loops) - 1); $i >= 0; $i--) {
+                        if(isset($loops[$i]['related'][$db_var->object])) {
+                            $isRelation = true;
+                            if($loops[$i]['isArray'])
+                            $eval = "\$value".$i;
+                            else
+                            $eval = $loops[$i]['model_var'];
+                            break;
+                        }
+                    }
+                    if(!$isRelation) {
+                        $isSet = false;
+                        for($i = (count($loops) - 1); $i >= 0; $i--) {
+                            if(isset($loops[$i]['loaded'][$db_var->object])) {
+                                $isSet = true;
+                                if($loops[$i]['isArray'])
+                                $eval = "\$value".$i;
+                                else
+                                $eval = $loops[$i]['model_var'];
+                                break;
+                            }
+                        }
+                        if(!$isSet) {
+                            if($query[0]) {
+                                try {
+                                    $loops[$loop_count]['loaded'][$db_var->object] = eval("return \App\Models\\".$db_var->object.'::'.$query[0].";");
+                                } catch (ParseError $e) {
+                                    $continue = false;
+                                }
+                            }
+                        }
+                        if($continue) {
+                            if($db_var->property) {
+                                if(!$isSet) {
+                                    if($loops[$loop_count]['loaded'][$db_var->object] instanceof Traversable)
+                                    $eval = "\$value".$loop_count."->".$db_var->property;
+                                    else
+                                    $eval = "\$loops[".$loop_count."]['loaded']['".$db_var->object."']->".$db_var->property;
+                                }
+                                else
+                                $eval .= "->".$db_var->property;
+                                if($db_var->related_to) {
+                                    $relation = App\Models\DatabaseVariable::find($db_var->related_to);
+                                    if($relation) {
+                                        $bool = true;
+                                        for($i = (count($loops) - 1); $i >= 0; $i--) {
+                                            if(isset($loops[$i]['related'][$relation->object])) {
+                                                $bool = false;
+                                                break;
+                                            }
+                                        }
+                                        if($bool)
+                                        $loops[$loop_count]['related'][$relation->object] = $db_var->object;
+                                    }
+                                }
+                            } else {
+                                $eval = "\$loops[".$loop_count."]['loaded']['".$db_var->object."']";
+                            }
+                        }
+                    } else {
+                        $eval .= "->".$db_var->property;
+                        if($db_var->related_to) {
+                            $relation = App\Models\DatabaseVariable::find($db_var->related_to);
+                            if($relation) {
+                                $bool = true;
+                                for($i = (count($loops) - 1); $i >= 0; $i--) {
+                                    if(isset($loops[$i]['related'][$relation->object])) {
+                                        $bool = false;
+                                        break;
+                                    }
+                                }
+                                if($bool)
+                                $loops[$loop_count]['related'][$relation->object] = $db_var->object;
+                            }
+                        }
+                    }
+                    if($db_var->is_array)
+                    $loops[$loop_count]['isArray'] = true;
+                    elseif(!$db_var->property && isset($loops[$loop_count]['loaded'][$db_var->object]) && is_iterable($loops[$loop_count]['loaded'][$db_var->object]))
+                    $loops[$loop_count]['isArray'] = true;
+                    else
+                    $loops[$loop_count]['isArray'] = false;
+                }
+            }
+            if($eval)
+            $loops[$loop_count]['model_var'] = $eval.((isset($query[1]) && $query[1])?'->'.$query[1]:'');
+            return $continue;
+        };
+        $this->propertyResolver = function($database_variables, &$loops) {
+            $eval = "";
+            foreach($database_variables as $variable) {
+                if($variable && $db_var = \App\Models\DatabaseVariable::find($variable)) {
+                    $isRelation = false;
+                    for($i = (count($loops) - 1); $i >= 0; $i--) {
+                        if(isset($loops[$i]['related'][$db_var->object])) {
+                            $isRelation = true;
+                            if($loops[$i]['isArray'])
+                            $eval = "\$value".$i;
+                            else
+                            $eval = $loops[$i]['model_var'];
+                            break;
+                        }
+                    }
+                    if(!$isRelation) {
+                        $isSet = false;
+                        for($i = (count($loops) - 1); $i >= 0; $i--) {
+                            if(isset($loops[$i]['loaded'][$db_var->object])) {
+                                $isSet = true;
+                                if($loops[$i]['isArray'])
+                                $eval = "\$value".$i;
+                                else
+                                $eval = $loops[$i]['model_var'];
+                                break;
+                            }
+                        }
+                        if($db_var->property) {
+                            if($isSet)
+                            $eval .= "->".$db_var->property;
+                        }
+                    } else {
+                        $eval .= "->".$db_var->property;
+                    }
+                }
+            }
+            $result = "@@DatabaseVariable@@";
+            if($eval) {
+                $result = "\".".$eval.".\"";
+            }
+            return $result;
+        };
+    }
     private function DBComponent(&$request, $id, $name = "") {
         if($name) {
             $component = new Components;
@@ -44,6 +195,60 @@ class TemplateController extends Controller
         $component->content = ((isset($request->content[$id]))?$request->content[$id]:null);
         $component->save();
         return $component->id;
+    }
+    private function HTMLTouchUp($template_id, $html, &$variables) {
+        //sets variable to $variables[]
+        $html = preg_replace_callback('/@@variable\.(.*?)@@/', function($match_) use (&$variables) {
+            $temp = explode(".", $match_[1]);
+            if(count($temp) == 2) {
+                if(array_key_exists($temp[0], $variables)) {
+                    if(is_array($variables[$temp[0]])) {
+                        $variables[$temp[0]][] = $temp[1];
+                    } else {
+                        $variables[$temp[0]] = [$variables[$temp[0]], $temp[1]];
+                    }
+                } else {
+                    $variables[$temp[0]] = $temp[1];
+                }
+            }
+            return "";
+        }, $html);
+        $html = preg_replace_callback('/id=@@image\.(.*?)@@/', function($match_) {
+            $image = \App\Models\Images::find($match_[1]);
+            return 'src="' .(($image)?asset('storage/'.$image->file_name):'#'). '" title="' .(($image)?$image->image_title:'Image'). '"';
+        }, $html);
+        //replaces global values and Evaluates PHP CODE
+        $html = preg_replace_callback('/@@global\.(.*?)@@/', function($match_) use ($template_id, &$variables) {
+            $variable = \App\Models\Variables::where(["template_id" => $template_id, "variable_name" => $match_[1]])->first();
+            if($variable) {
+                if($variable->is_php){
+                    eval($variable->php_code);
+                    return $evaluate;
+                } else return $variable->evaluate;
+            } else return "";
+        }, $html);
+        $auth = Auth::user();
+        if($auth) {
+            $html = preg_replace_callback('/@@auth\.(.*?)@@/', function($match_) use ($auth) {
+                return $auth->{$match_[1]};
+            }, $html);
+        }
+        //replaces Variables
+        $html = preg_replace_callback('/@@(.*?)@@/', function($match_) use ($variables) {
+            $evaluated = "";
+            if($match_[1]) {
+                $temp = explode(".", $match_[1]);
+                if(array_key_exists($temp[0], $variables)) {
+                    if(count($temp) == 2) {
+                        $evaluated = $variables[$temp[0]][$temp[1]];
+                    } else {
+                        $evaluated = $variables[$temp[0]];
+                    }
+                }
+            }
+            return $evaluated;
+        }, $html);
+        return $html;
     }
     public function index($operation = null, $id = null) {
         $this->response = [
@@ -634,167 +839,6 @@ class TemplateController extends Controller
         }
         return response()->json($response);
     }
-    public function view($id) {
-        $page = Page::find($id);
-        $loopResolver = function($database_variables, $query = ["all()",""], &$loop_count, &$loops) {
-            $loop_count++;
-            $loops[$loop_count] = [
-                "loaded" => [],
-                "related" => [],
-                "isArray" => false,
-                "model_var" => "",
-            ];
-            $continue = true;
-            $eval = "";
-            foreach($database_variables as $variable) {
-                if(!$continue)
-                break;
-                if($variable && $db_var = \App\Models\DatabaseVariable::find($variable)) {
-                    $isRelation = false;
-                    for($i = (count($loops) - 1); $i >= 0; $i--) {
-                        if(isset($loops[$i]['related'][$db_var->object])) {
-                            $isRelation = true;
-                            if($loops[$i]['isArray'])
-                            $eval = "\$value".$i;
-                            else
-                            $eval = $loops[$i]['model_var'];
-                            break;
-                        }
-                    }
-                    if(!$isRelation) {
-                        $isSet = false;
-                        for($i = (count($loops) - 1); $i >= 0; $i--) {
-                            if(isset($loops[$i]['loaded'][$db_var->object])) {
-                                $isSet = true;
-                                if($loops[$i]['isArray'])
-                                $eval = "\$value".$i;
-                                else
-                                $eval = $loops[$i]['model_var'];
-                                break;
-                            }
-                        }
-                        if(!$isSet) {
-                            if($query[0]) {
-                                try {
-                                    $loops[$loop_count]['loaded'][$db_var->object] = eval("return \App\Models\\".$db_var->object.'::'.$query[0].";");
-                                } catch (ParseError $e) {
-                                    $continue = false;
-                                }
-                            }
-                        }
-                        if($continue) {
-                            if($db_var->property) {
-                                if(!$isSet) {
-                                    if($loops[$loop_count]['loaded'][$db_var->object] instanceof Traversable)
-                                    $eval = "\$value".$loop_count."->".$db_var->property;
-                                    else
-                                    $eval = "\$loops[".$loop_count."]['loaded']['".$db_var->object."']->".$db_var->property;
-                                }
-                                else
-                                $eval .= "->".$db_var->property;
-                                if($db_var->related_to) {
-                                    $relation = App\Models\DatabaseVariable::find($db_var->related_to);
-                                    if($relation) {
-                                        $bool = true;
-                                        for($i = (count($loops) - 1); $i >= 0; $i--) {
-                                            if(isset($loops[$i]['related'][$relation->object])) {
-                                                $bool = false;
-                                                break;
-                                            }
-                                        }
-                                        if($bool)
-                                        $loops[$loop_count]['related'][$relation->object] = $db_var->object;
-                                    }
-                                }
-                            } else {
-                                $eval = "\$loops[".$loop_count."]['loaded']['".$db_var->object."']";
-                            }
-                        }
-                    } else {
-                        $eval .= "->".$db_var->property;
-                        if($db_var->related_to) {
-                            $relation = App\Models\DatabaseVariable::find($db_var->related_to);
-                            if($relation) {
-                                $bool = true;
-                                for($i = (count($loops) - 1); $i >= 0; $i--) {
-                                    if(isset($loops[$i]['related'][$relation->object])) {
-                                        $bool = false;
-                                        break;
-                                    }
-                                }
-                                if($bool)
-                                $loops[$loop_count]['related'][$relation->object] = $db_var->object;
-                            }
-                        }
-                    }
-                    if($db_var->is_array)
-                    $loops[$loop_count]['isArray'] = true;
-                    elseif(!$db_var->property && isset($loops[$loop_count]['loaded'][$db_var->object]) && is_iterable($loops[$loop_count]['loaded'][$db_var->object]))
-                    $loops[$loop_count]['isArray'] = true;
-                    else
-                    $loops[$loop_count]['isArray'] = false;
-                }
-            }
-            if($eval)
-            $loops[$loop_count]['model_var'] = $eval.((isset($query[1]) && $query[1])?'->'.$query[1]:'');
-            return $continue;
-        };
-        $propertyResolver = function($database_variables, &$loops) {
-            $eval = "";
-            foreach($database_variables as $variable) {
-                if($variable && $db_var = \App\Models\DatabaseVariable::find($variable)) {
-                    $isRelation = false;
-                    for($i = (count($loops) - 1); $i >= 0; $i--) {
-                        if(isset($loops[$i]['related'][$db_var->object])) {
-                            $isRelation = true;
-                            if($loops[$i]['isArray'])
-                            $eval = "\$value".$i;
-                            else
-                            $eval = $loops[$i]['model_var'];
-                            break;
-                        }
-                    }
-                    if(!$isRelation) {
-                        $isSet = false;
-                        for($i = (count($loops) - 1); $i >= 0; $i--) {
-                            if(isset($loops[$i]['loaded'][$db_var->object])) {
-                                $isSet = true;
-                                if($loops[$i]['isArray'])
-                                $eval = "\$value".$i;
-                                else
-                                $eval = $loops[$i]['model_var'];
-                                break;
-                            }
-                        }
-                        if($db_var->property) {
-                            if($isSet)
-                            $eval .= "->".$db_var->property;
-                        }
-                    } else {
-                        $eval .= "->".$db_var->property;
-                    }
-                }
-            }
-            $result = "@@DatabaseVariable@@";
-            if($eval) {
-                $result = "\".".$eval.".\"";
-            }
-            return $result;
-        };
-        if($page) {
-            return view('Page.index', ['page' => $page, 'mode' => Cookie::get('mode'), 'country' => Cookie::get('country'), 'loopResolver' => $loopResolver, 'propertyResolver' => $propertyResolver]);
-        }
-        return redirect()->route('home');
-    }
-    public function mode(Request $request) {
-        $request->validate([
-            "mode" => "required|in:guest,auth",
-            "country" => "nullable|string|exists:geo_locations,country"
-        ]);
-        Cookie::queue('mode', $request->mode, 0);
-        Cookie::queue('country', $request->country, 0);
-        return redirect()->back()->with("message", "Mode: ".$request->mode." ".$request->country);
-    }
     public function data_variable($operation = null, $id = null) {
         $this->response = [
             "breadcrumbs" => [[
@@ -860,5 +904,138 @@ class TemplateController extends Controller
         DatabaseVariable::destroy($id);
         return redirect()->route('Database')->with('message', 'Variable Deleted Successfully');
     }
-
+    public function variable($template_id, $operation = null, $id = null) {
+        $this->response = [
+            "breadcrumbs" => [[
+                "route" => "Template.index",
+                "routePar" => [],
+                "name" => '<i class="fa fa-home"></i>'
+            ]]
+        ];
+        $this->response["operation"] = $operation;
+        $this->response["template"] = Template::find($template_id);
+        $this->response["breadcrumbs"][] = [
+            "route" => "Template.Page",
+            "routePar" => ["template_id" => $this->response["template"]->id],
+            "name" => $this->response["template"]->title
+        ];
+        $this->response["breadcrumbs"][] = [
+            "route" => "Variable",
+            "routePar" => ['template_id' => $template_id],
+            "name" => "Global Variable"
+        ];
+        if($operation && ($operation == "add" || $operation == "edit")) {
+            $this->response["variable"] = null;
+            $this->response["breadcrumbs"][] = [
+                "route" => null,
+                "routePar" => null,
+                "name" => ucwords($operation)
+            ];
+            if($operation == "edit") {
+            $this->response["variable"] = Variables::find($id);
+            }
+            return view('Template.Forms.variable', $this->response);
+        } else {
+            $this->response["variable"] = Variables::all();
+        }
+        return view('Template.variable', $this->response);
+    }
+    public function variable_add(Request $request) {
+        $request->validate([
+            "template_id" => "required|exists:templates,id",
+            "variable_name" => "required|alpha_dash|max:100",
+            "is_php" => "required|boolean",
+            "evaluate" => "nullable|string|max:200",
+            "php_code" => "nullable|string|max:65500"
+        ]);
+        $variable = new Variables;
+        $variable->template_id = $request->template_id;
+        $variable->variable_name = $request->variable_name;
+        $variable->is_php = $request->is_php;
+        $variable->evaluate = $request->evaluate;
+        $variable->php_code = $request->php_code;
+        $variable->save();
+        return redirect()->back()->with('message', 'Global Variable Added Successfully');
+    }
+    public function variable_edit(Request $request) {
+        $request->validate([
+            "id" => "required|exists:variables",
+            "template_id" => "required|exists:templates,id",
+            "variable_name" => "required|alpha_dash|max:100",
+            "is_php" => "required|boolean",
+            "evaluate" => "nullable|string|max:200",
+            "php_code" => "nullable|string|max:65500"
+        ]);
+        $variable = Variables::find($request->id);
+        $variable->template_id = $request->template_id;
+        $variable->variable_name = $request->variable_name;
+        $variable->is_php = $request->is_php;
+        $variable->evaluate = $request->evaluate;
+        $variable->php_code = $request->php_code;
+        $variable->save();
+        return redirect()->route('Variable', ['template_id' => $request->template_id])->with('message', 'Global Variable Edited Successfully');
+    }
+    public function variable_delete($template_id, $id) {
+        Variables::destroy($id);
+        return redirect()->route('Variable', ['template_id' => $template_id])->with('message', 'Global Variable Deleted Successfully');
+    }
+    public function view($template_id, $id) {
+        $page = Page::find($id);
+        if($page) {
+            $variables = [];
+            $mode = Cookie::get('mode');
+            $country = Cookie::get('country');
+            $view = View::make('Page.index', [
+                'page' => $page,
+                'mode' => $mode,
+                'country' => $country,
+                'loopResolver' => $this->loopResolver,
+                'propertyResolver' => $this->propertyResolver
+            ]);
+            $html = $view->render();
+            $html = $this->HTMLTouchUp($template_id, $html, $variables);
+            if(Auth::user()->admin) {
+                $html .= "<!--".json_encode($variables)."-->";
+                $pageVar = "";
+                foreach($variables as $key => $val) {
+                    $pageVar .= '<kbd>'.$key.'</kbd>';
+                    if(is_array($val)) {
+                        $pageVar .= ' <code>Array</code>';
+                    }
+                    $pageVar .= '<br>';
+                }
+                if($pageVar) {
+                    $page->variables = $pageVar;
+                    $page->save();
+                }
+            }
+            return $html;
+        }
+        return redirect()->route('home');
+    }
+    public function WebView($id) {
+        $page = Page::find($id);
+        if($page) {
+            $variables = [];
+            $view = View::make('Website.index', [
+                'page' => $page,
+                'content_id' => 0,
+                'loopResolver' => $this->loopResolver,
+                'propertyResolver' => $this->propertyResolver
+            ]);
+            $html = $view->render();
+            $html = $this->HTMLTouchUp($html, $variables);
+            return $html;
+        }
+        return redirect()->route('home');
+    }
+    public function mode(Request $request) {
+        $request->validate([
+            "mode" => "required|in:guest,auth",
+            "country" => "nullable|string|exists:geo_locations,country"
+        ]);
+        Cookie::queue('mode', $request->mode, 0);
+        Cookie::queue('country', $request->country, 0);
+        return redirect()->back()->with("message", "Mode: ".$request->mode." ".$request->country);
+    }
 }

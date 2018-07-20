@@ -12,6 +12,9 @@ class Template extends Model
     public function URLs() {
         return $this->hasMany('App\Models\WebUrl');
     }
+    public function GlobalVariables() {
+        return $this->hasMany('App\Models\Variables');
+    }
     public function getUser() {
         return $this->hasOne('App\Models\User', 'id', 'user_id');
     }
@@ -47,6 +50,7 @@ class Template extends Model
                 $page->AllComponents()->delete();
             }
             $model->Pages()->delete();
+            $model->GlobalVariables()->delete();
             $model->AllComponents()->delete();
             $model->PageContent()->update(["template_id" => 0, "page_id" => 0]);
         });

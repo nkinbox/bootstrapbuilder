@@ -14,6 +14,7 @@
                     <th scope="col">Components</th>
                     <th scope="col">Script</th>
                     <th scope="col">CSS</th>
+                    <th scope="col">Variables</th>
                     @if(Auth::user()->admin)
                     <th scope="col">User</th>
                     <th scope="col">Created at</th>
@@ -41,6 +42,7 @@
                                 <i class="fa fa-window-maximize" style="cursor:pointer" onclick='preview_html(css_content_{{$template->css_id}})'></i>
                                 @endif
                             </td>
+                            <td><a href="{{ route('Variable', ['template_id' => $template->id]) }}">{{$template->GlobalVariables->count()}}</a></td>
                             @if(Auth::user()->admin)
                             <td>{{($template->user_id)?$template->getUser->name:'-'}}</td>
                             <td><small>{{$template->created_at}}</small></td>

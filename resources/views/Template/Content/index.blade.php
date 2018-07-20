@@ -46,6 +46,9 @@ function collectdata() {
         }
     });
 }
+$("a").click(function(e){
+    e.preventDefault();
+});
 @endpush
 @if($globalStyle)
 @push('styles')

@@ -1,4 +1,4 @@
-@extends('Page.layout')
+@extends('Website.layout')
 @php
 $globalScript = $page->Template->getScript;
 $globalStyle = $page->Template->getCSS;
@@ -27,26 +27,26 @@ if(isset($content_id) && $content_id) {
 @endphp
 @if($component->type == "header")
 @push('header')
-@include('Page.element', ["element" => $component])
+@include('Website.element', ["element" => $component])
 @endpush
 @elseif($component->type == "body")
 @if($up)
 @push('bodyup')
-@include('Page.element', ["element" => $component])
+@include('Website.element', ["element" => $component])
 @endpush
 @else
 @push('bodydown')
-@include('Page.element', ["element" => $component])
+@include('Website.element', ["element" => $component])
 @endpush
 @endif
 @elseif($component->type == "main")
 @php $up = false; @endphp
 @push('main')
-@include('Page.element', ["element" => $component])
+@include('Website.element', ["element" => $component])
 @endpush
 @elseif($component->type == "footer")
 @push('footer')
-@include('Page.element', ["element" => $component])
+@include('Website.element', ["element" => $component])
 @endpush
 @endif
 @endforeach
@@ -75,8 +75,3 @@ if(isset($content_id) && $content_id) {
 {!!$metaData->content!!}
 @endpush
 @endif
-@push('scripts')
-$("a").click(function(e){
-    e.preventDefault();
-});
-@endpush

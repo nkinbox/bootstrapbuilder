@@ -16,10 +16,11 @@ class CreateVariablesTable extends Migration
         Schema::create('variables', function (Blueprint $table) {
             $table->increments('id');
             $table->unsignedInteger('template_id'); //not to dump in Client
-            $table->unsignedInteger('component_id')->default(0); // 0 -> global|auth
             $table->string('variable_name', 100);
-            $table->string('evaluate', 100);
-            $table->text("php_code");
+            $table->boolean('is_php')->default(0);
+            $table->string('evaluate', 200)->nullable()->default(null);
+            $table->text("php_code")->nullable()->default(null);
+            $table->index(['template_id', 'variable_name']);
         });
     }
 
