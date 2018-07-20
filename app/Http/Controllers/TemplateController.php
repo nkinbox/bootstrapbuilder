@@ -273,13 +273,14 @@ class TemplateController extends Controller
                 return view('Template.Forms.template', $this->response);
             }
         } else {
-            $this->response["templates"] = Template::paginate(100);
+            $this->response["templates"] = Template::orderBy('is_website')->orderBy('title')->paginate(100);
         }
         return view('Template.index', $this->response);
     }
     public function template_add(Request $request) {
         $request->validate([
             "title" => "required|string|max:50|unique:templates,title",
+            "is_website" => "required|boolean",
             "js_content" => "nullable|string|max:65500",
             "css_content" => "nullable|string|max:65500"
         ]);
@@ -302,16 +303,132 @@ class TemplateController extends Controller
             $css_id = $content->id;
         }
         $template = new Template;
+        $template->is_website = $request->is_website;
         $template->title = $request->title;
         $template->script_id = $script_id;
         $template->css_id = $css_id;
         $template->user_id = Auth::id();
         $template->save();
+        if($request->has('template_id') && $request->template_id && $parentTemplate = Template::find($request->template_id)) {
+            $save = false;
+            if($parentTemplate->script_id) {
+                $save = true;
+                if($template->script_id) {
+                    $content = Content::find($template->script_id);
+                } else {
+                    $content = new Content;
+                }
+                $content->content_type = "text";
+                $content->content = $parentTemplate->getScript->content;
+                $content->user_id = Auth::id();
+                $content->save();
+                $template->script_id = $content->id;
+            }
+            if($parentTemplate->css_id) {
+                $save = true;
+                if($template->css_id) {
+                    $content = Content::find($template->css_id);
+                } else {
+                    $content = new Content;
+                }
+                $content->content_type = "text";
+                $content->content = $parentTemplate->getCSS->content;
+                $content->user_id = Auth::id();
+                $content->save();
+                $template->css_id = $content->id;
+            }
+            if($save)
+            $template->save();
+            $componentIndex = [];
+            if($parentTemplate->AllComponents) {
+                $nested = [];
+                foreach($parentTemplate->AllComponents as $components) {
+                    $component = new Components;
+                    $component->name = $components->name ."_".$template->id;
+                    $component->template_id = $template->id;
+                    $component->visibility_id = $components->visibility_id;
+                    $component->geolocation = $components->geolocation;
+                    $component->type = $components->type;
+                    $component->category = $components->category;
+                    $component->node = $components->node;
+                    $component->visibility = $components->visibility;
+                    $component->content_type = $components->content_type;
+                    $component->child_order = $components->child_order;
+                    $component->loop_source = $components->loop_source;
+                    $component->start_tag = $components->start_tag;
+                    $component->end_tag = $components->end_tag;
+                    $component->attributes = $components->attributes;
+                    $component->var_attributes = $components->var_attributes;
+                    $component->classes = $components->classes;
+                    $component->style = $components->style;
+                    $component->script = $components->script;
+                    $component->content = $components->content;
+                    $component->save();
+                    if($components->nested_component)
+                    $nested[$components->nested_component] = $components->id;
+                    $componentIndex[$components->id] = $component->id;
+                }
+                foreach($nested as $k => $val) {
+                    Components::where('id', $componentIndex[$val])->update(['nested_component' => $componentIndex[$k]]);
+                }
+            }
+            if($parentTemplate->Pages) {
+                foreach($parentTemplate->Pages as $pages) {
+                    $script_id = 0;
+                    $css_id = 0;
+                    if($pages->script_id) {
+                        $content = new Content;
+                        $content->content_type = "text";
+                        $content->content = $pages->getScript->content;
+                        $content->user_id = Auth::id();
+                        $content->save();
+                        $script_id = $content->id;
+                    }
+                    if($pages->css_id) {
+                        $content = new Content;
+                        $content->content_type = "text";
+                        $content->content = $pages->getCSS->content;
+                        $content->user_id = Auth::id();
+                        $content->save();
+                        $css_id = $content->id;
+                    }
+                    $page = new Page;
+                    $page->template_id = $template->id;
+                    $page->url = $pages->url;
+                    $page->title = $pages->title;
+                    $page->script_id = $script_id;
+                    $page->css_id = $css_id;
+                    $page->user_id = Auth::id();
+                    $page->save();
+                    if(count($pages->AllComponents)) {
+                        foreach($pages->AllComponents as $pageComponents){
+                            $pageComponent = new PageComponent;
+                            $pageComponent->page_id = $page->id;
+                            $pageComponent->component_id = $componentIndex[$pageComponents->component_id];
+                            $pageComponent->order = $pageComponents->order;
+                            $pageComponent->save();
+                        }
+                    }
+                }
+            }
+            if(count($parentTemplate->GlobalVariables)) {
+                foreach($parentTemplate->GlobalVariables as $variables) {
+                    $variable = new Variables;
+                    $variable->template_id = $template->id;
+                    $variable->variable_name = $variables->variable_name;
+                    $variable->is_php = $variables->is_php;
+                    $variable->evaluate = $variables->evaluate;
+                    $variable->php_code = $variables->php_code;
+                    $variable->save();
+                }
+            }
+        }
         return redirect()->route('Template.index')->with("message", $request->title. " Created Successfully.");
     }
     public function template_edit(Request $request) {
         $request->validate([
             "id" => "required|exists:templates",
+            "is_website" => "required|boolean",
             "title" => "required|string|max:50",
             "js_content" => "nullable|string|max:65500",
             "css_content" => "nullable|string|max:65500"
@@ -348,6 +465,7 @@ class TemplateController extends Controller
             $template->getCSS->delete();
         }
         $template->title = $request->title;
+        $template->is_website = $request->is_website;
         $template->script_id = $script_id;
         $template->css_id = $css_id;
         $template->user_id = Auth::id();
@@ -936,7 +1054,7 @@ class TemplateController extends Controller
             }
             return view('Template.Forms.variable', $this->response);
         } else {
-            $this->response["variable"] = Variables::all();
+            $this->response["variable"] = Variables::where('template_id', $template_id)->get();
         }
         return view('Template.variable', $this->response);
     }

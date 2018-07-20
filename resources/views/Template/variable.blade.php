@@ -21,8 +21,8 @@
                     <tr>
                     <th scope="row">{{$loop->iteration}}</th>
                     <td><kbd>{{$row->variable_name}}</kbd></td>
-                    <td>{{$row->evaluate}}</td>
-                    <td>{{$row->php_code}}</td>
+                    <td>{!!(!$row->is_php)?'<i class="fa fa-check-square-o"></i>':''!!} {{$row->evaluate}}</td>
+                    <td>{!!($row->is_php)?'<i class="fa fa-check-square-o"></i>':''!!} {{$row->php_code}}</td>
                     <td>
                         <a href="{{ route('Variable', ['template_id' => $template->id, "operation"=>"edit", "id"=>$row->id]) }}"><i class="fa fa-edit"></i> Edit</a>
                         /

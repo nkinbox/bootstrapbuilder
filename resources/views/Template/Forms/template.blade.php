@@ -17,6 +17,20 @@
                             <span class="input-group-text"><i class="fa fa-text-width"></i></span>
                         </div>
                         <input type="text" class="form-control" placeholder="Template Name" tabindex="1" name="title" value="{{ old("title", (($template)?$template->title:'')) }}">
+                        <div class="input-group-append">
+                        <select class="custom-select" name="is_website">
+                            <option value="0"{{ (old("is_website", (($template)?$template->is_website:'')) == 0)?' selected':'' }}>Template</option>
+                            <option value="1"{{ (old("is_website", (($template)?$template->is_website:'')) == 1)?' selected':'' }}>Website</option>
+                        </select>
+                        @if($operation == "add")
+                        <select class="custom-select" tabindex="1" name="template_id">
+                            <option value="0">--</option>
+                            @foreach(App\Models\Template::where('is_website', 0)->get() as $template_)
+                            <option value="{{$template_->id}}"{{(old("template_id") == $template_->id)?' selected':''}}>Import {{$template_->title}}</option>
+                            @endforeach
+                        </select>
+                        @endif
+                        </div>
                     </div>
                     <div class="card mb-2">
                         <div class="card-body">

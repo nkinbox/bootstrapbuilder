@@ -18,9 +18,8 @@
                 <span class="input-group-text">Website</span>
             </div>
             <select class="custom-select" tabindex="1" name="template_id">
-                {{-- where('is_website')->get() --}}
                 <option value="0"{{(old("template_id") == $template_id)?' selected':''}}>Unknown</option>
-                @foreach(App\Models\Template::all() as $template_)
+                @foreach(App\Models\Template::where('is_website', 1)->get() as $template_)
                 <option value="{{$template_->id}}"{{(old("template_id", $template_id) == $template_->id)?' selected':''}}>{{$template_->title}}</option>
                 @endforeach
             </select>
