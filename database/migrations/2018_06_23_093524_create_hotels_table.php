@@ -22,8 +22,8 @@ class CreateHotelsTable extends Migration
             $table->unsignedInteger('no_of_rooms')->default(null)->nullable();
             $table->unsignedInteger('content_id')->default(0);
             $table->unsignedInteger('policy_id')->default(0);
-            $table->unsignedDecimal('latitude', 10, 8)->default(null)->nullable();
-            $table->unsignedDecimal('longitude', 10, 8)->default(null)->nullable();
+            $table->unsignedDecimal('latitude', 12, 8)->default(null)->nullable();
+            $table->unsignedDecimal('longitude', 12, 8)->default(null)->nullable();
             $table->unsignedInteger('user_id')->default(0);
             $table->timestamps();
             $table->index('hotel_name');

@@ -26,7 +26,7 @@ class CreateComponentsTable extends Migration
             $table->string("content_type", 8); //["static", "variable", "element"]
             $table->unsignedInteger("child_order")->default(1);
             $table->unsignedInteger("nested_component")->default(null)->nullable();
-            $table->string("loop_source", "200")->default(null)->nullable();
+            $table->string("loop_source", "50")->default(null)->nullable();
             $table->string("start_tag", 10);
             $table->string("end_tag", 10)->default(null)->nullable();
             $table->string("attributes", 500)->default("{}")->nullable();

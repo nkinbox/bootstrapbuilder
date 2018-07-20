@@ -22,32 +22,7 @@
     }
 ?>
 @if($render)
-{{-- STYLE PUSH START --}}
-@if($element->style != '{"selector":"","style":[]}')
-    <?php
-    $style = json_decode($element->style, true);
-    ?>
-    @push('styles')
-    #component_{{$element->id}}<?php if($style['selector']) echo ' '.$style['selector']; ?> {<?php
-    foreach($style['style'] as $prop => $val) {
-    echo $prop.":".$val.";";
-    }
-    ?>}
-    @endpush
-@endif
-@if($element->node == "self" && $element->Parent && $element->Parent->style != '{"selector":"","style":[]}')
-    <?php
-    $style = json_decode($element->Parent->style, true);
-    ?>
-    @push('styles')
-    #component_{{$element->Parent->id}}<?php if($style['selector']) echo ' '.$style['selector']; ?> {<?php
-    foreach($style['style'] as $prop => $val) {
-    echo $prop.":".$val.";";
-    }
-    ?>}
-    @endpush
-@endif
-{{-- STYLE PUSH END --}}
+@include('Page.style_script')
 {{-- Parent Header START --}}
 @if($element->node == "self" && $element->Parent)
 <?php
@@ -60,9 +35,6 @@
         else
         echo ' '.$key;
     }
-    $var_attributes = json_decode($element->Parent->var_attributes, true);
-    foreach($var_attributes as $attribute)
-    echo ' '.$attribute.'=""';
     $classes = json_decode($element->classes, true);
     if(count($classes)) {
         echo ' class="'.implode(" ", $classes).'"';
@@ -70,46 +42,39 @@
 ?>>
 @endif
 {{-- Parent Header END --}}
-
-{{-- HTML START --}}
+@if($element->loop_source)
 <?php
-    echo substr($element->start_tag, 0, -1);
-    echo ' id="component_' .$element->id. '"';
-    $attributes = json_decode($element->attributes, true);
-    foreach($attributes as $key => $val) {
-        if($val)
-        echo ' '.$key.'="'.$val.'"';
-        else
-        echo ' '.$key;
+    $execute = true;
+    $temp = explode("|", $element->loop_source);
+    $query = (isset($temp[1]) && $temp[1])?$temp[1]:'';
+    $database_variables = explode(".", $temp[0]);
+    $loop = false;
+    $loops;
+    $loopResolver($database_variables, [$query,""], $loop_count, $loops);
+    try {
+        $loopThrough = eval("return " .$loops[$loop_count]['model_var']. " ;");
+    } catch (ParseError $e) {
+        $loopThrough = [];
+        $execute = false;
     }
-    $var_attributes = json_decode($element->var_attributes, true);
-    foreach($var_attributes as $attribute)
-    echo ' '.$attribute.'=""';
-    $classes = json_decode($element->classes, true);
-    if(count($classes)) {
-        echo ' class="'.(($element->content_type != "element")?' component':'').implode(" ", $classes).'"';
-    } elseif($element->content_type != "element") {
-        echo ' class="component"';
-    }
-    if($element->content_type != "element")
-    echo ' contenteditable="true" data-order="'.$order.'"';
-?>>
-{{-- Content START --}}
-@if($element->content_type == "element")
-    @if($element->node == "self" && count($element->Children))
-        @foreach($element->Children as $child)
-        @include('Page.element', ["element" => $child])
-        @endforeach
+?>
+@if($execute)
+    @if($loops[$loop_count]['isArray'])
+    @if($loopThrough instanceof \Illuminate\Pagination\LengthAwarePaginator)
+    {{$loopThrough->links()}}
     @endif
-    @if($element->nested_component)
-        @include('Page.element', ["element" => $element->nestedComponent])
+        @foreach($loopThrough as ${"key".$loop_count} => ${"value".$loop_count})
+        @include('Page.html')
+        @endforeach
+    @else
+        @include('Page.html')
     @endif
 @else
-{!!($element->content)?$element->content:'__content__'!!}
+<h1 class="text-danger">ERROR: Name: {{$element->name}} ID: {{$element->id}} Node: {{$element->node}}</h1>
 @endif
-{{-- Content END --}}
-{!! $element->end_tag !!}
-{{-- HTML END --}}
+@else
+    @include('Page.html')
+@endif
 {{-- Parent Footer START --}}
 @if($element->node == "self" && $element->Parent)
 {!! $element->Parent->end_tag !!}

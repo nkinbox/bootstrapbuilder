@@ -18,9 +18,11 @@
     <header>
         @stack('header')
     </header>
+    @stack('bodyup')
     <main>
-        @stack('body')
+        @stack('main')
     </main>
+    @stack('bodydown')
     <footer>
         @stack('footer')
     </footer>

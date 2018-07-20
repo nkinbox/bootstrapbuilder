@@ -54,7 +54,29 @@
                 </tbody>
             </table>
             <div class="card">
-                <h4 class="card-header">Pages</h4>
+                <div class="card-header">
+                    <form class="pull-right" action="{{ route('mode') }}" method="post">
+                        @csrf
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">MODE</span>
+                            </div>
+                            <select class="custom-select" tabindex="1" name="mode">
+                                <option value="guest">GUEST</option>
+                                <option value="auth">AUTH</option>
+                            </select>
+                            <select class="custom-select" tabindex="1" name="country">
+                                @foreach(App\Models\GeoLocation::select('country')->groupBy('country')->get() as $country)
+                                <option{{(Cookie::get('country') && Cookie::get('country') == $country->country)?' selected':''}}>{{$country->country}}</option>
+                                @endforeach
+                            </select>
+                            <div class="input-group-append">
+                                <button class="btn btn-light border" type="submit" tabindex="-1"><i class="fa fa-thumb-tack"></i></button>
+                            </div>
+                        </div>
+                    </form>
+                    <h4>Pages</h4>
+                </div>
                 <div class="card-body">
                     <table class="table table-hover table-bordered">
                         <thead>
@@ -80,7 +102,7 @@
                                 <tr>
                                     <th scope="row"{!! (!$page->Components->count())?' class="bg-danger text-light"':'' !!}>{{ $loop->iteration }}</th>
                                     <td>
-                                        <a href="{{ route('view', ['id' => $page->id, 'mode' => 'guest']) }}" target="_blank">{{$page->title}}</a>
+                                        <a href="{{ route('view', ['id' => $page->id]) }}" target="_blank">{{$page->title}}</a>
                                     </td>
                                     <td>{{$page->url}}</td>
                                     <td><a href="{{ route('Template.Page.Component', ['page_id' => $page->id]) }}">{{$page->Components->count()}}</a></td>

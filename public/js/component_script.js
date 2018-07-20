@@ -3,10 +3,21 @@ function element_renderer(ele, highlight = false, pointer = "") {
     var element = $(ele.start_tag+ele.end_tag);
     var style = $("<style></style>");
     var temp_style = "";
-    $.each(ele.style.style, function(key, value) {
-        temp_style += key+':'+value+';';
-    });
-    style.html("#component_"+ele_id+ " "+ele.style.selector+"{"+temp_style+"}");
+    if(Array.isArray(ele.style)) {
+        $.each(ele.style, function(k, css){
+            temp_style_ = "";
+            $.each(css.style, function(key, value) {
+                temp_style_ += key+':'+value+';';
+            });
+            temp_style += "#component_"+ele_id+ " "+css.selector+"{"+temp_style_+"}";
+        });
+        style.html(temp_style);
+    } else {
+        $.each(ele.style.style, function(key, value) {
+            temp_style += key+':'+value+';';
+        });
+        style.html("#component_"+ele_id+ " "+ele.style.selector+"{"+temp_style+"}");
+    }
     $("#component_display").append(style);
     element.attr("id", "component_"+ele_id);
     $.each(ele.classes, function(key, value){
@@ -245,10 +256,16 @@ function settingFormData(node, element) {
     //setting += '<input type="text" class="form-control" placeholder="Attribute Value" name="attribute_value">';
     //setting += '<small class="form-text text-muted">Attributes in JSON eg: {"attr1":"value1", "attr2":"value2"}</small>';
     setting += '</div>';
+    setting += '<div class="form-group">';
+    setting += '<label>Script</label>';
+    setting += '<textarea class="form-control" name="script" value="" placeholder="JavaScript">'+((element.script)?element.script:'')+'</textarea>';
+    //setting += '<input type="text" class="form-control" placeholder="Attribute Value" name="attribute_value">';
+    //setting += '<small class="form-text text-muted">Attributes in JSON eg: {"attr1":"value1", "attr2":"value2"}</small>';
+    setting += '</div>';
     return setting;
 }
 function addNewElement(node) {
-    var element = {id:1,geolocation:0,name:"",category:"element",node:"",visibility:"show",content_type:"static",child_order:1,nested_component:null,loop_source:null,start_tag:"<div>",end_tag:"</div>",attributes:{},var_attributes:[],classes:[],style:{selector:"",style:{}},content:null};
+    var element = {id:1,geolocation:0,name:"",category:"element",node:"",visibility:"show",content_type:"static",child_order:1,nested_component:null,loop_source:null,start_tag:"<div>",end_tag:"</div>",attributes:{},var_attributes:[],classes:[],style:{selector:"",style:{}},script:null,content:null};
     element.node = node;
     if(node == "parent") {
         if(typeof component.parent == "undefined") {

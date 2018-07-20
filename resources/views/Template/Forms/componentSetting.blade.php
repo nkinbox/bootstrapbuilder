@@ -20,7 +20,7 @@ if($element->visibility == 'none') {
 <div id="component_{{$element->node.'_'.$element->id}}" class="collapse mb-2">
     <div class="card">
         <div class="card-header">
-            <h4><i class="fa fa-cube"></i> {{$element->node.'_'.$element->id}}</h4>
+            <h4 class="setting_toggle" data-toggle="component_{{$element->node.'_'.$element->id}}"><i class="fa fa-cube"></i> {{$element->node.'_'.$element->id}}</h4>
         </div>
         <div class="card-body">
             <div class="input-group mb-3">
@@ -65,10 +65,14 @@ if($element->visibility == 'none') {
                 @else
                 <input type="hidden" name="child_order[{{$element->id}}]" value="1">
                 @endif
+                @if($element->node != "parent")
                 <div class="input-group-prepend ml-1">
                     <span class="input-group-text"><i class="fa fa-repeat"></i></span>
                 </div>
                 <input type="text" class="form-control" placeholder="Loop Source" tabindex="1" name="loop_source[{{$element->id}}]" value="{{ old("loop_source.".$element->id, $element->loop_source) }}">
+                @else
+                <input type="hidden" name="loop_source[{{$element->id}}]" value="">
+                @endif
             </div>
             <div class="input-group mb-3">
                 <div class="input-group-prepend">
@@ -76,12 +80,16 @@ if($element->visibility == 'none') {
                 </div>
                 <input type="text" class="form-control" placeholder='eg. {"attr1":"value1", "attr2":"value2"}' tabindex="1" name="attribute[{{$element->id}}]" value="{{ old("attribute.".$element->id, $element->attributes) }}">
             </div>
+            @if($element->node != "parent")
             <div class="input-group mb-3">
                 <div class="input-group-prepend">
                     <span class="input-group-text">Var Attribute</span>
                 </div>
-                <input type="text" class="form-control" placeholder='eg. ["href", "src", "disabled", "schema"]' tabindex="1" name="var_attribute[{{$element->id}}]" value="{{ old("var_attribute.".$element->id, $element->var_attributes) }}">
+                <input type="text" class="form-control" placeholder='eg. {"href":"@@database.1@@"}' tabindex="1" name="var_attribute[{{$element->id}}]" value="{{ old("var_attribute.".$element->id, $element->var_attributes) }}">
             </div>
+            @else
+            <input type="hidden" name="var_attribute[{{$element->id}}]" value="{{ old("var_attribute.".$element->id, $element->var_attributes) }}">
+            @endif
             <div class="input-group mb-3">
                 <div class="input-group-prepend">
                     <span class="input-group-text">Classes</span>
@@ -116,6 +124,12 @@ if($element->visibility == 'none') {
                 </select>
             </div>
             @endif
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Script</span>
+                </div>
+                <input type="text" class="form-control" placeholder='JavaScript' tabindex="1" name="script[{{$element->id}}]" value="{{ old("script.".$element->id, $element->script) }}">
+            </div>
         </div>
     </div>
 </div>

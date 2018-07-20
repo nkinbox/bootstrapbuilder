@@ -34,7 +34,6 @@ function collectdata() {
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function(data){
-            console.log(data);
             if(data.success) {
                 alert("Updated Successfully!");
                 location.reload();

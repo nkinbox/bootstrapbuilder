@@ -44,6 +44,9 @@
                             $(this).val(val);
                         });
                     });
+                    $('.setting_toggle').click(function(){
+                        $("[href='#"+$(this).attr("data-toggle")+"']").click();
+                    });
                     $(".child_order").change(function(){
                         var val = $(this).val();
                         var prev = $(this).attr("data-value");

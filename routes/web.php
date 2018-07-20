@@ -7,8 +7,9 @@ Auth::routes();
 
 Route::middleware('auth', 'access:Template')->group(function () {
     //mode = auth guest country
-    Route::get('page/{id}/{mode}', 'TemplateController@view')->name('view');
-    Route::prefix('template')->group(function(){
+    Route::get('page/{id}', 'TemplateController@view')->name('view');
+    Route::post('page_mode', 'TemplateController@mode')->name('mode');
+    Route::prefix('template')->group(function() {
         Route::get('/page_component/{page_id}/{operation?}/{id?}', 'TemplateController@page_component')->name('Template.Page.Component');
         Route::put('/page_component/order', 'TemplateController@page_component_order')->name('Template.Page.Component.order');
         Route::post('/page_component/add', 'TemplateController@page_component_add')->name('Template.Page.Component.add');
@@ -19,7 +20,12 @@ Route::middleware('auth', 'access:Template')->group(function () {
         Route::put('/component/edit', 'TemplateController@component_edit')->name('Template.Component.edit');
         Route::post('/content', 'TemplateController@all_components_content')->name('Template.Component.content');
         Route::get('/component_content/{id}', 'TemplateController@all_components_view')->name('Template.Component.view');
-
+        
+        Route::get('/database/{operation?}/{id?}', 'TemplateController@data_variable')->name('Database');
+        Route::post('/database', 'TemplateController@data_variable_add')->name('Database.add');
+        Route::put('/database', 'TemplateController@data_variable_edit')->name('Database.edit');
+        Route::get('/delete/database/{id}', 'TemplateController@data_variable_delete')->name('Database.delete')->middleware('canDelete');
+        
         Route::get('/page/{template_id}/{operation?}/{id?}', 'TemplateController@page')->name('Template.Page');
         Route::post('/page/add', 'TemplateController@page_add')->name('Template.Page.add');
         Route::put('/page/edit', 'TemplateController@page_edit')->name('Template.Page.edit');

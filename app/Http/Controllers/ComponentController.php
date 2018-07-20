@@ -34,6 +34,7 @@ class ComponentController extends Controller
             "var_attributes" => "nullable|json|max:500",
             "classes" => "required|json|max:500",
             "style" => "required|json|max:500",
+            "script" => "required|nullable|string|max:2000",
             "content" => "required_if:content_type,static,variable|nullable|string|max:65500"
         ];        
         foreach($this->stack as $elements) {
@@ -131,6 +132,7 @@ class ComponentController extends Controller
         $ele->var_attributes = $element['var_attributes'];
         $ele->classes = $element['classes'];
         $ele->style = $element['style'];
+        $ele->script = $element['script'];
         $ele->content = $element['content'];
         $ele->save();
         if($element['node'] == "self")
