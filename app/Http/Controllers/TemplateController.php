@@ -1131,28 +1131,43 @@ class TemplateController extends Controller
         }
         return redirect()->route('home');
     }
-    public function WebView($id) {
-        $page = Page::find($id);
+    public function WebView($url) {
+        $page = 0;
+        $content_id = 0;
+        if(Cookie::get('template_id') == null)
+        return view('welcome');
+        $template_id = Cookie::get('template_id');
+        if($url == "index") {
+            $page = Page::where(['template_id' => $template_id, "title" => "index"])->first();
+        } else {
+            $pageContent = PageContent::where(['template_id' => $template_id, "url" => $url])->first(); 
+            if($pageContent) {
+                $page = $pageContent->Page;
+                $content_id = $pageContent->content_id;
+            }
+        }
         if($page) {
             $variables = [];
             $view = View::make('Website.index', [
                 'page' => $page,
-                'content_id' => 0,
+                'content_id' => $content_id,
                 'loopResolver' => $this->loopResolver,
                 'propertyResolver' => $this->propertyResolver
             ]);
             $html = $view->render();
-            $html = $this->HTMLTouchUp($html, $variables);
+            $html = $this->HTMLTouchUp($template_id, $html, $variables);
             return $html;
         }
-        return redirect()->route('home');
+        return redirect()->route('home')->with("error", "Web URL could not be resolved.");
     }
     public function mode(Request $request) {
         $request->validate([
+            "template_id" => "required|exists:templates,id",
             "mode" => "required|in:guest,auth",
             "country" => "nullable|string|exists:geo_locations,country"
         ]);
         Cookie::queue('mode', $request->mode, 0);
+        Cookie::queue('template_id', $request->template_id, 0);
         Cookie::queue('country', $request->country, 0);
         return redirect()->back()->with("message", "Mode: ".$request->mode." ".$request->country);
     }

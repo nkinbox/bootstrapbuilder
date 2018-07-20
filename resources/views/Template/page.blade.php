@@ -59,6 +59,7 @@
                 <div class="card-header">
                     <form class="pull-right" action="{{ route('mode') }}" method="post">
                         @csrf
+                        <input type="hidden" name="template_id" value="{{$template->id}}">
                         <div class="input-group">
                             <div class="input-group-prepend">
                                 <span class="input-group-text">MODE</span>

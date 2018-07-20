@@ -1,10 +1,5 @@
 <?php
-Route::get('/', function () {
-    return view('welcome');
-});
-
 Auth::routes();
-
 Route::middleware('auth', 'access:Template')->group(function () {
     Route::get('page/{template_id}/{id}', 'TemplateController@view')->name('view');
     Route::post('page_mode', 'TemplateController@mode')->name('mode');
@@ -53,7 +48,6 @@ Route::middleware('auth', 'access:Template')->group(function () {
         Route::get('/delete/{name}', 'ComponentController@deleteComponent')->name("Component.Delete")->middleware('canDelete');
     });
 });
-
 Route::middleware('auth', 'access:Data')->prefix('data')->group(function () {
     Route::get('/', 'DataEntryController@index')->name('DataEntry.Home');
     
@@ -138,5 +132,11 @@ Route::middleware('auth', 'access:Data')->prefix('data')->group(function () {
     Route::get('/delete/hotel/{id}', 'DataEntryController@hotel_delete')->name('DataEntry.Hotel.delete')->middleware('canDelete');
     
 });
-
 Route::get('/home', 'HomeController@index')->name('home');
+Route::get('/', function () {
+    if(Cookie::get('template_id')) {
+        return redirect()->route('WebView', ['url' => 'index']);
+    }
+    return view('welcome');
+});
+Route::get('{url}', 'TemplateController@WebView')->name('WebView');
