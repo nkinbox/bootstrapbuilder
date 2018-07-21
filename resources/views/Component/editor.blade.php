@@ -127,7 +127,7 @@
 @push("scripts")
 <script>
     var component = {};
-    var stack = {!! ($edit)?"JSON.parse('".json_encode($stack)."')":'{}' !!};
+    var stack = {!! ($edit)?"JSON.parse(".json_encode(json_encode($stack)).")":'{}' !!};
     var stackPointer = "";
     var ele_id = 0;
     var urls = {
