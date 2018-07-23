@@ -14,7 +14,7 @@
             return $propertyResolver($match_[1], $loops);
         }, json_encode($element->var_attributes));
         try {
-            dd("\$element_var_attributes=".$element_var_attributes.";");
+            eval("\$element_var_attributes=".$element_var_attributes.";");
         } catch (ParseError $e) {}
         $var_attributes = json_decode($element_var_attributes, true);
     } else {
