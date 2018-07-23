@@ -15,6 +15,12 @@
             @csrf
             <div class="input-group mb-3">
                 <div class="input-group-prepend">
+                    <span class="input-group-text">Title</span>
+                </div>
+                <input type="text" class="form-control" name="title" placeholder="Description of QUERY" value="{{ old("title", (($loopsource)?$loopsource->title:'')) }}">
+            </div>
+            <div class="input-group mb-3">
+                <div class="input-group-prepend">
                     <span class="input-group-text">DB Vars</span>
                 </div>
                 <input type="text" class="form-control" name="database_variables" placeholder="eg 1.2.3" value="{{ old("database_variables", (($loopsource)?$loopsource->database_variables:'')) }}">

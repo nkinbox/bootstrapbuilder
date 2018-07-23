@@ -10,6 +10,7 @@
                 <thead>
                     <tr>
                     <th scope="col">#</th>
+                    <th scope="col">Title</th>
                     <th scope="col">Database Variables</th>
                     <th scope="col">Resolved</th>
                     <th scope="col">Object Query</th>
@@ -22,6 +23,7 @@
                     @foreach($loopsource as $ls)
                     <tr>
                     <th scope="row">{{$ls->id}}</th>
+                    <td><small>{{$ls->title}}</small></td>
                     <td>{!!'<kbd>'.$ls->database_variables.'</kbd>'!!}</td>
                     <td><small><?php
                     $Loopsource = "";

@@ -69,18 +69,7 @@ if($element->visibility == 'none') {
                 <select class="custom-select" tabindex="1" name="loop_source[{{$element->id}}]">
                     <option value="">None</option>
                     @foreach(App\Models\LoopSource::all() as $ls)
-                    <option value="{{$ls->id}}"{{(old("loop_source.".$element->id, $element->loop_source) == $ls->id)?' selected':''}}><?php
-                    $Loopsource = "";
-                    $database_variables = explode(".", $ls->database_variables);
-                    foreach($database_variables as $variable) {
-                        $db_var = \App\Models\DatabaseVariable::find($variable);
-                        if($db_var) {
-                            $Loopsource .= ((!$Loopsource)?$db_var->object:'').(($db_var->property)?"->".$db_var->property.(($db_var->is_array)?"[]":""):"");
-                        } else $Loopsource .= "(error)";
-                    }
-                    $Loopsource .= (($ls->query_string)?$ls->operator . $ls->query_string:'');
-                    echo $ls->id .") ". $Loopsource;
-                    ?></option>
+                    <option value="{{$ls->id}}"{{(old("loop_source.".$element->id, $element->loop_source) == $ls->id)?' selected':''}}>{{$ls->title}}</option>
                     @endforeach
                 </select>
                 @else

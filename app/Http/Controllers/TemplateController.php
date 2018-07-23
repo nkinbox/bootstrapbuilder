@@ -1058,6 +1058,7 @@ class TemplateController extends Controller
     public function loopsource_add(Request $request) {
         $request->validate([
             "database_variables" => "required|string|max:50",
+            "title" => "required|string|max:300",
             "object_query" => "nullable|string|max:200",
             "property_query" => "nullable|string|max:200",
             "variables" => "nullable|json|max:500",
@@ -1065,6 +1066,7 @@ class TemplateController extends Controller
         ]);
         $ls = new LoopSource;
         $ls->database_variables = $request->database_variables;
+        $ls->title = $request->title;
         $ls->object_query = $request->object_query;
         $ls->property_query = $request->property_query;
         $ls->variables = $request->variables;
@@ -1076,6 +1078,7 @@ class TemplateController extends Controller
         $request->validate([
             "id" => "required|exists:loop_sources",
             "database_variables" => "required|string|max:50",
+            "title" => "required|string|max:300",
             "object_query" => "nullable|string|max:200",
             "property_query" => "nullable|string|max:200",
             "variables" => "nullable|json|max:500",
@@ -1083,6 +1086,7 @@ class TemplateController extends Controller
         ]);
         $ls = LoopSource::find($request->id);
         $ls->database_variables = $request->database_variables;
+        $ls->title = $request->title;
         $ls->object_query = $request->object_query;
         $ls->property_query = $request->property_query;
         $ls->variables = $request->variables;
