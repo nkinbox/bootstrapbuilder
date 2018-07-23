@@ -24,7 +24,6 @@ class TemplateController extends Controller
     function __construct() {
         $this->propertyResolver = function($toresolve, &$loops) {
             //$database_variables = "@@database.1.2.3|(first/last)@@"
-            // dd($toresolve);
             $temp = explode("|", $toresolve."|last");
             $database_variables = explode(".", $temp[0]);
             $relation = $temp[1];
@@ -1130,7 +1129,7 @@ class TemplateController extends Controller
         }
         return redirect()->route('home');
     }
-    public function WebView($url) {
+    public function WebView($pageURL) {
         $url = [];
         $page = 0;
         $content_id = 0;
@@ -1140,7 +1139,7 @@ class TemplateController extends Controller
         if($url == "index") {
             $page = Page::where(['template_id' => $template_id, "title" => "index"])->first();
         } else {
-            $pageContent = PageContent::where(['template_id' => $template_id, "url" => $url])->first(); 
+            $pageContent = PageContent::where(['template_id' => $template_id, "url" => $pageURL])->first(); 
             if($pageContent) {
                 $page = $pageContent->Page;
                 $content_id = $pageContent->content_id;

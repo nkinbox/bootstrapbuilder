@@ -144,4 +144,4 @@ Route::get('/', function () {
     }
     return view('welcome');
 });
-Route::get('{url}', 'TemplateController@WebView')->name('WebView');
+Route::get('{pageURL}', 'TemplateController@WebView')->name('WebView');
