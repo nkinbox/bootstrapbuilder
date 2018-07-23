@@ -246,13 +246,13 @@
     <div class="pagination_container">{{$loopThrough->links()}}</div>
     @endif
         @foreach($loopThrough as ${"key".$loop_count} => ${"value".$loop_count})
-        @include('Page.html')
+        @include('Website.html')
         @endforeach
     @if($loopThrough instanceof \Illuminate\Pagination\LengthAwarePaginator)
     <div class="pagination_container">{{$loopThrough->links()}}</div>
     @endif
     @else
-        @include('Page.html')
+        @include('Website.html')
     @endif
 @else
 <h1 class="text-danger">ERROR: Name: {{$element->name}} ID: {{$element->id}} Node: {{$element->node}}</h1>
