@@ -1136,7 +1136,7 @@ class TemplateController extends Controller
         if(Cookie::get('template_id') == null)
         return view('welcome');
         $template_id = Cookie::get('template_id');
-        if($url == "index") {
+        if($pageURL == "index") {
             $page = Page::where(['template_id' => $template_id, "title" => "index"])->first();
         } else {
             $pageContent = PageContent::where(['template_id' => $template_id, "url" => $pageURL])->first(); 
