@@ -55,6 +55,7 @@
                                     <a class="dropdown-item{{(Route::is("Template.*"))?' active':''}}" href="{{ route('Template.index') }}"><i class="fa fa-home"></i> Home</a>
                                     <a class="dropdown-item{{(Route::is("Component.Create") || Route::is("Component.Edit"))?' active':''}}" href="{{ route('Component.Create') }}"><i class="fa fa-cubes"></i> Component Editor</a>
                                     <a class="dropdown-item{{(Route::is("Database"))?' active':''}}" href="{{ route('Database') }}"><i class="fa  fa-crosshairs"></i> Database Variables</a>
+                                    <a class="dropdown-item{{(Route::is("Loopsource"))?' active':''}}" href="{{ route('Loopsource') }}"><i class="fa  fa-crosshairs"></i> Loop Sources</a>
                                     <a class="dropdown-item{{(Route::is("Component.AddBasic"))?' active':''}}" href="{{ route('Component.AddBasic') }}"><i class="fa fa-cube"></i> Basic Component</a>
                                 </div>
                             </li>

@@ -8,7 +8,7 @@
                 @if($operation == "edit")
                 <form action="{{ (isset($template_id))?route('Template.Component.edit'):route('Template.Page.Component.edit') }}" method="post">
                     <input type="hidden" name="_method" value="put">
-                    <input type="hidden" name="redirectTo" value="{{$redirectTo}}">
+                    {{-- <input type="hidden" name="redirectTo" value="{{$redirectTo}}"> --}}
                 @else
                 <form action="{{ (isset($template_id))?route('Template.Component.add'):route('Template.Page.Component.add') }}" method="post">
                 @endif

@@ -25,6 +25,11 @@ Route::middleware('auth', 'access:Template')->group(function () {
         Route::put('/variable', 'TemplateController@variable_edit')->name('Variable.edit');
         Route::get('/delete/variable/{template_id}/{id}', 'TemplateController@variable_delete')->name('Variable.delete')->middleware('canDelete');
         
+        Route::get('/loopsource/{operation?}/{id?}', 'TemplateController@loopsource')->name('Loopsource');
+        Route::post('/loopsource', 'TemplateController@loopsource_add')->name('Loopsource.add');
+        Route::put('/loopsource', 'TemplateController@loopsource_edit')->name('Loopsource.edit');
+        Route::get('/delete/loopsource/{id}', 'TemplateController@loopsource_delete')->name('Loopsource.delete')->middleware('canDelete');
+        
         Route::get('/page/{template_id}/{operation?}/{id?}', 'TemplateController@page')->name('Template.Page');
         Route::post('/page/add', 'TemplateController@page_add')->name('Template.Page.add');
         Route::put('/page/edit', 'TemplateController@page_edit')->name('Template.Page.edit');

@@ -27,17 +27,14 @@ if($element->visibility == 'none') {
                 <div class="input-group-prepend">
                     <span class="input-group-text"><i class="fa fa-globe"></i></span>
                 </div>
-                <select class="custom-select" tabindex="1" name="geolocation[{{$element->id}}]">
-                    <option value="0"{{(old("geolocation.".$element->id, $element->geolocation) == "0")?' selected':''}}>Global</option>
-                    <option value="1"{{(old("geolocation.".$element->id, $element->geolocation) == "1")?' selected':''}}>GeoLocation</option>
-                </select>
+                <input type="text" class="form-control" placeholder="Country1,Country2" tabindex="1" name="geolocation[{{$element->id}}]" value="{{ old("geolocation.".$element->id, $element->geolocation) }}">
                 <div class="input-group-prepend ml-1">
                     <span class="input-group-text"><i class="fa fa-eye-slash"></i></span>
                 </div>
-                <select class="custom-select" tabindex="1" name="visibility_id[{{$element->id}}]">
-                    <option value="0"{{(old("visibility_id.".$element->id, $element->visibility_id) == "0")?' selected':''}}>Visible</option>
-                    <option value="1"{{(old("visibility_id.".$element->id, $element->visibility_id) == "1")?' selected':''}}>Partial</option>
-                </select>
+                <input type="number" class="form-control" placeholder="Visibility Condition" tabindex="1" name="visibility_id[{{$element->id}}]" value="{{ old("visibility_id.".$element->id, $element->visibility_id) }}">
+                <div class="input-group-append">
+                    <span class="input-group-text">{{(old("visibility_id.".$element->id, $element->visibility_id) == "0")?'Visible':'Partial'}}</span>
+                </div>
                 <div class="input-group-prepend ml-1">
                     <span class="input-group-text"><i class="fa fa-eye"></i></span>
                 </div>
@@ -67,9 +64,25 @@ if($element->visibility == 'none') {
                 @endif
                 @if($element->node != "parent")
                 <div class="input-group-prepend ml-1">
-                    <span class="input-group-text"><i class="fa fa-repeat"></i></span>
+                    <span class="input-group-text"><a href="{{route('Loopsource')}}" target="_blank"><i class="fa fa-repeat"></i></a></span>
                 </div>
-                <input type="text" class="form-control" placeholder="Loop Source" tabindex="1" name="loop_source[{{$element->id}}]" value="{{ old("loop_source.".$element->id, $element->loop_source) }}">
+                <select class="custom-select" tabindex="1" name="loop_source[{{$element->id}}]">
+                    <option value="">None</option>
+                    @foreach(App\Models\LoopSource::all() as $ls)
+                    <option value="{{$ls->id}}"{{(old("loop_source.".$element->id, $element->loop_source) == $ls->id)?' selected':''}}><?php
+                    $Loopsource = "";
+                    $database_variables = explode(".", $ls->database_variables);
+                    foreach($database_variables as $variable) {
+                        $db_var = \App\Models\DatabaseVariable::find($variable);
+                        if($db_var) {
+                            $Loopsource .= ((!$Loopsource)?$db_var->object:'').(($db_var->property)?"->".$db_var->property.(($db_var->is_array)?"[]":""):"");
+                        } else $Loopsource .= "(error)";
+                    }
+                    $Loopsource .= (($ls->query_string)?$ls->operator . $ls->query_string:'');
+                    echo $ls->id .") ". $Loopsource;
+                    ?></option>
+                    @endforeach
+                </select>
                 @else
                 <input type="hidden" name="loop_source[{{$element->id}}]" value="">
                 @endif

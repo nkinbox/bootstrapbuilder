@@ -11,8 +11,7 @@
     }
     if(isset($loops)) {
         $element_var_attributes = preg_replace_callback('/@@database\.(.*?)@@/', function($match_) use ($propertyResolver, $loops) {
-            $database_variables = explode(".", $match_[1]);
-            return $propertyResolver($database_variables, $loops);
+            return $propertyResolver($match_[1], $loops);
         }, json_encode($element->var_attributes));
         try {
             eval("\$element_var_attributes=".$element_var_attributes.";");
@@ -55,8 +54,7 @@ if(isset($content[$element->id.'_'.$id])) {
 if($this_content) {
     if(isset($loops)) {
         $this_content = preg_replace_callback('/@@database\.(.*?)@@/', function($match_) use ($propertyResolver, $loops) {
-            $database_variables = explode(".", $match_[1]);
-            return $propertyResolver($database_variables, $loops);
+            return $propertyResolver($match_[1], $loops);
         }, json_encode($this_content));
         try {
             eval("\$this_content=".$this_content.";");

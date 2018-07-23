@@ -9,6 +9,7 @@ use App\Models\Content;
 use App\Models\Components;
 use App\Models\PageContent;
 use App\Models\PageComponent;
+use App\Models\LoopSource;
 use App\Models\DatabaseVariable;
 use App\Models\Variables;
 use App\Rules\alpha_dash_space;
@@ -19,137 +20,64 @@ use View;
 class TemplateController extends Controller
 {
     private $response;
-    private $loopResolver;
     private $propertyResolver;
     function __construct() {
-        $this->loopResolver = function($database_variables, $query = ["all()",""], &$loop_count, &$loops) {
-            $loop_count++;
-            $loops[$loop_count] = [
-                "loaded" => [],
-                "related" => [],
-                "isArray" => false,
-                "model_var" => "",
-            ];
-            $continue = true;
+        $this->propertyResolver = function($toresolve, &$loops) {
+            //$database_variables = "@@database.1.2.3|(first/last)@@"
+            // dd($toresolve);
+            $temp = explode("|", $toresolve."|last");
+            $database_variables = explode(".", $temp[0]);
+            $relation = $temp[1];
             $eval = "";
             foreach($database_variables as $variable) {
-                if(!$continue)
-                break;
                 if($variable && $db_var = \App\Models\DatabaseVariable::find($variable)) {
                     $isRelation = false;
-                    for($i = (count($loops) - 1); $i >= 0; $i--) {
-                        if(isset($loops[$i]['related'][$db_var->object])) {
-                            $isRelation = true;
-                            if($loops[$i]['isArray'])
-                            $eval = "\$value".$i;
-                            else
-                            $eval = $loops[$i]['model_var'];
-                            break;
-                        }
-                    }
-                    if(!$isRelation) {
-                        $isSet = false;
-                        for($i = (count($loops) - 1); $i >= 0; $i--) {
-                            if(isset($loops[$i]['loaded'][$db_var->object])) {
-                                $isSet = true;
+                    if($relation == "first") {
+                        for($i = 0; $i < count($loops); $i++) {
+                            if(isset($loops[$i]['related'][$db_var->object])) {
+                                $isRelation = true;
                                 if($loops[$i]['isArray'])
                                 $eval = "\$value".$i;
                                 else
                                 $eval = $loops[$i]['model_var'];
                                 break;
-                            }
-                        }
-                        if(!$isSet) {
-                            if($query[0]) {
-                                try {
-                                    $loops[$loop_count]['loaded'][$db_var->object] = eval("return \App\Models\\".$db_var->object.'::'.$query[0].";");
-                                } catch (ParseError $e) {
-                                    $continue = false;
-                                }
-                            }
-                        }
-                        if($continue) {
-                            if($db_var->property) {
-                                if(!$isSet) {
-                                    if($loops[$loop_count]['loaded'][$db_var->object] instanceof Traversable)
-                                    $eval = "\$value".$loop_count."->".$db_var->property;
-                                    else
-                                    $eval = "\$loops[".$loop_count."]['loaded']['".$db_var->object."']->".$db_var->property;
-                                }
-                                else
-                                $eval .= "->".$db_var->property;
-                                if($db_var->related_to) {
-                                    $relation = App\Models\DatabaseVariable::find($db_var->related_to);
-                                    if($relation) {
-                                        $bool = true;
-                                        for($i = (count($loops) - 1); $i >= 0; $i--) {
-                                            if(isset($loops[$i]['related'][$relation->object])) {
-                                                $bool = false;
-                                                break;
-                                            }
-                                        }
-                                        if($bool)
-                                        $loops[$loop_count]['related'][$relation->object] = $db_var->object;
-                                    }
-                                }
-                            } else {
-                                $eval = "\$loops[".$loop_count."]['loaded']['".$db_var->object."']";
                             }
                         }
                     } else {
-                        $eval .= "->".$db_var->property;
-                        if($db_var->related_to) {
-                            $relation = App\Models\DatabaseVariable::find($db_var->related_to);
-                            if($relation) {
-                                $bool = true;
-                                for($i = (count($loops) - 1); $i >= 0; $i--) {
-                                    if(isset($loops[$i]['related'][$relation->object])) {
-                                        $bool = false;
-                                        break;
-                                    }
-                                }
-                                if($bool)
-                                $loops[$loop_count]['related'][$relation->object] = $db_var->object;
-                            }
-                        }
-                    }
-                    if($db_var->is_array)
-                    $loops[$loop_count]['isArray'] = true;
-                    elseif(!$db_var->property && isset($loops[$loop_count]['loaded'][$db_var->object]) && is_iterable($loops[$loop_count]['loaded'][$db_var->object]))
-                    $loops[$loop_count]['isArray'] = true;
-                    else
-                    $loops[$loop_count]['isArray'] = false;
-                }
-            }
-            if($eval)
-            $loops[$loop_count]['model_var'] = $eval.((isset($query[1]) && $query[1])?'->'.$query[1]:'');
-            return $continue;
-        };
-        $this->propertyResolver = function($database_variables, &$loops) {
-            $eval = "";
-            foreach($database_variables as $variable) {
-                if($variable && $db_var = \App\Models\DatabaseVariable::find($variable)) {
-                    $isRelation = false;
-                    for($i = (count($loops) - 1); $i >= 0; $i--) {
-                        if(isset($loops[$i]['related'][$db_var->object])) {
-                            $isRelation = true;
-                            if($loops[$i]['isArray'])
-                            $eval = "\$value".$i;
-                            else
-                            $eval = $loops[$i]['model_var'];
-                            break;
-                        }
-                    }
-                    if(!$isRelation) {
-                        $isSet = false;
                         for($i = (count($loops) - 1); $i >= 0; $i--) {
-                            if(isset($loops[$i]['loaded'][$db_var->object])) {
-                                $isSet = true;
+                            if(isset($loops[$i]['related'][$db_var->object])) {
+                                $isRelation = true;
                                 if($loops[$i]['isArray'])
                                 $eval = "\$value".$i;
                                 else
                                 $eval = $loops[$i]['model_var'];
                                 break;
+                            }
+                        }
+                    }
+                    if(!$isRelation) {
+                        $isSet = false;
+                        if($relation == "first") {
+                            for($i = 0; $i < count($loops); $i++) {
+                                if(isset($loops[$i]['loaded'][$db_var->object])) {
+                                    $isSet = true;
+                                    if($loops[$i]['isArray'])
+                                    $eval = "\$value".$i;
+                                    else
+                                    $eval = $loops[$i]['model_var'];
+                                    break;
+                                }
+                            }
+                        } else {
+                            for($i = (count($loops) - 1); $i >= 0; $i--) {
+                                if(isset($loops[$i]['loaded'][$db_var->object])) {
+                                    $isSet = true;
+                                    if($loops[$i]['isArray'])
+                                    $eval = "\$value".$i;
+                                    else
+                                    $eval = $loops[$i]['model_var'];
+                                    break;
+                                }
                             }
                         }
                         if($db_var->property) {
@@ -197,7 +125,7 @@ class TemplateController extends Controller
         return $component->id;
     }
     private function HTMLTouchUp($template_id, $html, &$variables) {
-        //sets variable to $variables[]
+        //sets variable to $variables[] @@variable.key.value@@
         $html = preg_replace_callback('/@@variable\.(.*?)@@/', function($match_) use (&$variables) {
             $temp = explode(".", $match_[1]);
             if(count($temp) == 2) {
@@ -797,7 +725,7 @@ class TemplateController extends Controller
                 $this->response["component"] = Components::find($id);
             }
             if($operation == "add" || $operation == "edit") {
-                $this->response["redirectTo"] = url()->previous();
+                // $this->response["redirectTo"] = url()->previous();
                 $this->response["breadcrumbs"][] = [
                     "route" => null,
                     "routePar" => [],
@@ -851,10 +779,10 @@ class TemplateController extends Controller
             "type.*" => "required|in:body,header,footer,main",
             "category.*" => "required|in:basic,element,component,web",
             "node.*" => "required|in:self,parent,child",
-            "geolocation.*" => "required|integer",
+            "geolocation.*" => "nullable|string|max:250",
             "visibility.*" => "required|in:auth,guest,show,none",
             "content_type.*" => "required|in:static,variable,element",
-            "loop_source.*" => "nullable|string|max:50",
+            "loop_source.*" => "nullable|integer",
             "child_order.*" => "required|numeric",
             "nested_component.*" => "nullable|integer",
             "start_tag.*" => "required|string|max:10",
@@ -903,10 +831,10 @@ class TemplateController extends Controller
             "type.*" => "required|in:body,header,footer,main",
             "category.*" => "required|in:basic,element,component,web",
             "node.*" => "required|in:self,parent,child",
-            "geolocation.*" => "required|integer",
+            "geolocation.*" => "nullable|string|max:250",
             "visibility.*" => "required|in:auth,guest,show,none",
             "content_type.*" => "required|in:static,variable,element",
-            "loop_source.*" => "nullable|string|max:50",
+            "loop_source.*" => "nullable|integer",
             "child_order.*" => "required|numeric",
             "nested_component.*" => "nullable|integer",
             "start_tag.*" => "required|string|max:10",
@@ -921,9 +849,10 @@ class TemplateController extends Controller
         foreach($request->type as $key => $val) {
             $this->DBComponent($request, $key);
         }
-        if(url()->previous() == $request->redirectTo)
-        return redirect()->route('Template.Component', ['template_id' => $request->template_id])->with("message", $request->name." Edited Successfully!");
-        return redirect($request->redirectTo)->with("message", $request->name." Edited Successfully!");
+        return redirect()->back()->with("message", $request->name." Edited Successfully!");
+        // if(url()->previous() == $request->redirectTo)
+        // return redirect()->route('Template.Component', ['template_id' => $request->template_id])->with("message", $request->name." Edited Successfully!");
+        // return redirect($request->redirectTo)->with("message", $request->name." Edited Successfully!");
     }
     public function all_components_view($template_id) {
         $template = Template::find($template_id);
@@ -1097,17 +1026,87 @@ class TemplateController extends Controller
         Variables::destroy($id);
         return redirect()->route('Variable', ['template_id' => $template_id])->with('message', 'Global Variable Deleted Successfully');
     }
+    public function loopsource($operation = null, $id = null) {
+        $this->response = [
+            "breadcrumbs" => [[
+                "route" => "Template.index",
+                "routePar" => [],
+                "name" => '<i class="fa fa-home"></i>'
+            ]]
+        ];
+        $this->response["breadcrumbs"][] = [
+            "route" => "Loopsource",
+            "routePar" => null,
+            "name" => "Loop Source"
+        ];
+        $this->response["operation"] = $operation;
+        if($operation && ($operation == "add" || $operation == "edit")) {
+            $this->response["loopsource"] = null;
+            $this->response["breadcrumbs"][] = [
+                "route" => null,
+                "routePar" => null,
+                "name" => ucwords($operation)
+            ];
+            if($operation == "edit") {
+            $this->response["loopsource"] = LoopSource::find($id);
+            }
+            return view('Template.Forms.loopsource', $this->response);
+        } else {
+            $this->response["loopsource"] = LoopSource::all();
+        }
+        return view('Template.loopsource', $this->response);
+    }
+    public function loopsource_add(Request $request) {
+        $request->validate([
+            "database_variables" => "required|string|max:50",
+            "object_query" => "nullable|string|max:200",
+            "property_query" => "nullable|string|max:200",
+            "variables" => "nullable|json|max:500",
+            "relation" => "required_without:object_query|nullable|boolean"
+        ]);
+        $ls = new LoopSource;
+        $ls->database_variables = $request->database_variables;
+        $ls->object_query = $request->object_query;
+        $ls->property_query = $request->property_query;
+        $ls->variables = $request->variables;
+        $ls->relation = $request->relation;
+        $ls->save();
+        return redirect()->back()->with('message', 'Loop Source Added Successfully');
+    }
+    public function loopsource_edit(Request $request) {
+        $request->validate([
+            "id" => "required|exists:loop_sources",
+            "database_variables" => "required|string|max:50",
+            "object_query" => "nullable|string|max:200",
+            "property_query" => "nullable|string|max:200",
+            "variables" => "nullable|json|max:500",
+            "relation" => "required_without:object_query|nullable|boolean"
+        ]);
+        $ls = LoopSource::find($request->id);
+        $ls->database_variables = $request->database_variables;
+        $ls->object_query = $request->object_query;
+        $ls->property_query = $request->property_query;
+        $ls->variables = $request->variables;
+        $ls->relation = $request->relation;
+        $ls->save();
+        return redirect()->route('Loopsource')->with('message', 'Loop Source Edited Successfully');
+    }
+    public function loopsource_delete($id) {
+        LoopSource::destroy($id);
+        return redirect()->route('Loopsource')->with('message', 'Loop Source Deleted Successfully');
+    }
     public function view($template_id, $id) {
+        $url = [];
         $page = Page::find($id);
         if($page) {
             $variables = [];
             $mode = Cookie::get('mode');
             $country = Cookie::get('country');
             $view = View::make('Page.index', [
+                'url' => $url,
                 'page' => $page,
                 'mode' => $mode,
                 'country' => $country,
-                'loopResolver' => $this->loopResolver,
                 'propertyResolver' => $this->propertyResolver
             ]);
             $html = $view->render();
@@ -1132,6 +1131,7 @@ class TemplateController extends Controller
         return redirect()->route('home');
     }
     public function WebView($url) {
+        $url = [];
         $page = 0;
         $content_id = 0;
         if(Cookie::get('template_id') == null)
@@ -1149,9 +1149,9 @@ class TemplateController extends Controller
         if($page) {
             $variables = [];
             $view = View::make('Website.index', [
+                'url' => $url,
                 'page' => $page,
                 'content_id' => $content_id,
-                'loopResolver' => $this->loopResolver,
                 'propertyResolver' => $this->propertyResolver
             ]);
             $html = $view->render();

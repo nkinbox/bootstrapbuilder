@@ -27,7 +27,7 @@
                     @foreach($templates as $template)
                         <tr>
                             <th scope="row"{!!(!$template->is_website)?' class="bg-warning"':''!!}>{{$loop->iteration}}</th>
-                            <td>{{$template->title}}</td>
+                            <td><a href="{{ route('Template.Page', ['template_id' => $template->id]) }}">{{$template->title}}</a></td>
                             <td><a href="{{ route('Template.Page', ['template_id' => $template->id]) }}">{{$template->Pages->count()}}</a></td>
                             <td><a href="{{ route('Template.Component', ['template_id' => $template->id]) }}">{{$template->Components->count()}}</a></td>
                             <td>

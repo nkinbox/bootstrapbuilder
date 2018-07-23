@@ -9,6 +9,7 @@ $up = true;
 @endphp
 @foreach($page->Components as $component)
 @php
+$loops;
 $loop_count = -1;
 $id = $component->pivot->id;
 if(isset($content_id) && $content_id) {

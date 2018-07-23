@@ -117,7 +117,7 @@ class ComponentController extends Controller
         $ele->template_id = $this->template_id;
         $ele->visibility_id = ((isset($element['visibility_id']))?$element['visibility_id']:0);
         $ele->type = ((isset($element['type']))?$element['type']:'body');
-        $ele->geolocation = ((isset($element['geolocation']))?$element['geolocation']:0);
+        $ele->geolocation = ((isset($element['geolocation']))?$element['geolocation']:null);
         $ele->name = $element['name'];
         $ele->category = $element['category'];
         $ele->node = $element['node'];
@@ -181,6 +181,7 @@ class ComponentController extends Controller
         return view('Component.addBasic');
     }
     public function add(Request $request) {
+        return redirect()->back()->with("error", "This Module has to be redesigned.");
         $request->validate([
             "self.name" => "required|string|max:50|unique:components,name",
             "self.category" => "required|in:basic,component",

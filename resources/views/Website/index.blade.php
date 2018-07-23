@@ -10,6 +10,7 @@ $up = true;
 @foreach($page->Components as $component)
 @php
 $loop_count = -1;
+$loops;
 $id = $component->pivot->id;
 if(isset($content_id) && $content_id) {
     $content = [];
