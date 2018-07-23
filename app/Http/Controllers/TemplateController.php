@@ -1108,6 +1108,7 @@ class TemplateController extends Controller
             $view = View::make('Page.index', [
                 'url' => $url,
                 'page' => $page,
+                'template_id' => $template_id,
                 'mode' => $mode,
                 'country' => $country,
                 'propertyResolver' => $this->propertyResolver
@@ -1154,6 +1155,7 @@ class TemplateController extends Controller
             $view = View::make('Website.index', [
                 'url' => $url,
                 'page' => $page,
+                'template_id' => $template_id,
                 'content_id' => $content_id,
                 'propertyResolver' => $this->propertyResolver
             ]);
