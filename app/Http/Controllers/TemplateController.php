@@ -712,7 +712,7 @@ class TemplateController extends Controller
         ];
         $this->response["template"] = Template::find($template_id);
         $this->response["breadcrumbs"][] = [
-            "route" => "Template.Page",
+            "route" => "Template.Component",
             "routePar" => ["template_id" => $this->response["template"]->id],
             "name" => $this->response["template"]->title
         ];
