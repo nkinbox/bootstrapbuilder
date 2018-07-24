@@ -9,9 +9,13 @@ foreach($attributes as $key => $val) {
     else
     echo ' '.$key;
 }
-$var_attributes = json_decode($element->Parent->var_attributes, true);
-foreach($var_attributes as $attribute)
-echo ' '.$attribute.'=""';
+// $var_attributes = json_decode($element->Parent->var_attributes, true);
+// foreach($var_attributes as $key => $val) {
+//     if($val)
+//     echo ' '.$key.'="'.$val.'"';
+//     else
+//     echo ' '.$key;
+// }
 $classes = json_decode($element->Parent->classes, true);
 if(count($classes)) {
     echo ' class="'.implode(" ", $classes).'"';
@@ -27,9 +31,13 @@ foreach($attributes as $key => $val) {
     else
     echo ' '.$key;
 }
-$var_attributes = json_decode($element->var_attributes, true);
-foreach($var_attributes as $attribute)
-echo ' '.$attribute.'=""';
+// $var_attributes = json_decode($element->var_attributes, true);
+// foreach($var_attributes as $key => $val) {
+//     if($val)
+//     echo ' '.$key.'="'.$val.'"';
+//     else
+//     echo ' '.$key;
+// }
 $classes = json_decode($element->classes, true);
 if(count($classes)) {
     echo ' class="'.implode(" ", $classes).'"';
@@ -60,9 +68,13 @@ foreach($attributes as $key => $val) {
     else
     echo ' '.$key;
 }
-$var_attributes = json_decode($element->var_attributes, true);
-foreach($var_attributes as $attribute)
-echo ' '.$attribute.'=""';
+// $var_attributes = json_decode($element->var_attributes, true);
+// foreach($var_attributes as $key => $val) {
+//     if($val)
+//     echo ' '.$key.'="'.$val.'"';
+//     else
+//     echo ' '.$key;
+// }
 $classes = json_decode($element->classes, true);
 if(count($classes)) {
     echo ' class="'.implode(" ", $classes).'"';

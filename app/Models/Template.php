@@ -41,18 +41,21 @@ class Template extends Model
         static::deleting(function($model) {
             $model->getScript()->delete();
             $model->getCSS()->delete();
+            foreach($model->URLs as $url) {
+                $url->getMetadata()->delete();
+                $url->getScript()->delete();
+                $url->getCSS()->delete();
+            }
             $model->URLs()->delete();
             foreach($model->Pages as $page) {
                 $page->getMetadata()->delete();
                 $page->getScript()->delete();
                 $page->getCSS()->delete();
-                $page->URLs()->delete();
-                $page->AllComponents()->delete();
             }
             $model->Pages()->delete();
             $model->GlobalVariables()->delete();
             $model->AllComponents()->delete();
-            $model->PageContent()->update(["template_id" => 0, "page_id" => 0]);
+            $model->PageContent()->update(["template_id" => 0, "page_id" => 0, "web_url_id" => 0]);
         });
     }
 }

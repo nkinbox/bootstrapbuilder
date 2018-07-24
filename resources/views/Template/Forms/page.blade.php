@@ -16,9 +16,8 @@
                     <div class="input-group mb-3">
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fa fa-link"></i></span>
-                            <input type="text" class="form-control" placeholder="Page Name" tabindex="1" name="title" value="{{ old("title", (($page)?$page->title:'')) }}">
                         </div>
-                        <input type="text" class="form-control" placeholder="Page URL" tabindex="2" name="url" value="{{ old("url", (($page)?$page->url:'')) }}">
+                        <input type="text" class="form-control" placeholder="Page Name" tabindex="1" name="title" value="{{ old("title", (($page)?$page->title:'')) }}">
                     </div>
                     <div class="card mb-2">
                         <div class="card-body">

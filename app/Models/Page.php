@@ -39,9 +39,14 @@ class Page extends Model
             $model->getMetadata()->delete();
             $model->getScript()->delete();
             $model->getCSS()->delete();
+            foreach($model->URLs as $url) {
+                $url->getMetadata()->delete();
+                $url->getScript()->delete();
+                $url->getCSS()->delete();
+            }
             $model->URLs()->delete();
             $model->AllComponents()->delete();
-            $model->PageContent()->update(["page_id" => 0]);
+            $model->PageContent()->update(["page_id" => 0, "web_url_id" => 0]);
         });
     }
 }

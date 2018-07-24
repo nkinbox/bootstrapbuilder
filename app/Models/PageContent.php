@@ -18,13 +18,17 @@ class PageContent extends Model
     public function getContent() {
         return $this->hasOne('App\Models\Content', 'id', 'content_id');
     }
-    public function geoLocation() {
-        return $this->hasOne('App\Models\GeoLocation', 'id', 'geolocation_id');
+    public function url() {
+        return $this->hasOne('App\Models\WebUrl');
     }
     protected static function boot() {
         parent::boot();        
         static::deleting(function($model) {
             $model->getContent()->delete();
+            $model->url->getMetadata()->delete();
+            $model->url->getScript()->delete();
+            $model->url->getCSS()->delete();
+            $model->url->delete();
         });
     }
 }

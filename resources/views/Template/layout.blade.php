@@ -14,7 +14,7 @@
                 @endforeach
             </ol>
         </nav>
-    <div class="mx-auto my-3 w-75">
+    <div id="template-card-container" class="mx-auto my-3">
         @yield('card')
     </div>
 @endsection

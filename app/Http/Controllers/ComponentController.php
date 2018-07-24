@@ -31,7 +31,7 @@ class ComponentController extends Controller
             "start_tag" => "required|string|max:10",
             "end_tag" => "required|nullable|string|max:10",
             "attributes" => "required|json|max:500",
-            "var_attributes" => "nullable|json|max:500",
+            // "var_attributes" => "nullable|json|max:500",
             "classes" => "required|json|max:500",
             "style" => "required|json|max:500",
             "script" => "nullable|string|max:2000",
@@ -84,7 +84,7 @@ class ComponentController extends Controller
         else
         $element["name"] = $name;
         $element["nested_component"] = null;
-        $element["var_attributes"] = ((isset($element["var_attributes"]))?json_encode(array_unique($this->replaceNULL($element["var_attributes"]))):"[]");
+        // $element["var_attributes"] = ((isset($element["var_attributes"]))?json_encode(array_unique($this->replaceNULL($element["var_attributes"]))):"[]");
         $element["attributes"] = json_encode(array_unique($this->replaceNULL($element["attributes"])));
         $element["classes"] = json_encode(array_unique($this->replaceNULL($element["classes"])));
         $element["style"] = json_encode($this->replaceNULL($element["style"]));
@@ -129,7 +129,7 @@ class ComponentController extends Controller
         $ele->start_tag = $element['start_tag'];
         $ele->end_tag = $element['end_tag'];
         $ele->attributes = $element['attributes'];
-        $ele->var_attributes = $element['var_attributes'];
+        // $ele->var_attributes = $element['var_attributes'];
         $ele->classes = $element['classes'];
         $ele->style = $element['style'];
         $ele->script = $element['script'];
@@ -147,7 +147,7 @@ class ComponentController extends Controller
                 $nested = Components::find($component->nested_component);
                 $components[$key]->content = $this->fetchComponent($nested->name);
             }
-            $components[$key]->var_attributes = json_decode($component->var_attributes);
+            // $components[$key]->var_attributes = json_decode($component->var_attributes);
             $components[$key]->classes = json_decode($component->classes);
             $components[$key]->attributes = json_decode($component->attributes);
             $components[$key]->style = json_decode($component->style);
@@ -187,7 +187,7 @@ class ComponentController extends Controller
             "self.category" => "required|in:basic,component",
             "self.content" => "required_if:self.content_type,static,variable|nullable|string|max:65500",
             "self.node" => "required|in:self",
-            "self.var_attributes" => "nullable|json|max:500",
+            // "self.var_attributes" => "nullable|json|max:500",
             "self.start_tag" => "required|string|max:10",
             "self.end_tag" => "required|nullable|string|max:10",
             "self.content_type" => "required|in:static,variable,component,element",
@@ -197,7 +197,7 @@ class ComponentController extends Controller
             "parent.node" => "sometimes|required|in:parent",
             "parent.category" => "required_with:parent.node|in:element",
             "parent.content_type" => "required_with:parent.node|in:element",
-            "parent.var_attributes" => "required_with:parent.node|json|max:500",
+            // "parent.var_attributes" => "required_with:parent.node|json|max:500",
             "parent.start_tag" => "required_with:parent.node|string|max:10",
             "parent.end_tag" => "required_with:parent.node|nullable|string|max:10",
             "parent.classes" => "required_with:parent.node|json|max:500",
@@ -208,7 +208,7 @@ class ComponentController extends Controller
             "child.*.child_order" => "required_with:child.*.node|numeric",
             "child.*.content_type" => "required_with:child.*.node|in:static,variable,component",
             "child.*.content" => "required_if:child.*.content_type,static,variable|nullable|string|max:65500",
-            "child.*.var_attributes" => "required_with:child.*.node|json|max:500",
+            // "child.*.var_attributes" => "required_with:child.*.node|json|max:500",
             "child.*.start_tag" => "required_with:child.*.node|string|max:10",
             "child.*.end_tag" => "required_with:child.*.node|nullable|string|max:10",
             "child.*.classes" => "required_with:child.*.node|json|max:500",
@@ -226,7 +226,7 @@ class ComponentController extends Controller
         $self->start_tag = $request->self['start_tag'];
         $self->end_tag = $request->self['end_tag'];
         $self->attributes = $request->self['attributes'];
-        $self->var_attributes = $request->self['var_attributes'];
+        // $self->var_attributes = $request->self['var_attributes'];
         $self->classes = $request->self['classes'];
         $self->style = $request->self['style'];
         if(in_array($request->self['content_type'], ["static", "variable"]))
@@ -244,7 +244,7 @@ class ComponentController extends Controller
             $parent->start_tag = $request->parent['start_tag'];
             $parent->end_tag = $request->parent['end_tag'];
             $parent->attributes = $request->parent['attributes'];
-            $parent->var_attributes = $request->parent['var_attributes'];
+            // $parent->var_attributes = $request->parent['var_attributes'];
             $parent->classes = $request->parent['classes'];
             $parent->style = $request->parent['style'];
             if(in_array($request->parent['content_type'], ["static", "variable"]))
@@ -264,7 +264,7 @@ class ComponentController extends Controller
                 $child->start_tag = $req['start_tag'];
                 $child->end_tag = $req['end_tag'];
                 $child->attributes = $req['attributes'];
-                $child->var_attributes = $req['var_attributes'];
+                // $child->var_attributes = $req['var_attributes'];
                 $child->classes = $req['classes'];
                 $child->style = $req['style'];
                 if(in_array($req['content_type'], ["static", "variable"]))
@@ -288,7 +288,7 @@ class ComponentController extends Controller
                     $nested = Components::find($component->nested_component);
                     $components[$key]->content = $this->fetchComponent($nested->name);
                 }
-                $components[$key]->var_attributes = json_decode($component->var_attributes);
+                // $components[$key]->var_attributes = json_decode($component->var_attributes);
                 $components[$key]->classes = json_decode($component->classes);
                 $components[$key]->attributes = json_decode($component->attributes);
                 $components[$key]->style = json_decode($component->style);
@@ -312,7 +312,7 @@ class ComponentController extends Controller
                     $nested = Components::find($component->nested_component);
                     $components[$key]->content = $this->fetchComponent($nested->name);
                 }
-                $components[$key]->var_attributes = json_decode($component->var_attributes);
+                // $components[$key]->var_attributes = json_decode($component->var_attributes);
                 $components[$key]->classes = json_decode($component->classes);
                 $components[$key]->attributes = json_decode($component->attributes);
                 $components[$key]->style = json_decode($component->style);
@@ -336,7 +336,7 @@ class ComponentController extends Controller
                     $nested = Components::find($component->nested_component);
                     $components[$key]->content = $this->fetchComponent($nested->name);
                 }
-                $components[$key]->var_attributes = json_decode($component->var_attributes);
+                // $components[$key]->var_attributes = json_decode($component->var_attributes);
                 $components[$key]->classes = json_decode($component->classes);
                 $components[$key]->attributes = json_decode($component->attributes);
                 $components[$key]->style = json_decode($component->style);

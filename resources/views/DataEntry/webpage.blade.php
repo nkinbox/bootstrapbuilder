@@ -44,13 +44,12 @@
                     <td><small>{{$page->title}}</small></td>
                     <td><kbd>{{$page->type}}</kbd></td>
                     <td><small>{{$page->group_title}}</small></td>
-                    <td><small>@if($page->geolocation_id)
-                        @component('DataEntry.Forms.ComponentGeoLocation', ["geoLocation" => $page->geoLocation, "routeName" => null, "routePram" => null])
-                        @endcomponent
+                    <td><small>@if($page->url && $page->url->geolocation)
+                        {{$page->url->geolocation}}
                     @else Global
                     @endif</small></td>
-                    <td><small><small><a{!!($page->page_id && $page->content_id)?' href="'.route('DataEntry.Blade', ["page_id" => $page->page_id, "content_id" => $page->content_id]).'" target="_blank"':''!!}>{{($template_id)?$template->title:'websitename'}}/{{$page->url}}.html</a></small></small></td>
-                    <td>{{($page->content_id)?'Yes':'No'}}</td>
+                    <td>@if($page->url)<small><small><a{!!($page->page_id && $page->content_id)?' href="'.route('DataEntry.Blade', ["page_id" => $page->page_id, "content_id" => $page->content_id]).'" target="_blank"':''!!}>{{($template_id)?$template->title:'websitename'}}/{{$page->url->url}}.html</a></small></small>@else <b class="text-danger">NO URL</b> @endif</td>
+                    <td>{!!($page->content_id && $page->getContent->content != '' || $page->getContent->content != null)?'Yes':'<b class="text-danger">No</b>'!!}</td>
                     @if(Auth::user()->admin)
                     <td>{{($page->user_id)?$page->getUser->name:'-'}}</td>
                     <td><small><small>{{$page->created_at}}</small></small></td>
@@ -75,6 +74,7 @@
                     <th scope="col">Title</th>
                     <th scope="col">Pages</th>
                     <th scope="col">hasBroked</th>
+                    <th scope="col">No URL</th>
                     <th scope="col">PageLess</th>
                     <th scope="col">ContentLess</th>
                     </tr>
@@ -86,6 +86,7 @@
                     <td><a href="{{ route('DataEntry.Page', ["template_id" => $page['template_id'], "operation" => "show"]) }}">{{$key}}</a></td>
                     <td{!! (!$page['count'])?' class="bg-danger text-light"':''!!}>{{$page['count']}}</td>
                     <td{!! ($page['broked'])?' class="bg-danger text-light"':''!!}>{{$page['broked']}}</td>
+                    <td{!! ($page['nourl'])?' class="bg-danger text-light"':''!!}>{{$page['nourl']}}</td>
                     <td{!! ($page['pageless'])?' class="bg-danger text-light"':''!!}>{{$page['pageless']}}</td>
                     <td{!! ($page['content'])?' class="bg-danger text-light"':''!!}>{{$page['content']}}</td>
                     </tr>

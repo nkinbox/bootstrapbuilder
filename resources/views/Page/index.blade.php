@@ -4,12 +4,11 @@ $globalScript = $page->Template->getScript;
 $globalStyle = $page->Template->getCSS;
 $pageScript = $page->getScript;
 $pageStyle = $page->getCSS;
-$metaData = $page->getMetadata;
 $up = true;
 @endphp
 @foreach($page->Components as $component)
 @php
-$loops;
+$loops = [];
 $loop_count = -1;
 $id = $component->pivot->id;
 if(isset($content_id) && $content_id) {
@@ -71,11 +70,18 @@ if(isset($content_id) && $content_id) {
 {!!$pageStyle->content!!}
 @endpush
 @endif
-@if($metaData)
 @push('metadata')
-{!!$metaData->content!!}
+<?php
+$metadata = "";
+if($page->meta_id) {
+    $metaContent = preg_replace_callback('/@@all(.*?)@@endall/', function($match_) use (&$metadata) {
+        $metadata = $match_[1];
+        return "";
+    }, $page->getMetadata->content);
+    echo $metaContent.$metadata;
+}
+?>
 @endpush
-@endif
 @push('scripts')
 $("a").click(function(e){
     e.preventDefault();

@@ -24,8 +24,11 @@ class WebUrl extends Model
     public function getCSS() {
         return $this->hasOne('App\Models\Content', 'id', 'css_id');
     }
-    public function Components() {
-        return $this->hasMany('App\Models\Components', 'page_id', 'page_id')->orderBy('order');
+    // public function Components() {
+    //     return $this->hasMany('App\Models\Components', 'page_id', 'page_id')->orderBy('order');
+    // }
+    public function PageContent() {
+        return $this->hasOne('App\Models\PageContent');
     }
     protected static function boot() {
         parent::boot();        
@@ -33,6 +36,9 @@ class WebUrl extends Model
             $model->getMetadata()->delete();
             $model->getScript()->delete();
             $model->getCSS()->delete();
+            if($model->page_content_id) {
+                $model->PageContent->update(["web_url_id" => 0]);
+            }
         });
     }
 }

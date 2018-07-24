@@ -17,7 +17,11 @@ class CreateWebUrlsTable extends Migration
             $table->increments('id');
             $table->unsignedInteger('template_id');
             $table->unsignedInteger('page_id');
-            $table->string('url_string', 500);
+            $table->unsignedInteger('page_content_id')->default(0);
+            $table->string('url', 1000);
+            $table->string('geolocation', 45)->nullable()->dafault(null);
+            $table->string('regex', 200)->nullable()->dafault(null);
+            $table->string('matches', 500)->nullable()->dafault(null);
             $table->unsignedInteger('meta_id')->default(0);
             $table->unsignedInteger('script_id')->default(0);
             $table->unsignedInteger('css_id')->default(0);

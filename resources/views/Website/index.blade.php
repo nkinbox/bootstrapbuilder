@@ -4,13 +4,19 @@ $globalScript = $page->Template->getScript;
 $globalStyle = $page->Template->getCSS;
 $pageScript = $page->getScript;
 $pageStyle = $page->getCSS;
-$metaData = $page->getMetadata;
+if($webURL) {
+$webScript = $webURL->getScript;
+$webStyle = $webURL->getCSS;
+} else {
+$webScript = "";
+$webStyle = "";
+}
 $up = true;
 @endphp
 @foreach($page->Components as $component)
 @php
 $loop_count = -1;
-$loops;
+$loops = [];
 $id = $component->pivot->id;
 if(isset($content_id) && $content_id) {
     $content = [];
@@ -71,8 +77,28 @@ if(isset($content_id) && $content_id) {
 {!!$pageStyle->content!!}
 @endpush
 @endif
-@if($metaData)
-@push('metadata')
-{!!$metaData->content!!}
+@if($webScript)
+@push('scripts')
+{!!$webScript->content!!}
 @endpush
 @endif
+@if($webStyle)
+@push('styles')
+{!!$webStyle->content!!}
+@endpush
+@endif
+@push('metadata')
+<?php
+$metadata = "";
+if($page->meta_id) {
+    $metaContent = preg_replace_callback('/@@all(.*?)@@endall/', function($match_) use (&$metadata) {
+        $metadata = $match_[1];
+        return "";
+    }, $page->getMetadata->content);
+}
+if($webURL && $webURL->meta_id) {
+    $metaContent = $webURL->getMetadata->content;
+}
+echo $metaContent.$metadata;
+?>
+@endpush

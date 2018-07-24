@@ -1,4 +1,3 @@
-@include('DataEntry.Forms.geolocation')
 @if($operation == "edit")
 <form action="{{ route('DataEntry.Page.edit') }}" method="post">
     <input type="hidden" name="_method" value="put">
@@ -11,7 +10,7 @@
         <div class="input-group-prepend">
             <span id="url" class="input-group-text">URL</span>
         </div>
-        <input type="text" class="form-control" placeholder="URL String" tabindex="10" name="url" value="{{ old("url", (($page)?$page->url:'')) }}" readonly>
+        <input type="text" class="form-control" placeholder="URL String" tabindex="10" name="url" value="{{ old("url", (($page && $page->url)?$page->url->url:'')) }}" readonly>
     </div>
         <div class="input-group mb-3">
             <div class="input-group-prepend">
@@ -26,9 +25,10 @@
             <div class="input-group-prepend ml-1">
                 <span class="input-group-text"><i class="fa fa-globe"></i></span>
             </div>
-            <select class="custom-select" tabindex="1" name="geolocation_id">
-                <option value="0"{{(old("geolocation_id", (($page)?$page->geolocation_id:'')) == 0)?' selected':''}}>Global</option>
-                <option value="1"{{(old("geolocation_id", (($page)?$page->geolocation_id:'')) != 0)?' selected':''}}>Geolocation</option>
+            <select class="custom-select" tabindex="1" name="geolocation">
+                    @foreach(App\Models\GeoLocation::select('country')->groupBy('country')->get() as $country)
+                    <option{{(old("geolocation", (($page && $page->url)?$page->url->geolocation:'')) == $country->country)?' selected':''}}>{{$country->country}}</option>
+                    @endforeach
             </select>
         </div>
         <div class="input-group mb-3">

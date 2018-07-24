@@ -82,16 +82,6 @@ if($element->visibility == 'none') {
                 </div>
                 <input type="text" class="form-control" placeholder='eg. {"attr1":"value1", "attr2":"value2"}' tabindex="1" name="attribute[{{$element->id}}]" value="{{ old("attribute.".$element->id, $element->attributes) }}">
             </div>
-            @if($element->node != "parent")
-            <div class="input-group mb-3">
-                <div class="input-group-prepend">
-                    <span class="input-group-text">Var Attribute</span>
-                </div>
-                <input type="text" class="form-control" placeholder='eg. {"href":"@@database.1@@"}' tabindex="1" name="var_attribute[{{$element->id}}]" value="{{ old("var_attribute.".$element->id, $element->var_attributes) }}">
-            </div>
-            @else
-            <input type="hidden" name="var_attribute[{{$element->id}}]" value="{{ old("var_attribute.".$element->id, $element->var_attributes) }}">
-            @endif
             <div class="input-group mb-3">
                 <div class="input-group-prepend">
                     <span class="input-group-text">Classes</span>

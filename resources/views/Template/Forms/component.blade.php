@@ -38,6 +38,7 @@
             @push('scripts')
                 <?php $html = View::make('Component.partialRender')->withelement($component);?>
                 <script>
+                    $("#template-card-container").addClass('w-75');
                     $(".component_type").change(function(){
                         var val = $(this).val();
                         $(".component_type").each(function(){
@@ -268,7 +269,6 @@
                         display.html("<div id=\"basicLoader\" class=\"m-2 p-2 text-center\"><h2><i class=\"fa fa-spinner\"></i> Loading Components.</h2></div>");
                         $.getJSON('{{ route('LoadComponents.component') }}', function(response, status){
                             if(status == "success") {
-                                display.closest('.w-75').removeClass('w-75').addClass('w-100');
                                 $.each(response, function(i, value){
                                     container.find(".card-header").html(value.self.name);
                                     container.find(".card-body").html("").append(component_renderer(value, true));
@@ -281,7 +281,6 @@
                                     e.preventDefault();
                                     var display = $("#ComponentContainer");
                                     window.location = '{{ route('Template.Component', ['template_id' => $template_id, 'operation' => 'add']).'/' }}' + $(this).attr("data-name");
-                                    display.closest('.w-100').removeClass('w-100').addClass('w-75');
                                     display.removeClass("bg-dark").html("<div id=\"basicLoader\" class=\"m-2 p-2 text-center\"><h2><i class=\"fa fa-spinner\"></i> Loading Component.</h2></div>");
                                 });
                             }

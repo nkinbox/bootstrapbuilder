@@ -86,9 +86,8 @@
                             <tr>
                             <th scope="col">#</th>
                             <th scope="col">Title</th>
-                            <th scope="col">URL</th>
+                            <th scope="col">URLs</th>
                             <th scope="col">Components</th>
-                            <th scope="col">GeoBased</th>
                             <th scope="col">MetaData</th>
                             <th scope="col">Script</th>
                             <th scope="col">CSS</th>
@@ -108,9 +107,8 @@
                                     <td>
                                         <a href="{{ route('view', ['template_id' => $template->id, 'id' => $page->id]) }}" target="_blank">{{$page->title}}</a>
                                     </td>
-                                    <td>{{$page->url}}</td>
+                                    <td><a href="{{ route('WebUrl', ['page_id' => $page->id]) }}" target="_blank">{{$page->URLs->count()}}</a></td>
                                     <td><a href="{{ route('Template.Page.Component', ['page_id' => $page->id]) }}">{{$page->Components->count()}}</a></td>
-                                    <td>SKIPPED</td>
                                     <td>
                                         @if($page->meta_id)
                                         <script> var meta_content_{{$page->meta_id}} = {!!json_encode($page->getMetadata->content)!!};</script>

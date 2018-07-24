@@ -2,25 +2,26 @@
 <?php
     echo substr($element->start_tag, 0, -1);
     echo ' id="component_' .$element->id. '"';
-    $attributes = json_decode($element->attributes, true);
+    $attributes = preg_replace_callback('/@@database\.(.*?)@@/', function($match_) use ($propertyResolver, $loops) {
+        return $propertyResolver($match_[1], $loops);
+    }, json_encode($element->attributes));
+    $attributes = preg_replace_callback('/@@url\.(.*?)@@/', function($match_) use ($propertyResolver, $loops) {
+        $weburl = \App\Models\WebUrl::find($match_[1]);
+        $url = $weburl->url;
+        $builder = json_decode($weburl->url_builder, true);
+        foreach($builder as $key => $val) {
+            if(preg_match('/@@database\.(.*?)@@/', $val)) {
+                $val = $propertyResolver($val, $loops);
+            }
+            $url = str_replace($key, $val, $url);
+        }
+        return strtolower(str_replace(" ", "-", $url));
+    }, $attributes);
+    try {
+        eval("\$attributes=".$attributes.";");
+    } catch (ParseError $e) {}
+    $attributes = json_decode($attributes, true);
     foreach($attributes as $key => $val) {
-        if($val)
-        echo ' '.$key.'="'.$val.'"';
-        else
-        echo ' '.$key;
-    }
-    if(isset($loops)) {
-        $element_var_attributes = preg_replace_callback('/@@database\.(.*?)@@/', function($match_) use ($propertyResolver, $loops) {
-            return $propertyResolver($match_[1], $loops);
-        }, json_encode($element->var_attributes));
-        try {
-            eval("\$element_var_attributes=".$element_var_attributes.";");
-        } catch (ParseError $e) {}
-        $var_attributes = json_decode($element_var_attributes, true);
-    } else {
-        $var_attributes = json_decode($element->var_attributes, true);
-    }
-    foreach($var_attributes as $key => $val) {
         if($val)
         echo ' '.$key.'="'.$val.'"';
         else
@@ -52,17 +53,13 @@ if(isset($content[$element->id.'_'.$id])) {
     echo '__content__';
 }
 if($this_content) {
-    if(isset($loops)) {
-        $this_content = preg_replace_callback('/@@database\.(.*?)@@/', function($match_) use ($propertyResolver, $loops) {
-            return $propertyResolver($match_[1], $loops);
-        }, json_encode($this_content));
-        try {
-            eval("\$this_content=".$this_content.";");
-        } catch (ParseError $e) {}
-        echo $this_content;
-    } else {
-        echo $this_content;
-    }
+    $this_content = preg_replace_callback('/@@database\.(.*?)@@/', function($match_) use ($propertyResolver, $loops) {
+        return $propertyResolver($match_[1], $loops);
+    }, json_encode($this_content));
+    try {
+        eval("\$this_content=".$this_content.";");
+    } catch (ParseError $e) {}
+    echo $this_content;
 }
 ?>
 @endif

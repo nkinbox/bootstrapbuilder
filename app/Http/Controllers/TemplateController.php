@@ -12,6 +12,7 @@ use App\Models\PageComponent;
 use App\Models\LoopSource;
 use App\Models\DatabaseVariable;
 use App\Models\Variables;
+use App\Models\WebUrl;
 use App\Rules\alpha_dash_space;
 use Auth;
 use Cookie;
@@ -115,7 +116,7 @@ class TemplateController extends Controller
         $component->start_tag = $request->start_tag[$id];
         $component->end_tag = $request->end_tag[$id];
         $component->attributes = $request->attribute[$id];
-        $component->var_attributes = $request->var_attribute[$id];
+        // $component->var_attributes = $request->var_attribute[$id];
         $component->classes = $request->classes[$id];
         $component->style = $request->style[$id];
         $component->script = $request->script[$id];
@@ -123,7 +124,14 @@ class TemplateController extends Controller
         $component->save();
         return $component->id;
     }
-    private function HTMLTouchUp($template_id, $html, &$variables) {
+    private function HTMLTouchUp($template_id, $html, &$variables, $geolocation) {
+        $html = preg_replace_callback('/@@currency\.(.*?)@@/', function($match_) use ($geolocation) {
+            $temp = explode(".", $match_[1]);
+            if(count($temp) == 2) {
+                return (($geolocation['currency'])?$geolocation['currency']:$temp[0]). " " .(($geolocation['conversion'])?round($geolocation['conversion']*$temp[1]):$temp[1]);
+            }
+            return "";
+        }, $html);
         //sets variable to $variables[] @@variable.key.value@@
         $html = preg_replace_callback('/@@variable\.(.*?)@@/', function($match_) use (&$variables) {
             $temp = explode(".", $match_[1]);
@@ -144,8 +152,8 @@ class TemplateController extends Controller
             $image = \App\Models\Images::find($match_[1]);
             return 'src="' .(($image)?asset('storage/'.$image->file_name):'#'). '" title="' .(($image)?$image->image_title:'Image'). '"';
         }, $html);
-        //replaces global values and Evaluates PHP CODE
-        $html = preg_replace_callback('/@@global\.(.*?)@@/', function($match_) use ($template_id, &$variables) {
+        //replaces Evaluates Variable
+        $html = preg_replace_callback('/@@evaluate\.(.*?)@@/', function($match_) use ($template_id, &$variables) {
             $variable = \App\Models\Variables::where(["template_id" => $template_id, "variable_name" => $match_[1]])->first();
             if($variable) {
                 if($variable->is_php){
@@ -285,7 +293,7 @@ class TemplateController extends Controller
                     $component->start_tag = $components->start_tag;
                     $component->end_tag = $components->end_tag;
                     $component->attributes = $components->attributes;
-                    $component->var_attributes = $components->var_attributes;
+                    // $component->var_attributes = $components->var_attributes;
                     $component->classes = $components->classes;
                     $component->style = $components->style;
                     $component->script = $components->script;
@@ -321,7 +329,6 @@ class TemplateController extends Controller
                     }
                     $page = new Page;
                     $page->template_id = $template->id;
-                    $page->url = $pages->url;
                     $page->title = $pages->title;
                     $page->script_id = $script_id;
                     $page->css_id = $css_id;
@@ -334,6 +341,21 @@ class TemplateController extends Controller
                             $pageComponent->component_id = $componentIndex[$pageComponents->component_id];
                             $pageComponent->order = $pageComponents->order;
                             $pageComponent->save();
+                        }
+                    }
+                    if(count($pages->URLs)) {
+                        foreach($pages->URLs as $weburl) {
+                            $url = new WebUrl;
+                            $url->template_id = $template->id;
+                            $url->page_id = $page->id;
+                            $url->url = $weburl->url;
+                            $url->geolocation = $weburl->geolocation;
+                            $url->regex = $weburl->regex;
+                            $url->matches = $weburl->matches;
+                            $url->url_variables = $weburl->url_variables;
+                            $url->url_builder = $weburl->url_builder;
+                            $url->user_id = Auth::id();
+                            $url->save();
                         }
                     }
                 }
@@ -445,7 +467,6 @@ class TemplateController extends Controller
         $request->validate([
             "template_id" => "required|exists:templates,id",
             "title" => ['required',new alpha_dash_space,'max:50'],
-            "url" => "required|string|max:250",
             "meta_content" => "nullable|string|max:65500",
             "js_content" => "nullable|string|max:65500",
             "css_content" => "nullable|string|max:65500"
@@ -479,7 +500,6 @@ class TemplateController extends Controller
         }
         $page = new Page;
         $page->template_id = $request->template_id;
-        $page->url = $request->url;
         $page->title = $request->title;
         $page->meta_id = $meta_id;
         $page->script_id = $script_id;
@@ -493,7 +513,6 @@ class TemplateController extends Controller
             "id" => "required|exists:pages",
             "template_id" => "required|exists:templates,id",
             "title" => ['required',new alpha_dash_space,'max:50'],
-            "url" => "required|string|max:250",
             "meta_content" => "nullable|string|max:65500",
             "js_content" => "nullable|string|max:65500",
             "css_content" => "nullable|string|max:65500"
@@ -545,7 +564,6 @@ class TemplateController extends Controller
             $page->getCSS->delete();
         }
         $page->template_id = $request->template_id;
-        $page->url = $request->url;
         $page->title = $request->title;
         $page->meta_id = $meta_id;
         $page->script_id = $script_id;
@@ -787,7 +805,7 @@ class TemplateController extends Controller
             "start_tag.*" => "required|string|max:10",
             "end_tag.*" => "required|nullable|string|max:10",
             "attribute.*" => "required|json|max:500",
-            "var_attribute.*" => "nullable|json|max:500",
+            // "var_attribute.*" => "nullable|json|max:500",
             "classes.*" => "required|json|max:500",
             "style.*" => "required|json|max:500",
             "script.*" => "nullable|string|max:2000",
@@ -839,7 +857,7 @@ class TemplateController extends Controller
             "start_tag.*" => "required|string|max:10",
             "end_tag.*" => "required|nullable|string|max:10",
             "attribute.*" => "required|json|max:500",
-            "var_attribute.*" => "nullable|json|max:500",
+            // "var_attribute.*" => "nullable|json|max:500",
             "classes.*" => "required|json|max:500",
             "style.*" => "required|json|max:500",
             "script.*" => "nullable|string|max:2000",
@@ -1098,23 +1116,201 @@ class TemplateController extends Controller
         LoopSource::destroy($id);
         return redirect()->route('Loopsource')->with('message', 'Loop Source Deleted Successfully');
     }
+    public function weburl($page_id, $operation = null, $id = null) {
+        $this->response = [
+            "breadcrumbs" => [[
+                "route" => "Template.index",
+                "routePar" => [],
+                "name" => '<i class="fa fa-home"></i>'
+            ]]
+        ];
+        $this->response["operation"] = $operation;
+        $this->response["page"] = Page::find($page_id);
+        $this->response["template"] = $this->response["page"]->Template;
+        $this->response["breadcrumbs"][] = [
+            "route" => "Template.Page",
+            "routePar" => ["template_id" => $this->response["template"]->id],
+            "name" => $this->response["template"]->title
+        ];
+        $this->response["breadcrumbs"][] = [
+            "route" => "Template.Page",
+            "routePar" => ["template_id" => $this->response["template"]->id],
+            "name" => $this->response["page"]->title
+        ];
+        $this->response["breadcrumbs"][] = [
+            "route" => "WebUrl",
+            "routePar" => ['page_id' => $page_id],
+            "name" => "Web URLs"
+        ];
+        if($operation && ($operation == "add" || $operation == "edit")) {
+            $this->response["weburl"] = null;
+            $this->response["breadcrumbs"][] = [
+                "route" => null,
+                "routePar" => null,
+                "name" => ucwords($operation)
+            ];
+            if($operation == "edit") {
+            $this->response["weburl"] = WebUrl::find($id);
+            }
+            return view('Template.Forms.weburl', $this->response);
+        } else {
+            $this->response["weburl"] = WebUrl::where('page_id', $page_id)->orderBy('regex', 'desc')->orderBy('url')->paginate(50);
+        }
+        return view('Template.weburl', $this->response);
+    }
+    public function weburl_add(Request $request) {
+        $request->validate([
+            "template_id" => "required|exists:templates,id",
+            "page_id" => "required|exists:pages,id",
+            "url" => "required|string|max:1000",
+            "geolocation" => "nullable|string|max:45",
+            "regex" => "nullable|string|max:200",
+            "matches" => "nullable|json|max:500",
+            "url_variables" => "nullable|json|max:500",
+            "url_builder" => "nullable|json|max:500",
+            "meta_content" => "nullable|string|max:65500",
+            "js_content" => "nullable|string|max:65500",
+            "css_content" => "nullable|string|max:65500"
+        ]);
+        $meta_id = 0;
+        $script_id = 0;
+        $css_id = 0;
+        if($request->has('meta_content') && $request->meta_content) {
+            $content = new Content;
+            $content->content_type = "text";
+            $content->content = $request->meta_content;
+            $content->user_id = Auth::id();
+            $content->save();
+            $meta_id = $content->id;
+        }
+        if($request->has('js_content') && $request->js_content) {
+            $content = new Content;
+            $content->content_type = "text";
+            $content->content = $request->js_content;
+            $content->user_id = Auth::id();
+            $content->save();
+            $script_id = $content->id;
+        }
+        if($request->has('css_content') && $request->css_content) {
+            $content = new Content;
+            $content->content_type = "text";
+            $content->content = $request->css_content;
+            $content->user_id = Auth::id();
+            $content->save();
+            $css_id = $content->id;
+        }
+        $url = new WebUrl;
+        $url->template_id = $request->template_id;
+        $url->page_id = $request->page_id;
+        $url->url = $request->url;
+        $url->geolocation = $request->geolocation;
+        $url->regex = $request->regex;
+        $url->matches = $request->matches;
+        $url->url_variables = $request->url_variables;
+        $url->url_builder = $request->url_builder;
+        $url->meta_id = $meta_id;
+        $url->script_id = $script_id;
+        $url->css_id = $css_id;
+        $url->user_id = Auth::id();
+        $url->save();
+        return redirect()->route('Weburl', ['page_id' => $request->page_id])->with('message', $request->url.' Added Successfully');
+    }
+    public function weburl_edit(Request $request) {
+        $request->validate([
+            "id" => "required|exists:web_urls",
+            "template_id" => "required|exists:templates,id",
+            "page_id" => "required|exists:pages,id",
+            "url" => "required|string|max:1000",
+            "geolocation" => "nullable|string|max:45",
+            "regex" => "nullable|string|max:200",
+            "matches" => "nullable|json|max:500",
+            "url_variables" => "nullable|json|max:500",
+            "url_builder" => "nullable|json|max:500",
+            "meta_content" => "nullable|string|max:65500",
+            "js_content" => "nullable|string|max:65500",
+            "css_content" => "nullable|string|max:65500"
+        ]);
+        $url = WebUrl::find($request->id);
+        $meta_id = 0;
+        $script_id = 0;
+        $css_id = 0;
+        if($request->has('meta_content') && $request->meta_content) {
+            if($url->meta_id)
+            $content = $url->getMetadata;
+            else
+            $content = new Content;
+            $content->content_type = "text";
+            $content->content = $request->meta_content;
+            $content->user_id = Auth::id();
+            $content->save();
+            $meta_id = $content->id;
+        } else {
+            if($url->meta_id)
+            $url->getMetadata->delete();
+        }
+        if($request->has('js_content') && $request->js_content) {
+            if($url->script_id)
+            $content = $url->getScript;
+            else
+            $content = new Content;
+            $content->content_type = "text";
+            $content->content = $request->js_content;
+            $content->user_id = Auth::id();
+            $content->save();
+            $script_id = $content->id;
+        } else {
+            if($url->script_id)
+            $url->getScript->delete();
+        }
+        if($request->has('css_content') && $request->css_content) {
+            if($url->css_id)
+            $content = $url->getCSS;
+            else
+            $content = new Content;
+            $content->content_type = "text";
+            $content->content = $request->css_content;
+            $content->user_id = Auth::id();
+            $content->save();
+            $css_id = $content->id;
+        } else {
+            if($url->css_id)
+            $url->getCSS->delete();
+        }
+        $url->template_id = $request->template_id;
+        $url->page_id = $request->page_id;
+        $url->url = $request->url;
+        $url->geolocation = $request->geolocation;
+        $url->regex = $request->regex;
+        $url->matches = $request->matches;
+        $url->url_variables = $request->url_variables;
+        $url->url_builder = $request->url_builder;
+        $url->meta_id = $meta_id;
+        $url->script_id = $script_id;
+        $url->css_id = $css_id;
+        $url->user_id = Auth::id();
+        $url->save();
+        return redirect()->route('WebUrl', ['page_id' => $request->page_id])->with('message', $request->url.' Edited Successfully');
+    }
+    public function weburl_delete($page_id, $id) {
+        Weburl::destroy($id);
+        return redirect()->route('Weburl', ['page_id' => $page_id])->with('message', 'URL Deleted Successfully');
+    }
     public function view($template_id, $id) {
         $url = [];
         $page = Page::find($id);
         if($page) {
             $variables = [];
             $mode = Cookie::get('mode');
-            $country = Cookie::get('country');
+            $geolocation = ["country" => strtolower(Cookie::get('country')), "currency" => "USD", "conversion" => "65"];
             $view = View::make('Page.index', [
                 'url' => $url,
                 'page' => $page,
                 'template_id' => $template_id,
                 'mode' => $mode,
-                'country' => $country,
                 'propertyResolver' => $this->propertyResolver
             ]);
             $html = $view->render();
-            $html = $this->HTMLTouchUp($template_id, $html, $variables);
+            $html = $this->HTMLTouchUp($template_id, $html, $variables, $geolocation);
             if(Auth::user()->admin) {
                 $html .= "<!--".json_encode($variables)."-->";
                 $pageVar = "";
@@ -1135,32 +1331,77 @@ class TemplateController extends Controller
         return redirect()->route('home');
     }
     public function WebView($pageURL) {
-        $url = [];
+        $url = ["current" => '/'.$pageURL];
+        $pageURL = str_replace(".html", "", $pageURL);
         $page = 0;
         $content_id = 0;
-        if(Cookie::get('template_id') == null)
-        return view('welcome');
+        if(Cookie::get('template_id') == null || Cookie::get('country') == null)
+        return redirect()->route('home')->with("error", "Template or Country Missing");
         $template_id = Cookie::get('template_id');
+        $geolocation = ["country" => strtolower(Cookie::get('country')), "currency" => "USD", "conversion" => "65"];
+        $webURL = null;
         if($pageURL == "index") {
             $page = Page::where(['template_id' => $template_id, "title" => "index"])->first();
         } else {
-            $pageContent = PageContent::where(['template_id' => $template_id, "url" => $pageURL])->first(); 
-            if($pageContent) {
-                $page = $pageContent->Page;
-                $content_id = $pageContent->content_id;
+            $isStaticPage = WebUrl::where(['template_id' => $template_id, "url" => $pageURL])->whereNull('regex')->get();
+            if($count = count($isStaticPage)) {
+                if($count == 1) {
+                    $page = $isStaticPage[0]->PageContent->Page;
+                    $content_id = $isStaticPage[0]->PageContent->content_id;
+                    $url["title"] = $isStaticPage[0]->PageContent->title;
+                    $url["group_title"] = $isStaticPage[0]->PageContent->group_title;
+                    $webURL = $isStaticPage[0];
+                } else {
+                    foreach($isStaticPage as $found) {
+                        if($found->geolocation == null) {
+                            $webURL = $found;
+                            $page = $found->PageContent->Page;
+                            $content_id = $found->PageContent->content_id;
+                            $url["title"] = $found->PageContent->title;
+                            $url["group_title"] = $found->PageContent->group_title;
+                        } elseif(strtolower($found->geolocation) == $country) {
+                            $webURL = $found;
+                            $page = $found->PageContent->Page;
+                            $content_id = $found->PageContent->content_id;
+                            $url["title"] = $found->PageContent->title;
+                            $url["group_title"] = $found->PageContent->group_title;
+                        }
+                    }
+                }
+            } else {
+                foreach(\App\Models\WebUrl::where('template_id', $template_id)->whereNotNull('regex')->cursor() as $weburl) {
+                    $matches = [];
+                    if(preg_match($weburl->regex, $pageURL, $matches)) {
+                        $webURL = $weburl;
+                        $match_var = json_decode($weburl->matches, true);
+                        $url["title"] = ucwords(str_replace("-", " ", $matches[0]));
+                        foreach($match_var as $match_group => $var_name) {
+                            $url[$var_name] = ucwords(str_replace("-", " ", $matches[intval($match_group)]));
+                        }
+                        if($weburl->url_variables) {
+                            $url_variables = json_decode($weburl->url_variables, true);
+                            foreach($url_variables as $key => $val) {
+                                $url[$key] = $val;
+                            }
+                        }
+                        $page = $weburl->Page;
+                        break;
+                    }
+                }
             }
         }
         if($page) {
             $variables = [];
             $view = View::make('Website.index', [
                 'url' => $url,
+                'webURL' => $webURL,
                 'page' => $page,
                 'template_id' => $template_id,
                 'content_id' => $content_id,
                 'propertyResolver' => $this->propertyResolver
             ]);
             $html = $view->render();
-            $html = $this->HTMLTouchUp($template_id, $html, $variables);
+            $html = $this->HTMLTouchUp($template_id, $html, $variables, $geolocation);
             return $html;
         }
         return redirect()->route('home')->with("error", "Web URL could not be resolved.");
@@ -1173,6 +1414,7 @@ class TemplateController extends Controller
         ]);
         Cookie::queue('mode', $request->mode, 0);
         Cookie::queue('template_id', $request->template_id, 0);
+        if($request->country)
         Cookie::queue('country', $request->country, 0);
         return redirect()->back()->with("message", "Mode: ".$request->mode." ".$request->country);
     }

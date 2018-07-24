@@ -265,7 +265,7 @@ function settingFormData(node, element) {
     return setting;
 }
 function addNewElement(node) {
-    var element = {id:1,geolocation:0,name:"",category:"element",node:"",visibility:"show",content_type:"static",child_order:1,nested_component:null,loop_source:null,start_tag:"<div>",end_tag:"</div>",attributes:{},var_attributes:[],classes:[],style:{selector:"",style:{}},script:null,content:null};
+    var element = {id:1,geolocation:0,name:"",category:"element",node:"",visibility:"show",content_type:"static",child_order:1,nested_component:null,loop_source:null,start_tag:"<div>",end_tag:"</div>",attributes:{},classes:[],style:{selector:"",style:{}},script:null,content:null};
     element.node = node;
     if(node == "parent") {
         if(typeof component.parent == "undefined") {
@@ -682,7 +682,7 @@ $("#load_wrapper_setting").click(function(){
         setting += '<input type="hidden" name="parent[category]" value="element">';
         setting += '<input type="hidden" name="parent[content_type]" value="element">';
         setting += '<input type="hidden" name="parent[node]" value="parent">';
-        setting += '<input type="hidden" name="parent[var_attributes]" value="[]">';
+        // setting += '<input type="hidden" name="parent[var_attributes]" value="[]">';
         setting += '<div class="form-group">';
         setting += '<label>Start Tag</label>';
         setting += '<input type="text" class="form-control" name="parent[start_tag]">';
@@ -732,7 +732,7 @@ $("#load_child_setting").click(function(){
     setting += '<input type="hidden" name="child['+childCount+'][child_order]" value="'+childCount+'">';
     setting += '<input type="hidden" name="child['+childCount+'][content_type]" value="static">';
     setting += '<input type="hidden" name="child['+childCount+'][node]" value="child">';
-    setting += '<input type="hidden" name="child['+childCount+'][var_attributes]" value="[]">';
+    // setting += '<input type="hidden" name="child['+childCount+'][var_attributes]" value="[]">';
     setting += '<div class="form-group">';
     setting += '<label>Start Tag</label>';
     setting += '<input type="text" class="form-control" name="child['+childCount+'][start_tag]">';

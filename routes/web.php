@@ -25,6 +25,11 @@ Route::middleware('auth', 'access:Template')->group(function () {
         Route::put('/variable', 'TemplateController@variable_edit')->name('Variable.edit');
         Route::get('/delete/variable/{template_id}/{id}', 'TemplateController@variable_delete')->name('Variable.delete')->middleware('canDelete');
         
+        Route::get('/weburl/{page_id}/{operation?}/{id?}', 'TemplateController@weburl')->name('WebUrl');
+        Route::post('/weburl', 'TemplateController@weburl_add')->name('WebUrl.add');
+        Route::put('/weburl', 'TemplateController@weburl_edit')->name('WebUrl.edit');
+        Route::get('/delete/weburl/{page_id}/{id}', 'TemplateController@weburl_delete')->name('WebUrl.delete')->middleware('canDelete');
+        
         Route::get('/loopsource/{operation?}/{id?}', 'TemplateController@loopsource')->name('Loopsource');
         Route::post('/loopsource', 'TemplateController@loopsource_add')->name('Loopsource.add');
         Route::put('/loopsource', 'TemplateController@loopsource_edit')->name('Loopsource.edit');
@@ -140,8 +145,13 @@ Route::middleware('auth', 'access:Data')->prefix('data')->group(function () {
 Route::get('/home', 'HomeController@index')->name('home');
 Route::get('/', function () {
     if(Cookie::get('template_id')) {
-        return redirect()->route('WebView', ['url' => 'index']);
+        return redirect()->route('WebView', ['pageURL' => 'index.html']);
     }
     return view('welcome');
 });
 Route::get('{pageURL}', 'TemplateController@WebView')->name('WebView');
+// Route::get('{pageURL}', function($pageURL){
+//     $matches = [];
+//     preg_match("/^([^-]+)-([^-]+)\.html$/", $pageURL, $matches);
+//     return $matches;
+// })->name('WebView');

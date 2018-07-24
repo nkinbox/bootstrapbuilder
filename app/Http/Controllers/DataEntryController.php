@@ -24,6 +24,7 @@ use App\Models\PageComponent;
 use App\Models\Template;
 use App\Models\Page;
 use App\Models\HotelRoom;
+use App\Models\WebUrl;
 use App\Rules\alpha_dash_space;
 use Auth;
 use Cookie;
@@ -1821,15 +1822,6 @@ class DataEntryController extends Controller
             ];
             if($operation == "edit") {
                 $this->response["page"] = PageContent::find($id);
-                if($this->response["page"]->geolocation_id) {
-                    if(Cookie::get('geolocation_id') == null) {
-                        Cookie::queue('geolocation_id', $this->response['page']->geolocation_id, 0);
-                        $this->response['reload'] = true;
-                    } elseif(Cookie::get('geolocation_id') != $this->response['page']->geolocation_id) {
-                        Cookie::queue('geolocation_id', $this->response['page']->geolocation_id, 0);
-                        $this->response['reload'] = true;
-                    }
-                }
             } elseif($operation == "show") {
                 if(Auth::user()->admin)
                 $this->response["pages"] = PageContent::where(["template_id" => $template_id])->paginate(50);
@@ -1843,14 +1835,15 @@ class DataEntryController extends Controller
                 $pageCount = PageContent::where(["template_id" => $group->template_id])->count();
                 $brokedPage = PageContent::where(["template_id" => $group->template_id, "broked" => 1])->count();
                 $withoutPage = PageContent::where(["template_id" => $group->template_id, "page_id" => 0])->count();
+                $nourl = PageContent::where(["template_id" => $group->template_id, "web_url_id" => 0])->count();
                 $withoutContent = PageContent::where(["template_id" => $group->template_id])->whereHas('getContent', function($query){
                     $query->where('content', '');
                 })->count();
                 if($group->template_id == 0)
-                $this->response["pages"]["unknown"] = ["template_id" => 0, "count" => $pageCount, "broked" => $brokedPage, "pageless" => $withoutPage, "content" => $withoutContent];
+                $this->response["pages"]["unknown"] = ["template_id" => 0, "count" => $pageCount, "broked" => $brokedPage, "pageless" => $withoutPage, "content" => $withoutContent, "nourl" => $nourl];
                 else {
                     $website = $group->Template->title;
-                    $this->response["pages"][$website] = ["template_id" => $group->Template->id, "count" => $pageCount, "broked" => $brokedPage, "pageless" => $withoutPage, "content" => $withoutContent];
+                    $this->response["pages"][$website] = ["template_id" => $group->Template->id, "count" => $pageCount, "broked" => $brokedPage, "pageless" => $withoutPage, "content" => $withoutContent, "nourl" => $nourl];
                 }
             }
         }
@@ -1858,20 +1851,15 @@ class DataEntryController extends Controller
     }
     public function page_content_add(Request $request) {
         $request->validate([
-            "url" => "required|alpha_dash|max:500",
+            "url" => "required|alpha_dash|max:1000",
             "template_id" => "required|integer",
-            "geolocation_id" => "required|boolean",
+            "geolocation" => "nullable|string|max:45",
             "page_id" => "required|integer",
             "broked" => "required|boolean",
             "title" => ['required',new alpha_dash_space,'max:250'],
             "group_title" => ['required',new alpha_dash_space,'max:250'],
             "type" => "required|in:header,footer,sitemap,other",
         ]);
-        if($request->geolocation_id) {
-            if(Cookie::get('geolocation_id') == null) {
-                return redirect()->back()->with("error", "GeoLocation Missing!");
-            }
-        }
         $template_id = 0;
         $page_id = 0;
         if($request->template_id != 0) {
@@ -1889,6 +1877,13 @@ class DataEntryController extends Controller
             if($error)
             return redirect()->back()->with("error", "Select Page to display content.")->withInput();
         }
+        $url = new WebUrl;
+        $url->template_id = $template_id;
+        $url->page_id = $page_id;
+        $url->url = $request->url;
+        $url->geolocation = $request->geolocation;
+        $url->user_id = Auth::id();
+        $url->save();
         $content = new Content;
         $content->content_type = "blade";
         $content->content = "";
@@ -1897,16 +1892,16 @@ class DataEntryController extends Controller
         $pageContent = new PageContent;
         $pageContent->template_id = $template_id;
         $pageContent->page_id = $page_id;
-        if($request->geolocation_id)
-        $pageContent->geolocation_id = Cookie::get('geolocation_id');
+        $pageContent->web_url_id = $url->id;
         $pageContent->broked = $request->broked;
         $pageContent->type = $request->type; 
         $pageContent->group_title = $request->group_title; 
         $pageContent->title = $request->title; 
-        $pageContent->url = $request->url;
         $pageContent->content_id = $content->id;
         $pageContent->user_id = Auth::id();
         $pageContent->save();
+        $url->page_content_id = $pageContent->id;
+        $url->save();
         if($page_id) {
         return redirect()->route('DataEntry.Blade', ["page_id" => $page_id, "content_id" => $content->id]);
         }
@@ -1915,9 +1910,9 @@ class DataEntryController extends Controller
     public function page_content_edit(Request $request) {
         $request->validate([
             "id" => "required|exists:page_contents",
-            "url" => "required|alpha_dash|max:500",
+            "url" => "required|alpha_dash|max:1000",
             "template_id" => "required|exists:templates,id",
-            "geolocation_id" => "required|boolean",
+            "geolocation" => "nullable|string|max:45",
             "page_id" => "required|integer",
             "broked" => "required|boolean",
             "title" => ['required',new alpha_dash_space,'max:250'],
@@ -1926,11 +1921,6 @@ class DataEntryController extends Controller
             "content_type" => "required|in:blade",
             "content" => "required|string|max:65500"
         ]);
-        if($request->geolocation_id) {
-            if(Cookie::get('geolocation_id') == null) {
-                return redirect()->back()->with("error", "GeoLocation Missing!");
-            }
-        }
         $page_id = 0;
         $content_id = 0;
         $template = Template::find($request->template_id);
@@ -1949,17 +1939,28 @@ class DataEntryController extends Controller
         $pageContent->getContent->save();
         $pageContent->template_id = $template->id;
         $pageContent->page_id = $page_id;
-        if($request->geolocation_id)
-        $pageContent->geolocation_id = Cookie::get('geolocation_id');
-        else
-        $pageContent->geolocation_id = 0;
         $pageContent->broked = $request->broked;
         $pageContent->type = $request->type; 
         $pageContent->group_title = $request->group_title; 
         $pageContent->title = $request->title; 
-        $pageContent->url = $request->url;
         $pageContent->user_id = Auth::id();
         $pageContent->save();
+        if($pageContent->web_url_id) {
+            $url = WebUrl::find($pageContent->web_url_id);
+        } else {
+            $url = new WebUrl;
+        }
+        $url->template_id = $template->id;
+        $url->page_id = $page_id;
+        $url->page_content_id = $pageContent->id;
+        $url->url = $request->url;
+        $url->geolocation = $request->geolocation;
+        $url->user_id = Auth::id();
+        $url->save();
+        if(!$pageContent->web_url_id) {
+            $pageContent->web_url_id = $url->id;
+            $pageContent->save();
+        }
         return redirect()->route('DataEntry.Page', ["template_id" => $request->template_id, "operation" => "show"])->with("message", $request->title." Edited Successfully!");
     }
     public function page_content_delete($id) {

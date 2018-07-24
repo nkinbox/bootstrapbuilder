@@ -46,7 +46,7 @@
                         <div class="card-body">
                             <input type="hidden" name="self[category]" value="basic">
                             <input type="hidden" name="self[node]" value="self">
-                            <input type="hidden" name="self[var_attributes]" value="[]">
+                            {{-- <input type="hidden" name="self[var_attributes]" value="[]"> --}}
                             <div class="form-group">
                                 <label>Start Tag</label>
                                 <input type="text" class="form-control" name="self[start_tag]">
