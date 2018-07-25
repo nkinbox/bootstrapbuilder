@@ -1334,6 +1334,7 @@ class TemplateController extends Controller
     public function WebView($pageURL) {
         $url = ["current" => '/'.$pageURL];
         $pageURL = str_replace(".html", "", $pageURL);
+        $url["title"] = ucwords(str_replace("-", " ", $pageURL));
         $page = 0;
         $content_id = 0;
         if(Cookie::get('template_id') == null || Cookie::get('country') == null)
@@ -1347,25 +1348,31 @@ class TemplateController extends Controller
             $isStaticPage = WebUrl::where(['template_id' => $template_id, "url" => $pageURL])->whereNull('regex')->get();
             if($count = count($isStaticPage)) {
                 if($count == 1) {
-                    $page = $isStaticPage[0]->PageContent->Page;
-                    $content_id = $isStaticPage[0]->PageContent->content_id;
-                    $url["title"] = $isStaticPage[0]->PageContent->title;
-                    $url["group_title"] = $isStaticPage[0]->PageContent->group_title;
+                    if($isStaticPage[0]->page_content_id) {
+                        $page = $isStaticPage[0]->PageContent->Page;
+                        $content_id = $isStaticPage[0]->PageContent->content_id;
+                        $url["title"] = $isStaticPage[0]->PageContent->title;
+                        $url["group_title"] = $isStaticPage[0]->PageContent->group_title;
+                    }
                     $webURL = $isStaticPage[0];
                 } else {
                     foreach($isStaticPage as $found) {
                         if($found->geolocation == null) {
                             $webURL = $found;
-                            $page = $found->PageContent->Page;
-                            $content_id = $found->PageContent->content_id;
-                            $url["title"] = $found->PageContent->title;
-                            $url["group_title"] = $found->PageContent->group_title;
+                            if($found->page_content_id) {
+                                $page = $found->PageContent->Page;
+                                $content_id = $found->PageContent->content_id;
+                                $url["title"] = $found->PageContent->title;
+                                $url["group_title"] = $found->PageContent->group_title;
+                            }
                         } elseif(strtolower($found->geolocation) == $country) {
                             $webURL = $found;
-                            $page = $found->PageContent->Page;
-                            $content_id = $found->PageContent->content_id;
-                            $url["title"] = $found->PageContent->title;
-                            $url["group_title"] = $found->PageContent->group_title;
+                            if($found->page_content_id) {
+                                $page = $found->PageContent->Page;
+                                $content_id = $found->PageContent->content_id;
+                                $url["title"] = $found->PageContent->title;
+                                $url["group_title"] = $found->PageContent->group_title;
+                            }
                         }
                     }
                 }
@@ -1375,20 +1382,21 @@ class TemplateController extends Controller
                     if(preg_match($weburl->regex, $pageURL, $matches)) {
                         $webURL = $weburl;
                         $match_var = json_decode($weburl->matches, true);
-                        $url["title"] = ucwords(str_replace("-", " ", $matches[0]));
                         foreach($match_var as $match_group => $var_name) {
                             $url[$var_name] = ucwords(str_replace("-", " ", $matches[intval($match_group)]));
                         }
-                        if($weburl->url_variables) {
-                            $url_variables = json_decode($weburl->url_variables, true);
-                            foreach($url_variables as $key => $val) {
-                                $url[$key] = $val;
-                            }
-                        }
-                        $page = $weburl->Page;
                         break;
                     }
                 }
+            }
+            if(!$page) {
+                if($webURL->url_variables) {
+                    $url_variables = json_decode($weburl->url_variables, true);
+                    foreach($url_variables as $key => $val) {
+                        $url[$key] = $val;
+                    }
+                }
+                $page = $webURL->Page;
             }
         }
         if($page) {
