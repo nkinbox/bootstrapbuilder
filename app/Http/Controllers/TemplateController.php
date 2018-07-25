@@ -1214,7 +1214,7 @@ class TemplateController extends Controller
         $url->css_id = $css_id;
         $url->user_id = Auth::id();
         $url->save();
-        return redirect()->route('Weburl', ['page_id' => $request->page_id])->with('message', $request->url.' Added Successfully');
+        return redirect()->route('WebUrl', ['page_id' => $request->page_id])->with('message', $request->url.' Added Successfully');
     }
     public function weburl_edit(Request $request) {
         $request->validate([
@@ -1294,7 +1294,7 @@ class TemplateController extends Controller
     }
     public function weburl_delete($page_id, $id) {
         Weburl::destroy($id);
-        return redirect()->route('Weburl', ['page_id' => $page_id])->with('message', 'URL Deleted Successfully');
+        return redirect()->route('WebUrl', ['page_id' => $page_id])->with('message', 'URL Deleted Successfully');
     }
     public function view($template_id, $id) {
         $url = [];
