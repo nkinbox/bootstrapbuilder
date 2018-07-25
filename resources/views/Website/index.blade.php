@@ -8,8 +8,8 @@ if($webURL) {
 $webScript = $webURL->getScript;
 $webStyle = $webURL->getCSS;
 } else {
-$webScript = "";
-$webStyle = "";
+$webScript = 0;
+$webStyle = 0;
 }
 $up = true;
 @endphp
@@ -90,6 +90,7 @@ if(isset($content_id) && $content_id) {
 @push('metadata')
 <?php
 $metadata = "";
+$metaContent = "";
 if($page->meta_id) {
     $metaContent = preg_replace_callback('/@@all(.*?)@@endall/', function($match_) use (&$metadata) {
         $metadata = $match_[1];
