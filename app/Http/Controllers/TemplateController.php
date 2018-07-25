@@ -183,6 +183,7 @@ class TemplateController extends Controller
             }
             return $evaluated;
         }, $html);
+        $html = str_replace("\\/", "/", $html);
         return $html;
     }
     public function index($operation = null, $id = null) {
