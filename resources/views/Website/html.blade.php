@@ -57,7 +57,7 @@ if($this_content) {
         return $propertyResolver($match_[1], $loops);
     }, json_encode($this_content));
     try {
-        eval("\$this_content=".$this_content.";");
+        dd("\$this_content=".$this_content.";");
     } catch (ParseError $e) {}
     echo $this_content;
 }
