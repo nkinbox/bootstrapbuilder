@@ -38,7 +38,7 @@
         else
         echo ' '.$key;
     }
-    $classes = json_decode($element->classes, true);
+    $classes = json_decode($element->Parent->classes, true);
     if(count($classes)) {
         echo ' class="'.implode(" ", $classes).'"';
     }
