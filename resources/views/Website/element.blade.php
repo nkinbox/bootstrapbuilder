@@ -47,7 +47,6 @@
 {{-- Parent Header END --}}
 @if($element->loop_source && $ls = \App\Models\LoopSource::find($element->loop_source))
 <?php
-    $debug = "";
     $database_variables = explode(".", $ls->database_variables);
     $loop_count++;
     $loops[$loop_count] = [
@@ -57,6 +56,7 @@
         "model_var" => ""
     ];
     $error = false;
+    $error_message = "";
     $eval = "";
     foreach($database_variables as $variable) {
         if($error)
@@ -64,7 +64,6 @@
         if($variable && $db_var = \App\Models\DatabaseVariable::find($variable)) {
             $isRelation = false;
             if($ls->relation) {
-            $debug = "Step 1.\n";
                 for($i = (count($loops) - 1); $i >= 0; $i--) {
                     if(isset($loops[$i]['related'][$db_var->object])) {
                         $isRelation = true;
@@ -76,7 +75,6 @@
                     }
                 }
             } else {
-            $debug = "Step 2.\n";
                 for($i = 0; $i < count($loops); $i++) {
                     if(isset($loops[$i]['related'][$db_var->object])) {
                         $isRelation = true;
@@ -89,12 +87,9 @@
                 }
             }
             if(!$isRelation) {
-                $debug = "Step 3.\n";
                 $isSet = false;
                 if(!$ls->object_query) {
-                    $debug = "Step 4.\n";
                     if($ls->relation) {
-                        $debug = "Step 5.\n";
                         for($i = (count($loops) - 1); $i >= 0; $i--) {
                             if(isset($loops[$i]['loaded'][$db_var->object])) {
                                 $isSet = true;
@@ -106,7 +101,6 @@
                             }
                         }
                     } else {
-                        $debug = "Step 6.\n";
                         for($i = 0; $i < count($loops); $i++) {
                             if(isset($loops[$i]['loaded'][$db_var->object])) {
                                 $isSet = true;
@@ -120,11 +114,9 @@
                     }
                 }
                 if(!$isSet) {
-                    $debug = "Step 7.\n";
                     $object_query = json_encode($ls->object_query);
                     $q_var = json_decode($ls->variables, true);
                     if(isset($q_var['url']) && is_array($q_var['url']) && count($q_var['url'])) {
-                        $debug = "Step 8.\n";
                         $object_query = preg_replace_callback('/@@(.*?)@@/', function($match_) use ($q_var, $url) {
                             if($match_[1]) {
                                 if(array_key_exists($match_[1], $q_var['url'])) {
@@ -139,7 +131,6 @@
                         }, $object_query);
                     }
                     if(isset($q_var['loop']) && is_array($q_var['loop']) && count($q_var['loop'])) {
-                        $debug = "Step 9.\n";
                         $object_query = preg_replace_callback('/@@(.*?)@@/', function($match_) use ($q_var, $loops, $propertyResolver) {
                             if($match_[1]) {
                                 if(array_key_exists($match_[1], $q_var['loop'])) {
@@ -151,34 +142,26 @@
                         }, $object_query);
                     }
                     try {
-                        $debug = "Step 10.\n";
                         eval("\$query = ".$object_query.";");
                         $loops[$loop_count]['loaded'][$db_var->object] = eval("return \App\Models\\".$db_var->object."::".(($query)?$query:"all()").";");
                     } catch (ParseError $e) {
-                        $debug = "Step 11.\n";
+                        $error_message = $e->message;
                         $error = 1;
                     }
                 }
                 if(!$error) {
-                    $debug = "Step 12.\n";
                     if($db_var->property) {
-                        $debug = "Step 13.\n";
                         if(!$isSet) {
-                            $debug = "Step 14.\n";
                             if(is_iterable($loops[$loop_count]['loaded'][$db_var->object]))
                             $eval = "\$value".$loop_count."->".$db_var->property;
                             else
                             $eval = "\$loops[".$loop_count."]['loaded']['".$db_var->object."']->".$db_var->property;
                         }
-                        else {
-                            $eval .= "->".$db_var->property;
-                            $debug = "Step 15.\n";
-                        }
+                        else
+                        $eval .= "->".$db_var->property;
                         if($db_var->related_to) {
-                            $debug = "Step 16.\n";
                             $relation = App\Models\DatabaseVariable::find($db_var->related_to);
                             if($relation) {
-                                $debug = "Step 17.\n";
                                 $bool = true;
                                 for($i = (count($loops) - 1); $i >= 0; $i--) {
                                     if(isset($loops[$i]['related'][$relation->object])) {
@@ -186,24 +169,17 @@
                                         break;
                                     }
                                 }
-                                if($bool) {
-                                    $debug = "Step 18.\n";
-                                    $loops[$loop_count]['related'][$relation->object] = $db_var->object;
-                                }
+                                if($bool)
+                                $loops[$loop_count]['related'][$relation->object] = $db_var->object;
                             }
                         }
                     } else {
-                        $debug = "Step 19.\n";
                         $eval = "\$loops[".$loop_count."]['loaded']['".$db_var->object."']";
                     }
                 }
-                // if($ls->id == 8)
-                //         dd($loops);
             } else {
-                $debug = "Step 20.\n";
                 $eval .= "->".$db_var->property;
                 if($db_var->related_to) {
-                    $debug = "Step 21.\n";
                     $relation = App\Models\DatabaseVariable::find($db_var->related_to);
                     if($relation) {
                         $bool = true;
@@ -261,6 +237,7 @@
         try {
             $loopThrough = eval("return " .$loops[$loop_count]['model_var']. " ;");
         } catch (ParseError $e) {
+            $error_message = $e->message;
             $loopThrough = [];
             $error = 2;
         }
@@ -281,13 +258,11 @@
         @include('Website.html')
     @endif
 @else
+<div class="d-none">
 <h1 class="text-danger">ERROR: Name: {{$element->name}} ID: {{$element->id}} Node: {{$element->node}} Error ID : {{$error}}</h1>
-@auth
-@if(Auth::user()->name == "Developer")
+<p>{{$error_message}}</p>
 <!-- {!!print_r($loops)!!} -->
-<!-- {!!$debug!!} -->
-@endif
-@endauth
+</div>
 @endif
 @else
     @include('Website.html')
