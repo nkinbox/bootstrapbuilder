@@ -54,10 +54,7 @@ if(isset($content[$element->id.'_'.$id])) {
 }
 if($this_content) {
     $this_content = preg_replace_callback('/@@database\.(.*?)@@/', function($match_) use ($propertyResolver, $loops) {
-        $res = $propertyResolver($match_[1], $loops);
-        if(isset($_GET['debug']))
-        $res = $res."<!--" .json_encode($res). "-->";
-        return $res;
+        return $propertyResolver($match_[1], $loops);
     }, json_encode($this_content));
     try {
         eval("\$this_content=".$this_content.";");
