@@ -91,9 +91,6 @@ class TemplateController extends Controller
             }
             $result = "@@DatabaseVariable@@";
             if($eval) {
-                if(isset($_GET['debug']))
-                $result = "\".".$eval.".\"<!--".json_encode($eval)."-->";
-                else
                 $result = "\".".$eval.".\"";
             }
             return $result;
