@@ -145,7 +145,7 @@
                         eval("\$query = ".$object_query.";");
                         $loops[$loop_count]['loaded'][$db_var->object] = eval("return \App\Models\\".$db_var->object."::".(($query)?$query:"all()").";");
                     } catch (ParseError $e) {
-                        $error_message = $e->message;
+                        $error_message = $e->getMessage;
                         $error = 1;
                     }
                 }
@@ -237,7 +237,7 @@
         try {
             $loopThrough = eval("return " .$loops[$loop_count]['model_var']. " ;");
         } catch (ParseError $e) {
-            $error_message = $e->message;
+            $error_message = $e->getMessage;
             $loopThrough = [];
             $error = 2;
         }
