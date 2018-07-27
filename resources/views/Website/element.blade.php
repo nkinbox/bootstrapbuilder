@@ -147,9 +147,6 @@
                         $error = 1;
                     }
                 }
-                dd($error);
-                if($ls->id == 8)
-                        dd($loops);
                 if(!$error) {
                     if($db_var->property) {
                         if(!$isSet) {
@@ -178,7 +175,8 @@
                         $eval = "\$loops[".$loop_count."]['loaded']['".$db_var->object."']";
                     }
                 }
-                echo $eval;
+                if($ls->id == 8)
+                        dd($loops);
             } else {
                 $eval .= "->".$db_var->property;
                 if($db_var->related_to) {
