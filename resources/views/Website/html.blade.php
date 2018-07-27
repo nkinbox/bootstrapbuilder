@@ -57,13 +57,7 @@ if($this_content) {
         return $propertyResolver($match_[1], $loops, isset($_GET['debug']));
     }, json_encode($this_content));
     try {
-        if($loop_count > 1)
-        dd("\$this_content=".$this_content.";");
-        else {
-            # code...
         eval("\$this_content=".$this_content.";");
-
-        }
     } catch (ParseError $e) {}
     echo $this_content;
 }

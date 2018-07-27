@@ -95,7 +95,7 @@ class TemplateController extends Controller
             $result = str_replace("@","",$toresolve);
             if($eval) {
                 if($debug)
-                $result = "\".".$eval.".\"<!--".json_encode($eval)."-->";
+                $result = "\".".$eval.".\"<!--".str_replace("$", "\\$", $eval)."-->";
                 else
                 $result = "\".".$eval.".\"";
             }
