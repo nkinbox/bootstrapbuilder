@@ -142,8 +142,6 @@
                     }
                     try {
                         eval("\$query = ".$object_query.";");
-                        if($ls->id == 8)
-                        dd("return \App\Models\\".$db_var->object."::".(($query)?$query:"all()").";");
                         $loops[$loop_count]['loaded'][$db_var->object] = eval("return \App\Models\\".$db_var->object."::".(($query)?$query:"all()").";");
                     } catch (ParseError $e) {
                         $continue = false;
@@ -202,6 +200,8 @@
             $loops[$loop_count]['isArray'] = false;
         }
     }
+    if($ls->id == 8)
+    dd($eval);
     if($eval) {
         $property_query = "";
         if($ls->property_query) {            
