@@ -175,6 +175,7 @@
                         $eval = "\$loops[".$loop_count."]['loaded']['".$db_var->object."']";
                     }
                 }
+                dd($eval);
             } else {
                 $eval .= "->".$db_var->property;
                 if($db_var->related_to) {
