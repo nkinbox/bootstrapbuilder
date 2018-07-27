@@ -23,7 +23,7 @@ class TemplateController extends Controller
     private $response;
     private $propertyResolver;
     function __construct() {
-        $this->propertyResolver = function($toresolve, &$loops) {
+        $this->propertyResolver = function($toresolve, &$loops, $debug = false) {
             //$database_variables = "@@database.1.2.3|(first/last)@@"
             $temp = explode("|", $toresolve."|last");
             $database_variables = explode(".", $temp[0]);
@@ -87,10 +87,16 @@ class TemplateController extends Controller
                     } else {
                         $eval .= "->".$db_var->property;
                     }
+                    if(!$db_var->is_array && $db->related_to) {
+                        $eval .= "->".$db_var->property;
+                    }
                 }
             }
-            $result = "@@DatabaseVariable@@";
+            $result = str_replace("@","",$toresolve);
             if($eval) {
+                if($debug)
+                $result = "\".".$eval.".\"<!--".json_encode($eval)."-->";
+                else
                 $result = "\".".$eval.".\"";
             }
             return $result;
