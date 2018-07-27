@@ -142,6 +142,8 @@
                     }
                     try {
                         eval("\$query = ".$object_query.";");
+                        if($ls->id == 8)
+                        dd("return \App\Models\\".$db_var->object."::".(($query)?$query:"all()").";");
                         $loops[$loop_count]['loaded'][$db_var->object] = eval("return \App\Models\\".$db_var->object."::".(($query)?$query:"all()").";");
                     } catch (ParseError $e) {
                         $continue = false;
