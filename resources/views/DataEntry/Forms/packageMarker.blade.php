@@ -10,7 +10,7 @@
                     <input type="hidden" name="package_id" value="{{$package->id}}">
                     @csrf
                     @php
-                    $markers_type = App\Models\DataMarker::select('type')->where('category', 'setting')->groupBy('type')->orderBy('type')->get();
+                    $markers_type = App\Models\DataMarker::select('type')->where('category', 'setng')->groupBy('type')->orderBy('type')->get();
                     @endphp
                     @foreach($markers_type as $marker_type)
                     <div class="card my-2">
@@ -20,7 +20,7 @@
                     <div class="card-body">
                     <div class="card-text">
                     @php
-                    $markers = App\Models\DataMarker::where(["category" => "setting", "type" => $marker_type->type])->get();
+                    $markers = App\Models\DataMarker::where(["category" => "setng", "type" => $marker_type->type])->get();
                     $count = count($markers);
                     @endphp
                     @foreach($markers as $marker)
