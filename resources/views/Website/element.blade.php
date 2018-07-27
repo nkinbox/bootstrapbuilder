@@ -55,10 +55,10 @@
         "isArray" => false,
         "model_var" => ""
     ];
-    $continue = true;
+    $error = false;
     $eval = "";
     foreach($database_variables as $variable) {
-        if(!$continue)
+        if($error)
         break;
         if($variable && $db_var = \App\Models\DatabaseVariable::find($variable)) {
             $isRelation = false;
@@ -144,10 +144,10 @@
                         eval("\$query = ".$object_query.";");
                         $loops[$loop_count]['loaded'][$db_var->object] = eval("return \App\Models\\".$db_var->object."::".(($query)?$query:"all()").";");
                     } catch (ParseError $e) {
-                        $continue = false;
+                        $error = 1;
                     }
                 }
-                if($continue) {
+                if(!$error) {
                     if($db_var->property) {
                         if(!$isSet) {
                             if(is_iterable($loops[$loop_count]['loaded'][$db_var->object]))
@@ -200,8 +200,6 @@
             $loops[$loop_count]['isArray'] = false;
         }
     }
-    if($ls->id == 8)
-    dd($eval);
     if($eval) {
         $property_query = "";
         if($ls->property_query) {            
@@ -238,11 +236,11 @@
             $loopThrough = eval("return " .$loops[$loop_count]['model_var']. " ;");
         } catch (ParseError $e) {
             $loopThrough = [];
-            $continue = false;
+            $error = 2;
         }
-    } else $continue = false;
+    } else $error = 3;
 ?>
-@if($continue)
+@if(!$error)
     @if($loops[$loop_count]['isArray'])
     @if($loopThrough instanceof \Illuminate\Pagination\LengthAwarePaginator)
     <div class="pagination_container">{{$loopThrough->links()}}</div>
@@ -257,7 +255,7 @@
         @include('Website.html')
     @endif
 @else
-<h1 class="text-danger">ERROR: Name: {{$element->name}} ID: {{$element->id}} Node: {{$element->node}}</h1>
+<h1 class="text-danger">ERROR: Name: {{$element->name}} ID: {{$element->id}} Node: {{$element->node}} Error ID : {{$error}}</h1>
 <!-- {!!print_r($loops)!!} -->
 @endif
 @else
