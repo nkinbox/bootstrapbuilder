@@ -87,7 +87,7 @@ class TemplateController extends Controller
                     } else {
                         $eval .= "->".$db_var->property;
                     }
-                    if(!$db_var->is_array && $db->related_to) {
+                    if(!$db_var->is_array && $db_var->related_to) {
                         $eval .= "->".$db_var->property;
                     }
                 }
