@@ -21,7 +21,6 @@
                     <div class="card-text">
                     @php
                     $markers = App\Models\DataMarker::where(["category" => "setng", "type" => $marker_type->type])->get();
-                    $count = count($markers);
                     @endphp
                     @foreach($markers as $marker)
                     <?php
@@ -47,16 +46,8 @@
                             </label>
                         </div>
                         <div class="input-group-append">
-                        <select class="custom-select" name="order[{{$marker->id}}]">
-                            <option value="0">Order</option>
-                            @for($i=1; $i<=$count; $i++)
-                            <option{{($i == $order)?' selected':''}}>{{$i}}</option>
-                            @endfor
-                        </select>
-                        <select class="custom-select" name="primary[{{$marker->id}}]">
-                            <option value="0">Secondary</option>
-                            <option value="1"{{($primary)?' selected':''}}>Primary</option>
-                        </select>
+                        <input type="text" class="form-control" placeholder="Order Number" tabindex="1" name="order[{{$marker->id}}]" value="{{$order}}">
+                        <input type="hidden" name="primary[{{$marker->id}}]" value="0">
                         </div>
                     </div>
                     @endforeach
