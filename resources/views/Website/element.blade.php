@@ -286,6 +286,7 @@
 @if(Auth::user()->name == "Developer")
 <!-- {!!print_r($loops)!!} -->
 <!-- {!!$debug!!} -->
+@endif
 @endauth
 @endif
 @else
