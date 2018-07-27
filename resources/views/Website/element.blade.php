@@ -256,7 +256,7 @@
     @endif
 @else
 <h1 class="text-danger">ERROR: Name: {{$element->name}} ID: {{$element->id}} Node: {{$element->node}}</h1>
-<!-- {{$loops}} -->
+<!-- {!!print_r($loops)!!} -->
 @endif
 @else
     @include('Website.html')
