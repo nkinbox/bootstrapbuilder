@@ -175,8 +175,7 @@
                         $eval = "\$loops[".$loop_count."]['loaded']['".$db_var->object."']";
                     }
                 }
-                if($ls->id == 8)
-                dd($eval);
+                echo $eval;
             } else {
                 $eval .= "->".$db_var->property;
                 if($db_var->related_to) {
