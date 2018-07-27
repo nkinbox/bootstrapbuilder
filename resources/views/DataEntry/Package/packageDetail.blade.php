@@ -15,6 +15,7 @@
                             <tr>
                             <th scope="col">#</th>
                             <th scope="col">Title</th>
+                            <th scope="col">Setting</th>
                             <th scope="col">Content</th>
                             @if(Auth::user()->admin)
                             <th scope="col">User</th>
@@ -31,11 +32,13 @@
                             ?>
                             <tr>
                             <th scope="row"{!! (!$isComplete)?' class="bg-danger text-light"':'' !!}>{{$loop->iteration}}</th>
-                            <td{!!($packageDetail->PackageMarker->where('title', 'PrimaryPackage')->first())?' class="bg-primary text-light"':''!!}><a href="{{ route('DataEntry.Package.Detail',['package_id' => $package->id, 'operation' => 'show', 'id' => $packageDetail->id])}}">
+                            <td><a href="{{ route('DataEntry.Package.Detail',['package_id' => $package->id, 'operation' => 'show', 'id' => $packageDetail->id])}}">
                                 {{ ($packageDetail->nights)?($packageDetail->nights > 1)?$packageDetail->nights.' Nights':'1 Night':'Only' }}
                                 {{ ($packageDetail->days)?($packageDetail->days > 1)?$packageDetail->days.' Days':'1 Day':'Only' }}
-                                {!! ($index = $packageDetail->PackageMarker->where('title', 'Index')->first())?' <b>(Index)[' .$index->pivot->order. ']</b>':'' !!}
                                 </a>
+                            </td>
+                            <td{!!($packageDetail->PackageMarker->where('title', 'PrimaryPackage')->first())?' class="bg-primary text-light"':''!!}>
+                                    {!! ($index = $packageDetail->PackageMarker->where('title', 'Index')->first())?' <b>(Index)[' .$index->pivot->order. ']</b>':'' !!}
                             </td>
                             <td>
                                 @if($packageDetail->content_id)
