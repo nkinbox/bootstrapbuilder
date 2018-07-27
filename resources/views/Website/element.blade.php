@@ -197,8 +197,8 @@
                         $eval = "\$loops[".$loop_count."]['loaded']['".$db_var->object."']";
                     }
                 }
-                if($ls->id == 8)
-                        dd($loops);
+                // if($ls->id == 8)
+                //         dd($loops);
             } else {
                 $debug = "Step 20.\n";
                 $eval .= "->".$db_var->property;
