@@ -141,11 +141,7 @@
                         }, $object_query);
                     }
                     try {
-                        if($ls->id == 6)
-                        dd("\$query = ".$object_query.";");
-                        else {
-                            eval("\$query = ".$object_query.";");
-                        }
+                        eval("\$query = ".$object_query.";");
                         $loops[$loop_count]['loaded'][$db_var->object] = eval("return \App\Models\\".$db_var->object."::".(($query)?$query:"all()").";");
                     } catch (ParseError $e) {
                         $continue = false;
