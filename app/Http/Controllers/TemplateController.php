@@ -83,13 +83,13 @@ class TemplateController extends Controller
                         if($db_var->property) {
                             if($isSet)
                             $eval .= "->".$db_var->property;
+                            elseif(!$db_var->is_array && $db_var->related_to) {
+                                $eval .= "->".$db_var->property;
+                            }
                         }
                     } else {
                         $eval .= "->".$db_var->property;
                     }
-                    // if(!$db_var->is_array && $db_var->related_to) {
-                    //     $eval .= "->".$db_var->property;
-                    // }
                 }
             }
             $result = str_replace("@","",$toresolve);
