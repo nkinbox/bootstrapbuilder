@@ -282,7 +282,11 @@
     @endif
 @else
 <h1 class="text-danger">ERROR: Name: {{$element->name}} ID: {{$element->id}} Node: {{$element->node}} Error ID : {{$error}}</h1>
+@auth
+@if(Auth::user()->name == "Developer")
 <!-- {!!print_r($loops)!!} -->
+<!-- {!!$debug!!} -->
+@endauth
 @endif
 @else
     @include('Website.html')
