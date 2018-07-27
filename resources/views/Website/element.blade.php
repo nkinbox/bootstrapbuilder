@@ -243,7 +243,9 @@
         }
     } else $error = 3;
 ?>
+@if(isset($_GET['debug']))
 <!-- {!!print_r($loops)!!} -->
+@endif
 @if(!$error)
     @if($loops[$loop_count]['isArray'])
     @if($loopThrough instanceof \Illuminate\Pagination\LengthAwarePaginator)
