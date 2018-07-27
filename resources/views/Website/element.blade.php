@@ -243,6 +243,7 @@
         }
     } else $error = 3;
 ?>
+<!-- {!!print_r($loops)!!} -->
 @if(!$error)
     @if($loops[$loop_count]['isArray'])
     @if($loopThrough instanceof \Illuminate\Pagination\LengthAwarePaginator)
@@ -259,9 +260,8 @@
     @endif
 @else
 <div class="d-none">
-<h1 class="text-danger">ERROR: Name: {{$element->name}} ID: {{$element->id}} Node: {{$element->node}} Error ID : {{$error}}</h1>
-<p>{{$error_message}}</p>
-<!-- {!!print_r($loops)!!} -->
+    <h1 class="text-danger">ERROR: Name: {{$element->name}} ID: {{$element->id}} Node: {{$element->node}} Error ID : {{$error}}</h1>
+    <p>{{$error_message}}</p>
 </div>
 @endif
 @else
