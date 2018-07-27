@@ -147,6 +147,7 @@
                         $error = 1;
                     }
                 }
+                dd($error);
                 if($ls->id == 8)
                         dd($loops);
                 if(!$error) {
