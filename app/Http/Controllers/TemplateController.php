@@ -102,13 +102,13 @@ class TemplateController extends Controller
                 }
             }
             if($toresolve == "@@database.10.9@@")
-            dd($eval);
+            echo $a;
             $result = str_replace("@","",$toresolve);
             if($eval) {
                 if($debug)
-                $result = "\".(isset(".$eval.")?'".$eval."':'').\"<!--".str_replace("$", "\\$", $eval)."-->";
+                $result = "\".((isset(".$eval."))?".$eval.":'').\"<!--".str_replace("$", "\\$", $eval)."-->";
                 else
-                $result = "\".(isset(".$eval.")?'".$eval."':'').\"";
+                $result = "\".((isset(".$eval."))?".$eval.":'').\"";
             }
             return $result;
         };
