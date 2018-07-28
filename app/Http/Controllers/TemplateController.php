@@ -29,10 +29,10 @@ class TemplateController extends Controller
             $database_variables = explode(".", $temp[0]);
             $relation = $temp[1];
             $eval = "";
+            $hasOneRelation = false;
             foreach($database_variables as $variable) {
                 if($variable && $db_var = \App\Models\DatabaseVariable::find($variable)) {
                     $isRelation = false;
-                    $hasOneRelation = false;
                     if($relation == "first") {
                         for($i = 0; $i < count($loops); $i++) {
                             if(isset($loops[$i]['related'][$db_var->object])) {
