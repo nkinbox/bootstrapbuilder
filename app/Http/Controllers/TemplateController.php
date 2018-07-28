@@ -82,18 +82,22 @@ class TemplateController extends Controller
                             }
                         }
                         if($db_var->property) {
-                            if($isSet)
-                            $eval .= "->".$db_var->property;
+                            if($isSet) {
+                                $eval .= "->".$db_var->property;
+                                if(!$db_var->is_array && $db_var->related_to) {
+                                    $hasOneRelation = true;
+                                }
+                            }
                         }
                     } else {
                         $eval .= "->".$db_var->property;
+                        if(!$db_var->is_array && $db_var->related_to) {
+                            $hasOneRelation = true;
+                        }
                     }
                     if($eval && $hasOneRelation) {
                         $eval .= "->".$db_var->property;
                         $hasOneRelation = false;
-                    }
-                    if($eval && !$db_var->is_array && $db_var->related_to) {
-                        $hasOneRelation = true;
                     }
                 }
             }
