@@ -32,6 +32,7 @@ class TemplateController extends Controller
             foreach($database_variables as $variable) {
                 if($variable && $db_var = \App\Models\DatabaseVariable::find($variable)) {
                     $isRelation = false;
+                    $hasOneRelation = false;
                     if($relation == "first") {
                         for($i = 0; $i < count($loops); $i++) {
                             if(isset($loops[$i]['related'][$db_var->object])) {
@@ -83,11 +84,14 @@ class TemplateController extends Controller
                         if($db_var->property) {
                             if($isSet)
                             $eval .= "->".$db_var->property;
-                            elseif(!$db_var->is_array && $db_var->related_to) {
-                                $eval .= "->".$db_var->property;
-                            }
                         }
                     } else {
+                        $eval .= "->".$db_var->property;
+                    }
+                    if($eval && !$db_var->is_array && $db_var->related_to) {
+                        $hasOneRelation = true;
+                    }
+                    if($eval && $hasOneRelation) {
                         $eval .= "->".$db_var->property;
                     }
                 }
