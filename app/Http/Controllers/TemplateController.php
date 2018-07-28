@@ -96,17 +96,19 @@ class TemplateController extends Controller
                         }
                     }
                     if($eval && $hasOneRelation) {
-                        $eval .= "->".$db_var->property;
+                        //$eval .= "->".$db_var->property;
                         $hasOneRelation = false;
                     }
                 }
             }
+            if($toresolve == "@@database.10.9@@")
+            dd($eval);
             $result = str_replace("@","",$toresolve);
             if($eval) {
                 if($debug)
-                $result = "\".".$eval.".\"<!--".str_replace("$", "\\$", $eval)."-->";
+                $result = "\".(isset(".$eval.")?'".$eval."':'').\"<!--".str_replace("$", "\\$", $eval)."-->";
                 else
-                $result = "\".".$eval.".\"";
+                $result = "\".(isset(".$eval.")?'".$eval."':'').\"";
             }
             return $result;
         };
