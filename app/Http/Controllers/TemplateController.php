@@ -167,6 +167,10 @@ class TemplateController extends Controller
             $image = \App\Models\Images::find($match_[1]);
             return 'src="' .(($image)?asset('storage/'.$image->file_name):'#'). '" title="' .(($image)?$image->image_title:'Image'). '"';
         }, $html);
+        $html = preg_replace_callback('/@@image\.(.*?)@@/', function($match_) {
+            $image = \App\Models\Images::find($match_[1]);
+            return (($image)?asset('storage/'.$image->file_name):'#');
+        }, $html);
         //replaces Evaluates Variable
         $html = preg_replace_callback('/@@evaluate\.(.*?)@@/', function($match_) use ($template_id, &$variables) {
             $variable = \App\Models\Variables::where(["template_id" => $template_id, "variable_name" => $match_[1]])->first();
