@@ -96,13 +96,11 @@ class TemplateController extends Controller
                         }
                     }
                     if($eval && $hasOneRelation) {
-                        //$eval .= "->".$db_var->property;
+                        $eval .= "->".$db_var->property;
                         $hasOneRelation = false;
                     }
                 }
             }
-            if($toresolve == "@@database.10.9@@")
-            echo $a;
             $result = str_replace("@","",$toresolve);
             if($eval) {
                 if($debug)
