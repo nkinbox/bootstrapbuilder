@@ -85,17 +85,17 @@ class TemplateController extends Controller
                             if($isSet) {
                                 $eval .= "->".$db_var->property;
                                 if(!$db_var->is_array && $db_var->related_to) {
-                                    $hasOneRelation = true;
+                                    $hasOneRelation = $db_var->related_to;
                                 }
                             }
                         }
                     } else {
                         $eval .= "->".$db_var->property;
                         if(!$db_var->is_array && $db_var->related_to) {
-                            $hasOneRelation = true;
+                            $hasOneRelation = $db_var->related_to;
                         }
                     }
-                    if($eval && $hasOneRelation) {
+                    if($eval && $hasOneRelation && $hasOneRelation != $db_var->related_to) {
                         $eval .= "->".$db_var->property;
                         $hasOneRelation = false;
                     }
