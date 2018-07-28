@@ -233,7 +233,7 @@
                 }, $property_query);
             }
         }
-        $loops[$loop_count]['model_var'] = $eval.(($property_query)?"->".$property_query:"");
+        $loops[$loop_count]['model_var'] = $eval.(($property_query)?"()->".$property_query:"");
         try {
             $loopThrough = eval("return " .$loops[$loop_count]['model_var']. " ;");
         } catch (ParseError $e) {
