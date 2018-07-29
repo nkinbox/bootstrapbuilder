@@ -190,7 +190,8 @@ class TemplateController extends Controller
         $html = preg_replace_callback('/@@php(.*?)phpend@@/', function($match_) use ($variables) {
             $evaluated = "";
             if($match_[1]) {
-                eval($match_[1]);
+                $eval = str_replace("@", "$", $match_[1]);
+                eval($eval);
             }
             return $evaluated;
         }, $html);
