@@ -43,7 +43,7 @@
                 <div class="input-group-prepend">
                     <span class="input-group-text">Property Query</span>
                 </div>
-                <input type="text" class="form-control" name="property_query" placeholder='where("","")->get()' value="{{ old("query_string", (($loopsource)?$loopsource->property_query:'')) }}">
+                <input type="text" class="form-control" name="property_query" placeholder='where("","")->get()' value="{{ old("property_query", (($loopsource)?$loopsource->property_query:'')) }}">
             </div>   
             <div class="input-group mb-3">
                 <div class="input-group-prepend">
