@@ -187,7 +187,7 @@ class TemplateController extends Controller
                 return $auth->{$match_[1]};
             }, $html);
         }
-        $html = preg_replace_callback('/@@php(.*?)@@phpend/', function($match_) use ($variables) {
+        $html = preg_replace_callback('/@@php(.*?)phpend@@/', function($match_) use ($variables) {
             $evaluated = "";
             if($match_[1]) {
                 eval($match_[1]);
