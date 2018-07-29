@@ -239,6 +239,7 @@
         $loops[$loop_count]['model_var'] = $eval.(($property_query)?"()->".$property_query:"");
         try {
             $loopThrough = eval("return " .$loops[$loop_count]['model_var']. " ;");
+            $loops[$loop_count]['isArray'] = is_iterable($loopThrough);
         } catch (ParseError $e) {
             $error_message = "return " .$loops[$loop_count]['model_var']. " ;\n".$e->getMessage();
             $loopThrough = [];
