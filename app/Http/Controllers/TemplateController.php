@@ -84,14 +84,15 @@ class TemplateController extends Controller
                         if($db_var->property) {
                             if($isSet) {
                                 $eval .= "->".$db_var->property;
-                                if(!$db_var->is_array && $db_var->related_to) {
+                                // if(!$db_var->is_array && $db_var->related_to) {
+                                if($db_var->related_to) {
                                     $hasOneRelation = $db_var->related_to;
                                 }
                             }
                         }
                     } else {
                         $eval .= "->".$db_var->property;
-                        if(!$db_var->is_array && $db_var->related_to) {
+                        if($db_var->related_to) {
                             $hasOneRelation = $db_var->related_to;
                         }
                     }
