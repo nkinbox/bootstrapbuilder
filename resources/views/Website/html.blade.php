@@ -70,6 +70,9 @@ if($this_content) {
         }
         return strtolower(str_replace(" ", "-", $url));
     }, $this_content);
+    if(sset($_GET['debug'])) {
+        echo "<!--" .$this_content. "-->";
+    }
     try {
         eval("\$this_content=".$this_content.";");
     } catch (ParseError $e) {}
