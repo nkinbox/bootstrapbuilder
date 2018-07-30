@@ -10,8 +10,9 @@
         $url = $weburl->url;
         $builder = json_decode($weburl->url_builder, true);
         foreach($builder as $key => $val) {
-            if(preg_match('/@@database\.(.*?)@@/', $val)) {
-                $val = $propertyResolver($val, $loops);
+            $m = [];
+            if(preg_match('/@@database\.(.*?)@@/', $val, $m)) {
+                $val = $propertyResolver($m[1], $loops);
             }
             $url = str_replace($key, $val, $url);
         }
@@ -65,7 +66,6 @@ if($this_content) {
             if(preg_match('/@@database\.(.*?)@@/', $val, $m)) {
                 $val = $propertyResolver($m[1], $loops);
             }
-            dd($val);
             $url = str_replace($key, $val, $url);
         }
         return strtolower(str_replace(" ", "-", $url));
