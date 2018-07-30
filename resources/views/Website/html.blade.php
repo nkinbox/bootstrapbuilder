@@ -70,7 +70,7 @@ if($this_content) {
         }
         return strtolower(str_replace(" ", "-", $url));
     }, $this_content);
-    if(sset($_GET['debug'])) {
+    if(isset($_GET['debug'])) {
         echo "<!--" .$this_content. "-->";
     }
     try {
