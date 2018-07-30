@@ -195,6 +195,9 @@ class TemplateController extends Controller
             }
             return $evaluated;
         }, $html);
+        $html = preg_replace_callback('/@@url\.(.*?)@@/', function($match_) use ($variables) {
+            return strtolower(str_replace(" ", "-", $match_[1]));
+        }, $html);
         //replaces Variables
         $html = preg_replace_callback('/@@(.*?)@@/', function($match_) use ($variables) {
             $evaluated = "";

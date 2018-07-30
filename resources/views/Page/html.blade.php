@@ -16,7 +16,7 @@
             }
             $url = str_replace($key, $val, $url);
         }
-        return strtolower(str_replace(" ", "-", $url));
+        return  "@@url.".$url."@@";
     }, $attributes);
     try {
         eval("\$attributes=".$attributes.";");
@@ -68,7 +68,7 @@ if($this_content) {
             }
             $url = str_replace($key, $val, $url);
         }
-        return strtolower(str_replace(" ", "-", $url));
+        return  "@@url.".$url."@@";
     }, $this_content);
     try {
         eval("\$this_content=".$this_content.";");
