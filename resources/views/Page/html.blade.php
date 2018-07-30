@@ -56,6 +56,18 @@ if($this_content) {
     $this_content = preg_replace_callback('/@@database\.(.*?)@@/', function($match_) use ($propertyResolver, $loops) {
         return $propertyResolver($match_[1], $loops);
     }, json_encode($this_content));
+    $this_content = preg_replace_callback('/@@url\.(.*?)@@/', function($match_) use ($propertyResolver, $loops) {
+        $weburl = \App\Models\WebUrl::find($match_[1]);
+        $url = $weburl->url;
+        $builder = json_decode($weburl->url_builder, true);
+        foreach($builder as $key => $val) {
+            if(preg_match('/@@database\.(.*?)@@/', $val)) {
+                $val = $propertyResolver($val, $loops);
+            }
+            $url = str_replace($key, $val, $url);
+        }
+        return strtolower(str_replace(" ", "-", $url));
+    }, $this_content);
     try {
         eval("\$this_content=".$this_content.";");
     } catch (ParseError $e) {}
