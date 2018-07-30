@@ -70,9 +70,6 @@ if($this_content) {
         }
         return  "@@url.".$url."@@";
     }, $this_content);
-    if(isset($_GET['debug'])) {
-        echo "<!-- " .$this_content. " -->";
-    }
     try {
         eval("\$this_content=".$this_content.";");
     } catch (ParseError $e) {}
