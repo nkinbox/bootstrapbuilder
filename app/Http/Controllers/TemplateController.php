@@ -145,6 +145,7 @@ class TemplateController extends Controller
             $component = \App\Models\Components::find($match_[1]);
             if($component) {
                 $view = \Illuminate\Support\Facades\View::make('Website.element', [
+                    'id' => 0,
                     'element' => $component,
                     'url' => $url,
                     'loop_count' => -1,
