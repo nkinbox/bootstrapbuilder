@@ -139,7 +139,21 @@ class TemplateController extends Controller
         $component->save();
         return $component->id;
     }
-    private function HTMLTouchUp($template_id, $html, &$variables, $geolocation) {
+    private function HTMLTouchUp($template_id, $url, $html, &$variables, $geolocation) {
+        $propertyResolver = $this->propertyResolver;
+        $html = preg_replace_callback('/@@component\.(.*?)@@/', function($match_) use ($url, $propertyResolver) {
+            $component = \App\Models\Components::find($match_[1]);
+            if($component) {
+                $view = Illuminate\Support\Facades\View::make('Website.element', [
+                    'element' => $component,
+                    'url' => $url,
+                    'loop_count' => -1,
+                    'loops' => [],
+                    'propertyResolver' => $propertyResolver
+                ]);
+                return $view->render();
+            } else return "";
+        }, $html);
         $html = preg_replace_callback('/@@currency\.(.*?)@@/', function($match_) use ($geolocation) {
             $temp = explode(".", $match_[1]);
             if(count($temp) == 2) {
@@ -1440,7 +1454,7 @@ class TemplateController extends Controller
                 'propertyResolver' => $this->propertyResolver
             ]);
             $html = $view->render();
-            $html = $this->HTMLTouchUp($template_id, $html, $variables, $geolocation);
+            $html = $this->HTMLTouchUp($template_id, $url, $html, $variables, $geolocation);
             return $html;
         }
         return redirect()->route('home')->with("error", "Web URL could not be resolved.");
