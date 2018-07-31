@@ -152,6 +152,7 @@ class TemplateController extends Controller
                     'loops' => [],
                     'propertyResolver' => $propertyResolver
                 ]);
+                dd($view->render());
                 return $view->render();
             } else return "";
         }, $html);
