@@ -1355,7 +1355,7 @@ class TemplateController extends Controller
                 'propertyResolver' => $this->propertyResolver
             ]);
             $html = $view->render();
-            $html = $this->HTMLTouchUp($template_id, $html, $variables, $geolocation);
+            $html = $this->HTMLTouchUp($template_id, $url, $html, $variables, $geolocation);
             if(Auth::user()->admin) {
                 $html .= "<!--".json_encode($variables)."-->";
                 $pageVar = "";
