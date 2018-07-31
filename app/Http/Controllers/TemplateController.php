@@ -144,7 +144,7 @@ class TemplateController extends Controller
         $html = preg_replace_callback('/@@component\.(.*?)@@/', function($match_) use ($url, $propertyResolver) {
             $component = \App\Models\Components::find($match_[1]);
             if($component) {
-                $view = Illuminate\Support\Facades\View::make('Website.element', [
+                $view = \Illuminate\Support\Facades\View::make('Website.element', [
                     'element' => $component,
                     'url' => $url,
                     'loop_count' => -1,
