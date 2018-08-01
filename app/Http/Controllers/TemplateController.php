@@ -566,13 +566,14 @@ class TemplateController extends Controller
                             foreach($pages->AllComponents as $pageComponents){
                                 $existspageComponent = Components::find($pageComponents->component_id);
                                 $existing_component = Components::where(["template_id" => $template->id, "name" => ($existspageComponent->name . "_" . $template->id), "node" => "self"])->first();
-                                dd(array($existspageComponent, $existing_component));
-                                if(PageComponent::where(["page_id" => $page->id, "component_id" => $existing_component->id, "order" => $pageComponents->order])->first() == null) {
-                                    $pageComponent = new PageComponent;
-                                    $pageComponent->page_id = $page->id;
-                                    $pageComponent->component_id = $existing_component->id;
-                                    $pageComponent->order = $pageComponents->order;
-                                    $pageComponent->save();
+                                if($existing_component) {
+                                    if(PageComponent::where(["page_id" => $page->id, "component_id" => $existing_component->id, "order" => $pageComponents->order])->first() == null) {
+                                        $pageComponent = new PageComponent;
+                                        $pageComponent->page_id = $page->id;
+                                        $pageComponent->component_id = $existing_component->id;
+                                        $pageComponent->order = $pageComponents->order;
+                                        $pageComponent->save();
+                                    }
                                 }
                             }
                         }
