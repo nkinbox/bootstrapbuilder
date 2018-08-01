@@ -500,7 +500,7 @@ class TemplateController extends Controller
             if($parentTemplate->AllComponents) {
                 $nested = [];
                 foreach($parentTemplate->AllComponents as $components) {
-                    $exists = Components::where('name', $components->name ."_".$template->id)->first();
+                    $exists = Components::where(['name' => $components->name ."_".$template->id, "node" => $components->node, "child_order" => $components->child_order])->first();
                     if($exists == null) {
                         $component = new Components;
                         $component->name = $components->name ."_".$template->id;
