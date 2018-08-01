@@ -36,9 +36,7 @@ class WebUrl extends Model
             $model->getMetadata()->delete();
             $model->getScript()->delete();
             $model->getCSS()->delete();
-            if($model->PageContent) {
-                $model->PageContent->update(["web_url_id" => 0]);
-            }
+            $model->PageContent()->update(["web_url_id" => 0]);
         });
     }
 }

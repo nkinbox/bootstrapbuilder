@@ -25,8 +25,10 @@ class PageContent extends Model
         parent::boot();        
         static::deleting(function($model) {
             $model->getContent()->delete();
-            if($model->url)
-            $model->url->delete();
+            // $model->url->getMetadata()->delete();
+            // $model->url->getScript()->delete();
+            // $model->url->getCSS()->delete();
+            $model->url()->delete();
         });
     }
 }
