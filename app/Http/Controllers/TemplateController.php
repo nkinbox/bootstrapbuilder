@@ -1601,6 +1601,7 @@ class TemplateController extends Controller
                 'propertyResolver' => $this->propertyResolver
             ]);
             $html = $view->render();
+            dd($url);
             $html = $this->HTMLTouchUp($template_id, $url, $html, $variables, $geolocation);
             return $html;
         }
