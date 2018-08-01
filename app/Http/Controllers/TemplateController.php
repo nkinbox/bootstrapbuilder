@@ -1495,7 +1495,7 @@ class TemplateController extends Controller
         if($page) {
             $variables = [];
             $mode = Cookie::get('mode');
-            $geolocation = ["country" => strtolower(Cookie::get('country')), "currency" => "USD", "conversion" => "65"];
+            $geolocation = ["country" => strtolower(Cookie::get('country')), "currency" => "USD", "conversion" => "0.65"];
             $view = View::make('Page.index', [
                 'url' => $url,
                 'page' => $page,
@@ -1533,7 +1533,7 @@ class TemplateController extends Controller
         if(Cookie::get('template_id') == null || Cookie::get('country') == null)
         return redirect()->route('home')->with("error", "Template or Country Missing");
         $template_id = Cookie::get('template_id');
-        $geolocation = ["country" => strtolower(Cookie::get('country')), "currency" => "USD", "conversion" => "65"];
+        $geolocation = ["country" => strtolower(Cookie::get('country')), "currency" => "USD", "conversion" => "0.65"];
         $webURL = null;
         if($pageURL == "index") {
             $page = Page::where(['template_id' => $template_id, "title" => "index"])->first();
