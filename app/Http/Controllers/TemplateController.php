@@ -466,6 +466,147 @@ class TemplateController extends Controller
         $template->css_id = $css_id;
         $template->user_id = Auth::id();
         $template->save();
+        if($request->has('template_id') && $request->template_id && $parentTemplate = Template::find($request->template_id)) {
+            $save = false;
+            /*if($parentTemplate->script_id) {
+                $save = true;
+                if($template->script_id) {
+                    $content = Content::find($template->script_id);
+                } else {
+                    $content = new Content;
+                }
+                $content->content_type = "text";
+                $content->content = $parentTemplate->getScript->content;
+                $content->user_id = Auth::id();
+                $content->save();
+                $template->script_id = $content->id;
+            }
+            if($parentTemplate->css_id) {
+                $save = true;
+                if($template->css_id) {
+                    $content = Content::find($template->css_id);
+                } else {
+                    $content = new Content;
+                }
+                $content->content_type = "text";
+                $content->content = $parentTemplate->getCSS->content;
+                $content->user_id = Auth::id();
+                $content->save();
+                $template->css_id = $content->id;
+            }
+            if($save)
+            $template->save();*/
+            $componentIndex = [];
+            if($parentTemplate->AllComponents) {
+                $nested = [];
+                foreach($parentTemplate->AllComponents as $components) {
+                    $exists = Components::where('name', $components->name ."_".$template->id)->first();
+                    if($exists == null) {
+                        $component = new Components;
+                        $component->name = $components->name ."_".$template->id;
+                        $component->template_id = $template->id;
+                        $component->visibility_id = $components->visibility_id;
+                        $component->geolocation = $components->geolocation;
+                        $component->type = $components->type;
+                        $component->category = $components->category;
+                        $component->node = $components->node;
+                        $component->visibility = $components->visibility;
+                        $component->content_type = $components->content_type;
+                        $component->child_order = $components->child_order;
+                        $component->loop_source = $components->loop_source;
+                        $component->start_tag = $components->start_tag;
+                        $component->end_tag = $components->end_tag;
+                        $component->attributes = $components->attributes;
+                        // $component->var_attributes = $components->var_attributes;
+                        $component->classes = $components->classes;
+                        $component->style = $components->style;
+                        $component->script = $components->script;
+                        $component->content = $components->content;
+                        $component->save();
+                        if($components->nested_component)
+                        $nested[$components->nested_component] = $components->id;
+                        $componentIndex[$components->id] = $component->id;
+                    }
+                }
+                foreach($nested as $k => $val) {
+                    Components::where('id', $componentIndex[$val])->update(['nested_component' => $componentIndex[$k]]);
+                }
+            }
+            if($parentTemplate->Pages) {
+                foreach($parentTemplate->Pages as $pages) {
+                    if(Page::where(["template_id" => $template->id, "title" => $pages->title])->first() == null) {
+                        $script_id = 0;
+                        $css_id = 0;
+                        if($pages->script_id) {
+                            $content = new Content;
+                            $content->content_type = "text";
+                            $content->content = $pages->getScript->content;
+                            $content->user_id = Auth::id();
+                            $content->save();
+                            $script_id = $content->id;
+                        }
+                        if($pages->css_id) {
+                            $content = new Content;
+                            $content->content_type = "text";
+                            $content->content = $pages->getCSS->content;
+                            $content->user_id = Auth::id();
+                            $content->save();
+                            $css_id = $content->id;
+                        }
+                        $page = new Page;
+                        $page->template_id = $template->id;
+                        $page->title = $pages->title;
+                        $page->script_id = $script_id;
+                        $page->css_id = $css_id;
+                        $page->user_id = Auth::id();
+                        $page->save();
+                        if(count($pages->AllComponents)) {
+                            foreach($pages->AllComponents as $pageComponents){
+                                $existspageComponent = Components::find($pageComponents->component_id);
+                                $existing_component = Components::where(["template_id" => $template->id, "name" => ($existspageComponent->name . "_" . $template->id), "node" => "self"])->first();
+                                if(PageComponent::where(["page_id" => $page->id, "component_id" => $existing_component->id, "order" => $pageComponents->order])->first() == null) {
+                                    $pageComponent = new PageComponent;
+                                    $pageComponent->page_id = $page->id;
+                                    $pageComponent->component_id = $existing_component->id;
+                                    $pageComponent->order = $pageComponents->order;
+                                    $pageComponent->save();
+                                }
+                            }
+                        }
+                        if(count($pages->URLs)) {
+                            foreach($pages->URLs as $weburl) {
+                                if(WebUrl::where(["template_id" => $template->id, "page_id" => $page->id, "url" => $weburl->url, "geolocation" => $weburl->geolocation])->first() == null) {
+                                    $url = new WebUrl;
+                                    $url->template_id = $template->id;
+                                    $url->page_id = $page->id;
+                                    $url->url = $weburl->url;
+                                    $url->geolocation = $weburl->geolocation;
+                                    $url->regex = $weburl->regex;
+                                    $url->matches = $weburl->matches;
+                                    $url->url_variables = $weburl->url_variables;
+                                    $url->url_builder = $weburl->url_builder;
+                                    $url->user_id = Auth::id();
+                                    $url->save();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if(count($parentTemplate->GlobalVariables)) {
+                foreach($parentTemplate->GlobalVariables as $variables) {
+                    if(Variables::where(["template_id" => $template->id, "variable_name" => $variables->variable_name])->first() == null) {
+                        $variable = new Variables;
+                        $variable->template_id = $template->id;
+                        $variable->variable_name = $variables->variable_name;
+                        $variable->is_php = $variables->is_php;
+                        $variable->evaluate = $variables->evaluate;
+                        $variable->php_code = $variables->php_code;
+                        $variable->save();
+                    }
+                }
+            }
+        }
         return redirect()->route('Template.index')->with("message", $request->title. " Edited Successfully.");
     }
     public function template_delete($id) {
