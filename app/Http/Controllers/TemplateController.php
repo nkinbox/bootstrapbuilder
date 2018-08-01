@@ -1582,8 +1582,10 @@ class TemplateController extends Controller
             }
             if($webURL && $webURL->url_variables) {
                 $url_variables = json_decode($webURL->url_variables, true);
-                foreach($url_variables as $key => $val) {
-                    $url[$key] = $val;
+                if(isset($url_variables["url"])) {
+                    foreach($url_variables["url"] as $key => $val) {
+                        $url[$key] = $val;
+                    }
                 }
             }
             if(!$page) {
