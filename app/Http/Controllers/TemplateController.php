@@ -215,7 +215,7 @@ class TemplateController extends Controller
             return strtolower(str_replace(" ", "-", $match_[1]));
         }, $html);
         //replaces Variables
-        $html = preg_replace_callback('/@@(.*?)@@/', function($match_) use ($variables) {
+        $html = preg_replace_callback('/@@(.*?)@@/', function($match_) use ($variables, $url) {
             $evaluated = "";
             if($match_[1]) {
                 $temp = explode(".", $match_[1]);
@@ -225,6 +225,8 @@ class TemplateController extends Controller
                     } else {
                         $evaluated = $variables[$temp[0]];
                     }
+                } elseif(array_key_exists($temp[0], $url)) {
+                    $evaluated = $url[$temp[0]];
                 }
             }
             return $evaluated;
