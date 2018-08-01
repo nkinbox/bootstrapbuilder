@@ -157,6 +157,7 @@ class TemplateController extends Controller
             } else return "";
         }, $html);
         $html = preg_replace_callback('/@@currency\.(.*?)@@/', function($match_) use ($geolocation) {
+            dd($geolocation);
             $temp = explode(".", $match_[1]);
             if(count($temp) == 2) {
                 return (($geolocation['currency'])?$geolocation['currency']:$temp[0]). " " .(($geolocation['conversion'])?round($geolocation['conversion']*$temp[1]):$temp[1]);
