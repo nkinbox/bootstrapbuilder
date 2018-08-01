@@ -526,6 +526,8 @@ class TemplateController extends Controller
                         if($components->nested_component)
                         $nested[$components->nested_component] = $components->id;
                         $componentIndex[$components->id] = $component->id;
+                    } else {
+                        $componentIndex[$components->id] = $exists->id;
                     }
                 }
                 foreach($nested as $k => $val) {
