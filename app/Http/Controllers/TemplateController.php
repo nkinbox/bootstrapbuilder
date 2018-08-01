@@ -562,7 +562,6 @@ class TemplateController extends Controller
                         $page->css_id = $css_id;
                         $page->user_id = Auth::id();
                         $page->save();
-                        dd($page);
                         if(count($pages->AllComponents)) {
                             foreach($pages->AllComponents as $pageComponents){
                                 $existspageComponent = Components::find($pageComponents->component_id);
