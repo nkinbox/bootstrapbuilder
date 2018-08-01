@@ -1580,13 +1580,14 @@ class TemplateController extends Controller
                     }
                 }
             }
-            if(!$page) {
-                if($webURL->url_variables) {
-                    $url_variables = json_decode($weburl->url_variables, true);
-                    foreach($url_variables as $key => $val) {
-                        $url[$key] = $val;
-                    }
+            if($webURL && $webURL->url_variables) {
+                $url_variables = json_decode($weburl->url_variables, true);
+                foreach($url_variables as $key => $val) {
+                    $url[$key] = $val;
                 }
+            }
+            if(!$page) {
+                if($webURL)
                 $page = $webURL->Page;
             }
         }
