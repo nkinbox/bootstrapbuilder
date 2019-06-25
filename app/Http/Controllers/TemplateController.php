@@ -1623,4 +1623,7 @@ class TemplateController extends Controller
         Cookie::queue('country', $request->country, 0);
         return redirect()->back()->with("message", "Mode: ".$request->mode." ".$request->country);
     }
+    public function formEnq(Request $request) {
+        return response()->json(["success"=>"1"]);
+    }
 }
